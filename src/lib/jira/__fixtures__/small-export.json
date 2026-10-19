@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "source": "jira-trawler",
+    "version": "1.0",
+    "generatedAt": "2026-10-08T12:00:00Z",
+    "jiraBaseUrl": "https://example.atlassian.net",
+    "query": { "teamIds": ["TEAM-TST"], "sprintIds": [1] }
+  },
+  "teams": [
+    { "id": "TEAM-TST", "name": "Test", "projectKey": "TST", "memberIds": ["u-1", "u-2"] }
+  ],
+  "people": [
+    { "id": "u-1", "displayName": "Alice Adams", "email": "alice@example.com", "avatarUrl": null },
+    { "id": "u-2", "displayName": "Bob Brown" }
+  ],
+  "sprints": [
+    {
+      "id": 1,
+      "name": "TST Sprint 1",
+      "teamId": "TEAM-TST",
+      "state": "active",
+      "goal": "Prove the metrics",
+      "startDate": "2026-10-05T09:00:00Z",
+      "endDate": "2026-10-16T17:00:00Z",
+      "completeDate": null
+    }
+  ],
+  "issues": [
+    {
+      "key": "TST-1",
+      "id": "1",
+      "summary": "Completed story (changelog deliberately unsorted)",
+      "description": null,
+      "type": "Story",
+      "status": "Done",
+      "statusCategory": "done",
+      "priority": "High",
+      "assigneeId": "u-1",
+      "reporterId": "u-2",
+      "teamId": "TEAM-TST",
+      "sprintIds": [1],
+      "storyPoints": 5,
+      "labels": ["billing"],
+      "epicKey": null,
+      "parentKey": null,
+      "created": "2026-10-01T10:00:00Z",
+      "updated": "2026-10-07T15:00:00Z",
+      "resolved": "2026-10-07T15:00:00Z",
+      "dueDate": null,
+      "changelog": [
+        { "at": "2026-10-07T15:00:00Z", "authorId": "u-1", "field": "status", "from": "QA", "to": "Done" },
+        { "at": "2026-10-05T10:00:00Z", "authorId": "u-1", "field": "status", "from": "To Do", "to": "In Progress" },
+        { "at": "2026-10-06T11:00:00Z", "authorId": "u-2", "field": "status", "from": "In Progress", "to": "QA" }
+      ]
+    },
+    {
+      "key": "TST-2",
+      "id": "2",
+      "summary": "Blocked bug added mid-sprint, assignee missing from people",
+      "type": "Bug",
+      "status": "Blocked",
+      "statusCategory": "in_progress",
+      "priority": "Highest",
+      "assigneeId": "u-3",
+      "reporterId": "u-2",
+      "teamId": "TEAM-TST",
+      "sprintIds": [1],
+      "storyPoints": 3,
+      "created": "2026-10-06T09:30:00Z",
+      "updated": "2026-10-08T09:00:00Z",
+      "resolved": null,
+      "changelog": [
+        { "at": "2026-10-06T09:31:00Z", "authorId": "u-2", "field": "assignee", "from": null, "to": "u-3" },
+        { "at": "2026-10-07T10:00:00Z", "authorId": "u-3", "field": "status", "from": "To Do", "to": "In Progress" },
+        { "at": "2026-10-08T09:00:00Z", "authorId": "u-2", "field": "status", "from": "In Progress", "to": "Blocked" }
+      ]
+    },
+    {
+      "key": "TST-3",
+      "id": "3",
+      "summary": "Unassigned task in an unknown status, re-estimated mid-sprint",
+      "type": "Task",
+      "status": "Triage",
+      "statusCategory": "todo",
+      "priority": "Low",
+      "assigneeId": null,
+      "teamId": "TEAM-TST",
+      "sprintIds": [1],
+      "storyPoints": 8,
+      "created": "2026-09-30T09:00:00Z",
+      "updated": "2026-10-07T12:00:00Z",
+      "resolved": null,
+      "extraTrawlerField": { "ignored": true },
+      "changelog": [
+        { "at": "2026-10-06T14:00:00Z", "authorId": "u-1", "field": "status", "from": "To Do", "to": "Triage" },
+        { "at": "2026-10-07T12:00:00Z", "authorId": "u-1", "field": "storyPoints", "from": 2, "to": 8 }
+      ]
+    }
+  ]
+}

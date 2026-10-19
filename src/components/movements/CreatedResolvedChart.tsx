@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/chart"
 import { createdVsResolvedPerDay } from "@/lib/jira/metrics"
 import type { DateRange, Issue } from "@/lib/jira/types"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useFirstLoad } from "@/hooks/useFirstLoad"
 
 const config = {
   created: { label: "Created", color: "var(--chart-2)" },
@@ -24,6 +26,7 @@ export function CreatedResolvedChart({ issues, range }: { issues: Issue[]; range
     () => createdVsResolvedPerDay(issues, range).map((r) => ({ ...r, day: format(r.date, "d MMM") })),
     [issues, range],
   )
+  const loading = useFirstLoad()
   const totals = data.reduce((t, r) => ({ c: t.c + r.created, r: t.r + r.resolved }), { c: 0, r: 0 })
 
   return (
@@ -35,8 +38,10 @@ export function CreatedResolvedChart({ issues, range }: { issues: Issue[]; range
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {data.length === 0 ? (
-          <EmptyState className="h-56" />
+        {loading ? (
+          <Skeleton className="h-56 w-full" />
+        ) : totals.c + totals.r === 0 ? (
+          <EmptyState className="h-56">Nothing created or resolved in this period.</EmptyState>
         ) : (
           <ChartContainer config={config} className="aspect-auto h-56 w-full">
             <LineChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>

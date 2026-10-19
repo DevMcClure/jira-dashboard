@@ -25,6 +25,8 @@ import { useFilteredIssues } from "@/hooks/useFilteredIssues"
 import { useScopedSprints } from "@/hooks/useScopedSprints"
 import { burndown, sprintHealth } from "@/lib/jira/metrics"
 import type { Sprint } from "@/lib/jira/types"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useFirstLoad } from "@/hooks/useFirstLoad"
 
 const config = {
   remaining: { label: "Remaining", color: "var(--chart-1)" },
@@ -60,6 +62,7 @@ export function BurndownChart() {
     }
   }, [sprint, issues, now])
 
+  const loading = useFirstLoad()
   const today = format(now, DAY_FMT)
   const showToday = sprint?.state === "active" && data.some((d) => d.day === today)
   const byTeam = groupByTeam(sprints, (id) => dataset.teamById.get(id)?.name)
@@ -98,7 +101,9 @@ export function BurndownChart() {
         )}
       </CardHeader>
       <CardContent>
-        {data.length === 0 ? (
+        {loading ? (
+          <Skeleton className="h-64 w-full" />
+        ) : data.length === 0 ? (
           <EmptyState className="h-64">No sprint data for the current filters.</EmptyState>
         ) : (
           <ChartContainer config={config} className="aspect-auto h-64 w-full">

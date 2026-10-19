@@ -7,7 +7,7 @@ import { pluralize } from "@/lib/format"
 import { StatCard, type Delta } from "./StatCard"
 
 const direction = (n: number): Delta["direction"] => (n > 0 ? "up" : n < 0 ? "down" : "flat")
-const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "No change,")
+const signed = (n: number) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`)
 
 export function KpiRow() {
   const { dataset } = useData()
@@ -25,7 +25,7 @@ export function KpiRow() {
         value={k.total.value}
         trend={k.total.trend}
         delta={{
-          text: `+${k.total.delta} created this week`,
+          text: k.total.delta ? `+${k.total.delta} created this week` : "None created this week",
           direction: k.total.delta > 0 ? "up" : "flat",
           tone: "neutral",
         }}
@@ -36,7 +36,7 @@ export function KpiRow() {
         unit="pts"
         trend={k.remaining.trend}
         delta={{
-          text: `${signed(k.remaining.delta)} points this week`,
+          text: k.remaining.delta ? `${signed(k.remaining.delta)} points this week` : "No change this week",
           direction: direction(k.remaining.delta),
           tone: k.remaining.delta < 0 ? "good" : k.remaining.delta > 0 ? "bad" : "neutral",
         }}
@@ -46,7 +46,7 @@ export function KpiRow() {
         value={k.completed.value}
         trend={k.completed.trend}
         delta={{
-          text: `+${k.completed.delta} done this week`,
+          text: k.completed.delta ? `+${k.completed.delta} done this week` : "None done this week",
           direction: k.completed.delta > 0 ? "up" : "flat",
           tone: k.completed.delta > 0 ? "good" : "neutral",
         }}

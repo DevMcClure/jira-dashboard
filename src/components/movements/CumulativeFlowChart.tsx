@@ -13,6 +13,8 @@ import {
 import { useStatusSeries } from "@/hooks/useStatusSeries"
 import { cumulativeFlow } from "@/lib/jira/metrics"
 import type { DateRange, Issue } from "@/lib/jira/types"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useFirstLoad } from "@/hooks/useFirstLoad"
 
 /**
  * The showpiece: tickets in each status at the end of every day, stacked.
@@ -28,6 +30,7 @@ export function CumulativeFlowChart({ issues, range }: { issues: Issue[]; range:
       })),
     [issues, range, series],
   )
+  const loading = useFirstLoad()
   // Bottom-to-top stacking order = reverse workflow (Done first).
   const stacked = [...series].reverse()
 
@@ -40,7 +43,9 @@ export function CumulativeFlowChart({ issues, range }: { issues: Issue[]; range:
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {issues.length === 0 || data.length === 0 ? (
+        {loading ? (
+          <Skeleton className="h-80 w-full" />
+        ) : issues.length === 0 || data.length === 0 ? (
           <EmptyState className="h-80">No tickets for the current filters.</EmptyState>
         ) : (
           <ChartContainer config={config} className="aspect-auto h-80 w-full">

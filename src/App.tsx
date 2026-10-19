@@ -1,16 +1,19 @@
+import { lazy } from "react"
 import { BrowserRouter, Route, Routes } from "react-router-dom"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import AboutPage from "@/pages/AboutPage"
-import ImportPage from "@/pages/ImportPage"
-import MovementsPage from "@/pages/MovementsPage"
-import NotFoundPage from "@/pages/NotFoundPage"
-import OverviewPage from "@/pages/OverviewPage"
-import PeoplePage from "@/pages/PeoplePage"
-import SprintsPage from "@/pages/SprintsPage"
-import TeamsPage from "@/pages/TeamsPage"
-import TicketsPage from "@/pages/TicketsPage"
+
+// Route-level code splitting: charts/tables load with the page that needs them.
+const AboutPage = lazy(() => import("@/pages/AboutPage"))
+const ImportPage = lazy(() => import("@/pages/ImportPage"))
+const MovementsPage = lazy(() => import("@/pages/MovementsPage"))
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
+const OverviewPage = lazy(() => import("@/pages/OverviewPage"))
+const PeoplePage = lazy(() => import("@/pages/PeoplePage"))
+const SprintsPage = lazy(() => import("@/pages/SprintsPage"))
+const TeamsPage = lazy(() => import("@/pages/TeamsPage"))
+const TicketsPage = lazy(() => import("@/pages/TicketsPage"))
 
 export default function App() {
   return (

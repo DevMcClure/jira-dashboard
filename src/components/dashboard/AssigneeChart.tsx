@@ -13,6 +13,8 @@ import {
 import { useData } from "@/hooks/useData"
 import { useFilteredIssues } from "@/hooks/useFilteredIssues"
 import { workloadByPerson } from "@/lib/jira/metrics"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useFirstLoad } from "@/hooks/useFirstLoad"
 
 const config = {
   todo: { label: "To Do", color: "var(--status-todo)" },
@@ -37,6 +39,9 @@ export function AssigneeChart() {
     [issues, dataset],
   )
 
+  const loading = useFirstLoad()
+  const height = data.length * ROW + 56
+
   return (
     <Card>
       <CardHeader>
@@ -44,10 +49,12 @@ export function AssigneeChart() {
         <CardDescription>Sorted by open story points</CardDescription>
       </CardHeader>
       <CardContent>
-        {data.length === 0 ? (
+        {loading ? (
+          <Skeleton className="w-full" style={{ height }} />
+        ) : data.length === 0 ? (
           <EmptyState className="h-40">No tickets for the current filters.</EmptyState>
         ) : (
-          <ChartContainer config={config} className="aspect-auto w-full" style={{ height: data.length * ROW + 56 }}>
+          <ChartContainer config={config} className="aspect-auto w-full" style={{ height }}>
             <BarChart data={data} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }} barCategoryGap={6}>
               <CartesianGrid horizontal={false} />
               <XAxis type="number" tickLine={false} axisLine={false} allowDecimals={false} />

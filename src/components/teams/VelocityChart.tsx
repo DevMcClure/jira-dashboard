@@ -9,6 +9,8 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import type { velocity } from "@/lib/jira/metrics"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useFirstLoad } from "@/hooks/useFirstLoad"
 
 const config = {
   committed: { label: "Committed", color: "var(--chart-2)" },
@@ -17,6 +19,8 @@ const config = {
 
 /** Committed vs completed points for each closed sprint. */
 export function VelocityChart({ data }: { data: ReturnType<typeof velocity> }) {
+  const loading = useFirstLoad()
+  if (loading) return <Skeleton className="h-44 w-full" />
   if (data.length === 0) return <EmptyState className="h-44">No closed sprints yet.</EmptyState>
   const rows = data.map((d) => ({ ...d, label: d.sprintName.replace(/^\S+\s/, "") }))
   return (

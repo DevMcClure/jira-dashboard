@@ -2,11 +2,15 @@ import { useId } from "react"
 import { Area, AreaChart, YAxis } from "recharts"
 import { ChartContainer } from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useFirstLoad } from "@/hooks/useFirstLoad"
 
 /** Tiny decorative trend line (last N days). The card's number + delta carry the data. */
 export function Sparkline({ values, className }: { values: number[]; className?: string }) {
   const id = useId().replace(/:/g, "")
+  const loading = useFirstLoad()
   const data = values.map((v, i) => ({ i, v }))
+  if (loading) return <Skeleton className={className} />
   if (data.length < 2) return null
   return (
     <ChartContainer config={{}} className={cn("aspect-auto", className)} aria-hidden>

@@ -13,6 +13,8 @@ import {
 import { useStatusSeries } from "@/hooks/useStatusSeries"
 import { transitionsPerDay } from "@/lib/jira/metrics"
 import type { DateRange, Transition } from "@/lib/jira/types"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useFirstLoad } from "@/hooks/useFirstLoad"
 
 /** Status changes per day, stacked by the status tickets moved into. */
 export function TransitionsPerDayChart({ transitions, range }: { transitions: Transition[]; range: DateRange }) {
@@ -27,6 +29,7 @@ export function TransitionsPerDayChart({ transitions, range }: { transitions: Tr
       })),
     [transitions, range, used],
   )
+  const loading = useFirstLoad()
   const total = transitions.filter((t) => t.at >= range.start && t.at <= range.end).length
 
   return (
@@ -38,7 +41,9 @@ export function TransitionsPerDayChart({ transitions, range }: { transitions: Tr
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {total === 0 ? (
+        {loading ? (
+          <Skeleton className="h-56 w-full" />
+        ) : total === 0 ? (
           <EmptyState className="h-56">No movement in this period.</EmptyState>
         ) : (
           <ChartContainer config={config} className="aspect-auto h-56 w-full">

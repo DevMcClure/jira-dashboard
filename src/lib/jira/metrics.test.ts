@@ -10,6 +10,7 @@ import {
   kpiSummary,
   cumulativeFlow,
   cycleTimeDays,
+  issueTimeline,
   pointsAt,
   remainingPointsAt,
   remainingPoints,
@@ -18,6 +19,7 @@ import {
   sprintHealth,
   statusAt,
   ticketAgeDays,
+  timeInCurrentStatus,
   transitionsPerDay,
   velocity,
   workloadByPerson,
@@ -245,6 +247,20 @@ describe("per issue", () => {
     expect(ticketAgeDays(tst1, now)).toBe(6)
     expect(ticketAgeDays(tst2, now)).toBe(2)
     expect(ticketAgeDays(tst3, now)).toBe(8)
+  })
+
+  it("issueTimeline lists creation, assignments and status moves in order", () => {
+    const events = issueTimeline(tst2)
+    expect(events.map((e) => e.kind)).toEqual(["created", "assignee", "status", "status"])
+    expect(events[0]).toMatchObject({ authorId: "u-2" })
+    expect(events[1]).toMatchObject({ from: null, to: "u-3" })
+    expect(events[2]).toMatchObject({ from: "To Do", to: "In Progress", msInPrevious: 24.5 * HOUR })
+    expect(events[3]).toMatchObject({ to: "Blocked", msInPrevious: 23 * HOUR })
+  })
+
+  it("timeInCurrentStatus", () => {
+    expect(timeInCurrentStatus(tst2, now)).toBe(3 * HOUR)
+    expect(timeInCurrentStatus(tst3, now)).toBe(46 * HOUR) // since 6 Oct 14:00
   })
 
   it("cycleTimeDays measures first in-progress → done", () => {

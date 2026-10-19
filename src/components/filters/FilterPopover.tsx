@@ -18,6 +18,8 @@ export type FilterOption = {
   label: string
   group?: string
   icon?: React.ReactNode
+  /** Optional facet count shown on the right. */
+  count?: number
 }
 
 type Props = {
@@ -29,10 +31,20 @@ type Props = {
   /** Text shown when nothing is selected. */
   emptyLabel?: string
   className?: string
+  align?: "start" | "end"
 }
 
 /** Compact multi-select: Popover + Command, showing "All" or a count badge. */
-export function FilterPopover({ title, icon: Icon, options, selected, onChange, emptyLabel = "All", className }: Props) {
+export function FilterPopover({
+  title,
+  icon: Icon,
+  options,
+  selected,
+  onChange,
+  emptyLabel = "All",
+  className,
+  align = "end",
+}: Props) {
   const selectedSet = new Set(selected)
   const groups = groupBy(options)
 
@@ -54,7 +66,7 @@ export function FilterPopover({ title, icon: Icon, options, selected, onChange, 
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-60 p-0" align="end">
+      <PopoverContent className="w-60 p-0" align={align}>
         <Command>
           <CommandInput placeholder={`Search ${title.toLowerCase()}…`} />
           <CommandList>
@@ -75,6 +87,9 @@ export function FilterPopover({ title, icon: Icon, options, selected, onChange, 
                       </div>
                       {o.icon}
                       <span className="truncate">{o.label}</span>
+                      {o.count !== undefined && (
+                        <span className="ml-auto font-mono text-xs text-muted-foreground tabular-nums">{o.count}</span>
+                      )}
                     </CommandItem>
                   )
                 })}

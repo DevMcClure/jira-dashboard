@@ -351,6 +351,47 @@ export function ticketAgeDays(issue: Issue, now: Date): number {
   return Math.max(0, differenceInDays(end, issue.created))
 }
 
+export type TimelineEvent =
+  | { kind: "created"; at: Date; authorId: string | null }
+  | {
+      kind: "status"
+      at: Date
+      authorId: string | null
+      from: string | null
+      to: string
+      /** Time spent in `from` before this move. */
+      msInPrevious: number
+    }
+  | { kind: "assignee"; at: Date; authorId: string | null; from: string | null; to: string | null }
+
+/** Chronological history of an issue: creation, status moves and (re)assignments. */
+export function issueTimeline(issue: Issue): TimelineEvent[] {
+  const events: TimelineEvent[] = [{ kind: "created", at: issue.created, authorId: issue.reporterId }]
+  let prevStatusAt = issue.created
+  for (const c of issue.changelog) {
+    if (c.field === "status" && c.to !== null) {
+      events.push({
+        kind: "status",
+        at: c.at,
+        authorId: c.authorId,
+        from: c.from,
+        to: c.to,
+        msInPrevious: Math.max(0, c.at.getTime() - prevStatusAt.getTime()),
+      })
+      prevStatusAt = c.at
+    } else if (c.field === "assignee") {
+      events.push({ kind: "assignee", at: c.at, authorId: c.authorId, from: c.from, to: c.to })
+    }
+  }
+  return events
+}
+
+/** How long the issue has been in its current status (since its last move, or creation). */
+export function timeInCurrentStatus(issue: Issue, now: Date): number {
+  const last = issue.changelog.findLast((c) => c.field === "status")
+  return Math.max(0, now.getTime() - (last?.at ?? issue.created).getTime())
+}
+
 /** Days from first move into an in-progress status to resolution; null if not done. */
 export function cycleTimeDays(issue: Issue): number | null {
   if (issue.statusCategory !== "done") return null

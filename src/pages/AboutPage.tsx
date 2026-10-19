@@ -20,16 +20,16 @@ export default function AboutPage() {
 
   return (
     <>
-      <PageHeader title="About" description="What Sprint Atlas is and where its data comes from." />
+      <PageHeader title="About" description="What Jira Dashboard is and where its data comes from." />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Sprint Atlas</CardTitle>
+            <CardTitle>Jira Dashboard</CardTitle>
             <CardDescription>A proof-of-concept Jira sprint dashboard.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
-              Sprint Atlas reads a JSON export produced by the Jira Trawler script and visualises ticket counts,
+              Jira Dashboard reads a JSON export produced by the Jira Trawler script and visualises ticket counts,
               remaining work, sprint progress and how tickets move through the workflow over time.
             </p>
             <p>

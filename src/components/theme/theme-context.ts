@@ -2,7 +2,7 @@ import { createContext } from "react"
 
 export type Theme = "dark" | "light"
 
-export const THEME_STORAGE_KEY = "sprint-atlas:theme"
+export const THEME_STORAGE_KEY = "jira-dashboard:theme"
 
 export type ThemeContextValue = {
   theme: Theme

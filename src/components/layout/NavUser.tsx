@@ -53,7 +53,7 @@ export function NavUser() {
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => navigate("/about")}>
               <Info />
-              About Sprint Atlas
+              About Jira Dashboard
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

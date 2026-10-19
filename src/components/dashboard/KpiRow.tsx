@@ -3,11 +3,14 @@ import { useData } from "@/hooks/useData"
 import { useFilteredIssues } from "@/hooks/useFilteredIssues"
 import { useFilteredTransitions } from "@/hooks/useFilteredTransitions"
 import { kpiSummary } from "@/lib/jira/metrics"
-import { pluralize } from "@/lib/format"
 import { StatCard, type Delta } from "./StatCard"
 
-const direction = (n: number): Delta["direction"] => (n > 0 ? "up" : n < 0 ? "down" : "flat")
-const signed = (n: number) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`)
+/** "+N <verb> this week", or `none` when nothing happened. */
+function weekly(n: number, verb: string, none: string, tone: Delta["tone"]): Delta {
+  return n > 0
+    ? { text: `+${n} ${verb} this week`, direction: "up", tone }
+    : { text: none, direction: "flat", tone: "neutral" }
+}
 
 export function KpiRow() {
   const { dataset } = useData()
@@ -24,42 +27,25 @@ export function KpiRow() {
         label="Total tickets"
         value={k.total.value}
         trend={k.total.trend}
-        delta={{
-          text: k.total.delta ? `+${k.total.delta} created this week` : "None created this week",
-          direction: k.total.delta > 0 ? "up" : "flat",
-          tone: "neutral",
-        }}
+        delta={weekly(k.total.delta, "created", "None created this week", "neutral")}
       />
       <StatCard
-        label="Remaining"
-        value={k.remaining.value}
-        unit="pts"
-        trend={k.remaining.trend}
-        delta={{
-          text: k.remaining.delta ? `${signed(k.remaining.delta)} points this week` : "No change this week",
-          direction: direction(k.remaining.delta),
-          tone: k.remaining.delta < 0 ? "good" : k.remaining.delta > 0 ? "bad" : "neutral",
-        }}
-      />
-      <StatCard
-        label="Completed"
-        value={k.completed.value}
-        trend={k.completed.trend}
-        delta={{
-          text: k.completed.delta ? `+${k.completed.delta} done this week` : "None done this week",
-          direction: k.completed.delta > 0 ? "up" : "flat",
-          tone: k.completed.delta > 0 ? "good" : "neutral",
-        }}
+        label="In progress"
+        value={k.inProgress.value}
+        trend={k.inProgress.trend}
+        delta={weekly(k.inProgress.delta, "started", "None started this week", "neutral")}
       />
       <StatCard
         label="Blocked"
         value={k.blocked.value}
         trend={k.blocked.trend}
-        delta={{
-          text: k.blocked.delta ? `${pluralize(k.blocked.delta, "new blocker")} this week` : "No new blockers this week",
-          direction: k.blocked.delta > 0 ? "up" : "flat",
-          tone: k.blocked.delta > 0 ? "bad" : "good",
-        }}
+        delta={weekly(k.blocked.delta, "blocked", "No new blockers this week", "bad")}
+      />
+      <StatCard
+        label="In review"
+        value={k.inReview.value}
+        trend={k.inReview.trend}
+        delta={weekly(k.inReview.delta, "sent to review", "None sent to review this week", "neutral")}
       />
     </div>
   )

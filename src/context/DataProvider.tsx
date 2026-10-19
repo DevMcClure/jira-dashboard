@@ -11,7 +11,7 @@ import {
   type LoadResult,
 } from "./data-context"
 
-const STORAGE_KEY = "sprint-atlas:upload"
+const STORAGE_KEY = "jira-dashboard:upload"
 
 type Stored = { fileName: string; loadedAt: string; json: string }
 type State = { dataset: JiraDataset; source: DataSource; rawJson: string }

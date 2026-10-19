@@ -83,7 +83,7 @@ function AppSwitcher() {
                 <Layers className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Sprint Atlas</span>
+                <span className="truncate font-semibold">Jira Dashboard</span>
                 <span className="truncate text-xs text-muted-foreground">Jira insights</span>
               </div>
               <ChevronsUpDown className="ml-auto" />

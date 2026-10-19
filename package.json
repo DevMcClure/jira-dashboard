@@ -1,5 +1,5 @@
 {
-  "name": "sprint-atlas",
+  "name": "jira-dashboard",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "mock:data": "tsx scripts/generate-mock-data.ts"
+    "mock:data": "tsx scripts/generate-mock-data.ts",
+    "start": "pnpm install && pnpm run build && pnpm run preview"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -46,5 +47,11 @@
   },
   "engines": {
     "node": ">=20.19"
+  },
+  "packageManager": "pnpm@10.34.7+sha512.ba98abc585539933375b5971f4bc6d6c73a1b4b7edc4a879e7d102fe5423d1e02309d67c60a11f04955093a96e521ad9c3b138cdd654ca5be563f378b3ae48bd",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

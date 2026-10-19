@@ -12,7 +12,6 @@ import {
   cycleTimeDays,
   issueTimeline,
   pointsAt,
-  remainingPointsAt,
   remainingPoints,
   resolvedSince,
   scopeChange,
@@ -225,22 +224,19 @@ describe("movement over time", () => {
 })
 
 describe("kpis", () => {
-  it("remainingPointsAt replays status and estimates", () => {
-    expect(remainingPointsAt(issues, d("2026-10-01T12:00:00Z"))).toBe(7)
-    expect(remainingPointsAt(issues, now)).toBe(11)
-  })
-
   it("kpiSummary gives value, weekly delta and a daily trend", () => {
     const k = kpiSummary(issues, ds.transitions, now)
     expect(k.total).toMatchObject({ value: 3, delta: 1 })
-    expect(k.remaining).toMatchObject({ value: 11, delta: 4 })
-    expect(k.completed).toMatchObject({ value: 1, delta: 1 })
+    // Nothing is In Progress right now, but TST-1 and TST-2 both moved into it this week.
+    expect(k.inProgress).toMatchObject({ value: 0, delta: 2 })
     expect(k.blocked).toMatchObject({ value: 1, delta: 1 })
+    expect(k.inReview).toMatchObject({ value: 0, delta: 0 })
     for (const kpi of Object.values(k)) expect(kpi.trend).toHaveLength(14)
     expect(k.total.trend.at(-1)).toBe(3)
-    expect(k.remaining.trend.at(-1)).toBe(11)
+    // End of 5, 6, 7 Oct, then "now" (8 Oct 12:00).
+    expect(k.inProgress.trend.slice(-4)).toEqual([1, 0, 1, 0])
     expect(k.blocked.trend.at(-1)).toBe(1)
-    expect(k.completed.trend.slice(-2)).toEqual([1, 1])
+    expect(k.inReview.trend.every((n) => n === 0)).toBe(true)
   })
 })
 

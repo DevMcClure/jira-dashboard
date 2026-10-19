@@ -303,27 +303,27 @@ export function cumulativeFlow(issues: Issue[], range: DateRange): DailyStatusCo
   })
 }
 
-/** Story points not done at time `t` (issues not yet created are excluded). */
-export function remainingPointsAt(issues: Issue[], t: Date): number {
-  return issues.reduce((sum, i) => {
-    const cat = categoryAt(i, t)
-    return cat === null || cat === "done" ? sum : sum + pointsAt(i, t)
-  }, 0)
-}
-
 export type Kpi = { value: number; delta: number; trend: number[] }
 
 /**
  * Headline numbers for the Overview stat cards: current value, change over the
  * last 7 days, and a daily trend (end of day) for the last `trendDays` days.
+ * Status cards count tickets currently in that status; their delta is how many
+ * distinct tickets moved into it this week.
  */
 export function kpiSummary(issues: Issue[], transitions: Transition[], now: Date, trendDays = 14) {
   const weekAgo = new Date(now.getTime() - 7 * DAY_MS)
   const range = { start: new Date(now.getTime() - (trendDays - 1) * DAY_MS), end: now }
   const flow = cumulativeFlow(issues, range)
-  const ends = days(range).map((d) => minDate(endOfDay(d), now))
-  const done = issues.filter((i) => i.statusCategory === "done")
-  const remaining = remainingPoints(issues)
+
+  const statusKpi = (status: string): Kpi => ({
+    value: issues.filter((i) => i.status === status).length,
+    // Distinct tickets, so one bouncing between statuses counts once.
+    delta: new Set(
+      transitions.filter((t) => t.to === status && t.at >= weekAgo && t.at <= now).map((t) => t.issueKey),
+    ).size,
+    trend: flow.map((r) => r.counts[status] ?? 0),
+  })
 
   return {
     total: {
@@ -331,21 +331,9 @@ export function kpiSummary(issues: Issue[], transitions: Transition[], now: Date
       delta: createdSince(issues, weekAgo),
       trend: flow.map((r) => r.total),
     } satisfies Kpi,
-    remaining: {
-      value: remaining,
-      delta: remaining - remainingPointsAt(issues, weekAgo),
-      trend: ends.map((t) => remainingPointsAt(issues, t)),
-    } satisfies Kpi,
-    completed: {
-      value: done.length,
-      delta: resolvedSince(issues, weekAgo),
-      trend: ends.map((t) => issues.filter((i) => categoryAt(i, t) === "done").length),
-    } satisfies Kpi,
-    blocked: {
-      value: issues.filter((i) => i.status === "Blocked").length,
-      delta: transitions.filter((t) => t.to === "Blocked" && t.at >= weekAgo && t.at <= now).length,
-      trend: flow.map((r) => r.counts.Blocked ?? 0),
-    } satisfies Kpi,
+    inProgress: statusKpi("In Progress"),
+    blocked: statusKpi("Blocked"),
+    inReview: statusKpi("In Review"),
   }
 }
 

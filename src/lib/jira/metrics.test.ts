@@ -7,9 +7,11 @@ import {
   countByStatusCategory,
   createdSince,
   createdVsResolvedPerDay,
+  kpiSummary,
   cumulativeFlow,
   cycleTimeDays,
   pointsAt,
+  remainingPointsAt,
   remainingPoints,
   resolvedSince,
   scopeChange,
@@ -215,6 +217,26 @@ describe("movement over time", () => {
 
   it("returns no rows for an inverted range", () => {
     expect(cumulativeFlow(issues, { start: range.end, end: range.start })).toEqual([])
+  })
+})
+
+describe("kpis", () => {
+  it("remainingPointsAt replays status and estimates", () => {
+    expect(remainingPointsAt(issues, d("2026-10-01T12:00:00Z"))).toBe(7)
+    expect(remainingPointsAt(issues, now)).toBe(11)
+  })
+
+  it("kpiSummary gives value, weekly delta and a daily trend", () => {
+    const k = kpiSummary(issues, ds.transitions, now)
+    expect(k.total).toMatchObject({ value: 3, delta: 1 })
+    expect(k.remaining).toMatchObject({ value: 11, delta: 4 })
+    expect(k.completed).toMatchObject({ value: 1, delta: 1 })
+    expect(k.blocked).toMatchObject({ value: 1, delta: 1 })
+    for (const kpi of Object.values(k)) expect(kpi.trend).toHaveLength(14)
+    expect(k.total.trend.at(-1)).toBe(3)
+    expect(k.remaining.trend.at(-1)).toBe(11)
+    expect(k.blocked.trend.at(-1)).toBe(1)
+    expect(k.completed.trend.slice(-2)).toEqual([1, 1])
   })
 })
 

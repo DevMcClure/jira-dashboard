@@ -25,6 +25,9 @@ export type DataContextValue = {
   resetToSample: () => void
   filters: Filters
   setFilters: (next: Filters) => void
+  /** Sprint shown in the Overview burndown; null = pick automatically. */
+  burndownSprintId: number | null
+  setBurndownSprintId: (id: number | null) => void
 }
 
 export const DataContext = createContext<DataContextValue | null>(null)

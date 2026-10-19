@@ -67,6 +67,7 @@ function problemsFrom(err: unknown): string[] {
 export function DataProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>(initialState)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
+  const [burndownSprintId, setBurndownSprintId] = useState<number | null>(null)
 
   const loadFromFile = useCallback(async (file: File): Promise<LoadResult> => {
     let text: string
@@ -85,6 +86,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const loadedAt = new Date().toISOString()
     setState({ dataset, source: { kind: "upload", fileName: file.name, loadedAt }, rawJson: text })
     setFilters(EMPTY_FILTERS)
+    setBurndownSprintId(null)
     const remembered = writeStored({ fileName: file.name, loadedAt, json: text })
     toast.success(`Loaded ${dataset.issues.length} tickets from ${file.name}`, {
       description: remembered ? undefined : "File is too large to remember after a refresh.",
@@ -96,12 +98,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     writeStored(null)
     setState(sampleState())
     setFilters(EMPTY_FILTERS)
+    setBurndownSprintId(null)
     toast.success("Reset to sample data")
   }, [])
 
   const value = useMemo(
-    () => ({ ...state, loadFromFile, resetToSample, filters, setFilters }),
-    [state, loadFromFile, resetToSample, filters],
+    () => ({ ...state, loadFromFile, resetToSample, filters, setFilters, burndownSprintId, setBurndownSprintId }),
+    [state, loadFromFile, resetToSample, filters, burndownSprintId],
   )
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

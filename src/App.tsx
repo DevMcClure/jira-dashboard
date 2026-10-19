@@ -1,13 +1,37 @@
-import { useFilteredIssues } from "@/hooks/useFilteredIssues"
+import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { AppLayout } from "@/components/layout/AppLayout"
+import { Toaster } from "@/components/ui/sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import AboutPage from "@/pages/AboutPage"
+import ImportPage from "@/pages/ImportPage"
+import MovementsPage from "@/pages/MovementsPage"
+import NotFoundPage from "@/pages/NotFoundPage"
+import OverviewPage from "@/pages/OverviewPage"
+import PeoplePage from "@/pages/PeoplePage"
+import SprintsPage from "@/pages/SprintsPage"
+import TeamsPage from "@/pages/TeamsPage"
+import TicketsPage from "@/pages/TicketsPage"
 
-function App() {
-  const issues = useFilteredIssues()
+export default function App() {
   return (
-    <div className="dark flex min-h-svh flex-col items-center justify-center gap-4 bg-background text-foreground">
-      <h1 className="text-2xl font-semibold">Sprint Atlas</h1>
-      <p className="text-muted-foreground tabular-nums">{issues.length} tickets loaded</p>
-    </div>
+    <TooltipProvider delayDuration={200}>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route index element={<OverviewPage />} />
+            <Route path="tickets" element={<TicketsPage />} />
+            <Route path="tickets/:key" element={<TicketsPage />} />
+            <Route path="sprints" element={<SprintsPage />} />
+            <Route path="teams" element={<TeamsPage />} />
+            <Route path="people" element={<PeoplePage />} />
+            <Route path="movements" element={<MovementsPage />} />
+            <Route path="import" element={<ImportPage />} />
+            <Route path="about" element={<AboutPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+      <Toaster richColors={false} position="bottom-right" />
+    </TooltipProvider>
   )
 }
-
-export default App

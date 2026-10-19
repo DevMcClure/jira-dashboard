@@ -1,0 +1,70 @@
+import { format } from "date-fns"
+import { useMemo } from "react"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { EmptyState } from "@/components/common/EmptyState"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
+import { useStatusSeries } from "@/hooks/useStatusSeries"
+import { transitionsPerDay } from "@/lib/jira/metrics"
+import type { DateRange, Transition } from "@/lib/jira/types"
+
+/** Status changes per day, stacked by the status tickets moved into. */
+export function TransitionsPerDayChart({ transitions, range }: { transitions: Transition[]; range: DateRange }) {
+  const { series, config } = useStatusSeries()
+  // Only statuses tickets actually move into (To Do rarely is one).
+  const used = useMemo(() => series.filter((s) => transitions.some((t) => t.to === s.status)), [series, transitions])
+  const data = useMemo(
+    () =>
+      transitionsPerDay(transitions, range).map((row) => ({
+        day: format(row.date, "d MMM"),
+        ...Object.fromEntries(used.map((s) => [s.key, row.counts[s.status] ?? 0])),
+      })),
+    [transitions, range, used],
+  )
+  const total = transitions.filter((t) => t.at >= range.start && t.at <= range.end).length
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Transitions per day</CardTitle>
+        <CardDescription className="tabular-nums">
+          {total} status changes, by destination status
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {total === 0 ? (
+          <EmptyState className="h-56">No movement in this period.</EmptyState>
+        ) : (
+          <ChartContainer config={config} className="aspect-auto h-56 w-full">
+            <BarChart data={data} margin={{ top: 8, right: 0, left: -20, bottom: 0 }} barCategoryGap="20%">
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} />
+              <YAxis tickLine={false} axisLine={false} allowDecimals={false} width={44} />
+              <ChartTooltip cursor={{ fillOpacity: 0.4 }} content={<ChartTooltipContent indicator="dot" />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              {used.map((s, i) => (
+                <Bar
+                  key={s.key}
+                  dataKey={s.key}
+                  stackId="t"
+                  fill={`var(--color-${s.key})`}
+                  stroke="var(--card)"
+                  strokeWidth={1}
+                  maxBarSize={24}
+                  radius={i === used.length - 1 ? [4, 4, 0, 0] : 0}
+                  isAnimationActive={false}
+                />
+              ))}
+            </BarChart>
+          </ChartContainer>
+        )}
+      </CardContent>
+    </Card>
+  )
+}

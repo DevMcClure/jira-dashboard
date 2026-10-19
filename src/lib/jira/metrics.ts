@@ -165,9 +165,10 @@ export function sprintHealth(sprint: Sprint, issues: Issue[], now: Date) {
 
   const total = scoped.reduce((s, i) => s + pointsAt(i, t), 0)
   const done = scoped.filter((i) => categoryAt(i, t) === "done")
+  const donePoints = done.reduce((s, i) => s + pointsAt(i, t), 0)
   const pctDone =
     total > 0
-      ? (done.reduce((s, i) => s + pointsAt(i, t), 0) / total) * 100
+      ? (donePoints / total) * 100
       : scoped.length > 0
         ? (done.length / scoped.length) * 100
         : 0
@@ -187,7 +188,14 @@ export function sprintHealth(sprint: Sprint, issues: Issue[], now: Date) {
         ? "at_risk"
         : "on_track"
 
-  return { pctDone: Math.round(pctDone), pctElapsed: Math.round(pctElapsed), daysLeft, level }
+  return {
+    pctDone: Math.round(pctDone),
+    pctElapsed: Math.round(pctElapsed),
+    daysLeft,
+    level,
+    donePoints,
+    totalPoints: total,
+  }
 }
 
 /** Completed (and committed) points per closed sprint of a team, oldest first. */

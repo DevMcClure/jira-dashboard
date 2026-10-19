@@ -166,6 +166,8 @@ describe("sprints", () => {
       pctElapsed: 28,
       daysLeft: 9,
       level: "on_track",
+      donePoints: 5,
+      totalPoints: 16,
     })
     expect(sprintHealth(sprint, issues, d("2026-10-11T00:00:00Z")).level).toBe("at_risk")
     expect(sprintHealth(sprint, issues, d("2026-10-12T12:00:00Z")).level).toBe("off_track")

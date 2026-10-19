@@ -17,10 +17,16 @@ For development: `pnpm install` then `pnpm dev` (http://localhost:5173).
 
 Other commands: `pnpm test`, `pnpm lint`, `pnpm mock:data` (regenerate the sample data).
 
+## Deploy to GitHub Pages
+
+Every push to `main` builds and deploys the site to https://devmcclure.github.io/jira-dashboard/ (see `.github/workflows/deploy.yml`).
+
+One-time setup: in the repo on GitHub, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
+
 ## Use real data
 
 - **Quick:** open the **Import** page and drop in a Trawler JSON file.
-- **As the default:** replace `src/data/jira-export.json`.
+- **As the default:** replace `src/data/jira-export.json`. ⚠️ Anything bundled is published on GitHub Pages, so don't commit real company data. Use the Import page for that (files stay in your browser).
 
 The expected format is in [`docs/02-DATA_CONTRACT.md`](docs/02-DATA_CONTRACT.md). If the real export looks different, only `src/lib/jira/adapter.ts` (and `schema.ts`) need to change.
 

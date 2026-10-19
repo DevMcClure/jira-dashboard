@@ -18,7 +18,8 @@ const TicketsPage = lazy(() => import("@/pages/TicketsPage"))
 export default function App() {
   return (
     <TooltipProvider delayDuration={200}>
-      <BrowserRouter>
+      {/* basename follows Vite's base, e.g. "/jira-dashboard" on GitHub Pages. */}
+      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<OverviewPage />} />

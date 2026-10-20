@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import sample from "@/data/jira-export.json"
 import { JiraExportError, parseExport } from "@/lib/jira/adapter"
+import type { Period } from "@/lib/jira/period"
 import type { JiraDataset } from "@/lib/jira/types"
 import {
   DataContext,
@@ -68,6 +69,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>(initialState)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [burndownSprintId, setBurndownSprintId] = useState<number | null>(null)
+  const [period, setPeriod] = useState<Period>("today")
 
   const loadFromFile = useCallback(async (file: File): Promise<LoadResult> => {
     let text: string
@@ -103,8 +105,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo(
-    () => ({ ...state, loadFromFile, resetToSample, filters, setFilters, burndownSprintId, setBurndownSprintId }),
-    [state, loadFromFile, resetToSample, filters, burndownSprintId],
+    () => ({
+      ...state,
+      loadFromFile,
+      resetToSample,
+      filters,
+      setFilters,
+      burndownSprintId,
+      setBurndownSprintId,
+      period,
+      setPeriod,
+    }),
+    [state, loadFromFile, resetToSample, filters, burndownSprintId, period],
   )
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

@@ -3,7 +3,7 @@ export const EXAMPLE_EXPORT = `{
   "meta": {
     "source": "jira-trawler",
     "version": "1.0",
-    "generatedAt": "2026-10-19T08:00:00Z",
+    "generatedAt": "2026-10-19T17:00:00Z",
     "jiraBaseUrl": "https://example.atlassian.net"
   },
   "teams":   [{ "id": "TEAM-PLAT", "name": "Platform", "projectKey": "PLAT", "memberIds": ["u-01"] }],

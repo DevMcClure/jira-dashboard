@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useData } from "@/hooks/useData"
 import { useFilteredTransitions } from "@/hooks/useFilteredTransitions"
+import { usePeriod } from "@/hooks/usePeriod"
 import { formatDateTime, formatRelative } from "@/lib/format"
 
 const HEAD = "h-9 text-xs font-medium tracking-wide text-muted-foreground uppercase"
@@ -16,14 +17,20 @@ const HEAD = "h-9 text-xs font-medium tracking-wide text-muted-foreground upperc
 export function RecentMovements({ limit = 15 }: { limit?: number }) {
   const { dataset } = useData()
   const navigate = useNavigate()
-  const recent = useFilteredTransitions().slice(-limit).reverse()
+  const { range, phrase } = usePeriod()
+  const inPeriod = useFilteredTransitions().filter((t) => t.at >= range.start && t.at <= range.end)
+  const recent = inPeriod.slice(-limit).reverse()
   const now = dataset.meta.generatedAt
 
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
         <CardTitle>Recent movements</CardTitle>
-        <CardDescription>The latest status changes</CardDescription>
+        <CardDescription className="tabular-nums">
+          {inPeriod.length > limit
+            ? `Latest ${limit} of ${inPeriod.length} status changes ${phrase}`
+            : `Status changes ${phrase}`}
+        </CardDescription>
         <CardAction>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/movements">
@@ -46,7 +53,7 @@ export function RecentMovements({ limit = 15 }: { limit?: number }) {
             {recent.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={4}>
-                  <EmptyState className="h-24" />
+                  <EmptyState className="h-24">No status changes {phrase}.</EmptyState>
                 </TableCell>
               </TableRow>
             ) : (

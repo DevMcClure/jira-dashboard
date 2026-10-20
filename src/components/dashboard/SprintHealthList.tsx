@@ -1,20 +1,17 @@
 import { useMemo } from "react"
+import { ArrowRight } from "lucide-react"
+import { Link } from "react-router-dom"
 import { EmptyState } from "@/components/common/EmptyState"
 import { StatusDot } from "@/components/common/StatusDot"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { HEALTH_LEVELS } from "@/components/health/health-levels"
+import { Button } from "@/components/ui/button"
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useData } from "@/hooks/useData"
 import { useFilteredIssues } from "@/hooks/useFilteredIssues"
 import { useScopedSprints } from "@/hooks/useScopedSprints"
 import { pluralize } from "@/lib/format"
-import { sprintHealth, type HealthLevel } from "@/lib/jira/metrics"
+import { sprintHealth } from "@/lib/jira/metrics"
 import { cn } from "@/lib/utils"
-
-const LEVEL: Record<HealthLevel, { label: string; colorVar: string }> = {
-  on_track: { label: "On track", colorVar: "--status-done" },
-  at_risk: { label: "At risk", colorVar: "--status-qa" },
-  off_track: { label: "Off track", colorVar: "--status-blocked" },
-  completed: { label: "Completed", colorVar: "--muted-foreground" },
-}
 
 /** Reference "SERVICE STATUS"-style list: dot + sprint name + one-line status. */
 export function SprintHealthList() {
@@ -45,6 +42,13 @@ export function SprintHealthList() {
         <CardTitle className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Sprint health
         </CardTitle>
+        <CardAction>
+          <Button variant="ghost" size="sm" className="-my-1.5 h-7" asChild>
+            <Link to="/health">
+              View all <ArrowRight />
+            </Link>
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="-mb-6 px-0">
         {rows.length === 0 ? (
@@ -52,7 +56,7 @@ export function SprintHealthList() {
         ) : (
           <ul className="divide-y border-t">
             {rows.map(({ sprint, health }) => {
-              const level = LEVEL[health.level]
+              const level = HEALTH_LEVELS[health.level]
               const detail =
                 health.level === "completed"
                   ? `${health.pctDone}% done`

@@ -2,23 +2,25 @@ import { useMemo } from "react"
 import { useData } from "@/hooks/useData"
 import { useFilteredIssues } from "@/hooks/useFilteredIssues"
 import { useFilteredTransitions } from "@/hooks/useFilteredTransitions"
+import { usePeriod } from "@/hooks/usePeriod"
 import { kpiSummary } from "@/lib/jira/metrics"
 import { StatCard, type Delta } from "./StatCard"
 
-/** "+N <verb> this week", or `none` when nothing happened. */
-function weekly(n: number, verb: string, none: string, tone: Delta["tone"]): Delta {
+/** "+N <verb> <period>", e.g. "+3 started today", or "None <verb> <period>". */
+function periodDelta(n: number, verb: string, phrase: string, tone: Delta["tone"]): Delta {
   return n > 0
-    ? { text: `+${n} ${verb} this week`, direction: "up", tone }
-    : { text: none, direction: "flat", tone: "neutral" }
+    ? { text: `+${n} ${verb} ${phrase}`, direction: "up", tone }
+    : { text: `None ${verb} ${phrase}`, direction: "flat", tone: "neutral" }
 }
 
 export function KpiRow() {
   const { dataset } = useData()
   const issues = useFilteredIssues()
   const transitions = useFilteredTransitions()
+  const { range, phrase } = usePeriod()
   const k = useMemo(
-    () => kpiSummary(issues, transitions, dataset.meta.generatedAt),
-    [issues, transitions, dataset],
+    () => kpiSummary(issues, transitions, range, dataset.meta.generatedAt),
+    [issues, transitions, range, dataset],
   )
 
   return (
@@ -27,25 +29,25 @@ export function KpiRow() {
         label="Total tickets"
         value={k.total.value}
         trend={k.total.trend}
-        delta={weekly(k.total.delta, "created", "None created this week", "neutral")}
+        delta={periodDelta(k.total.delta, "created", phrase, "neutral")}
       />
       <StatCard
         label="In progress"
         value={k.inProgress.value}
         trend={k.inProgress.trend}
-        delta={weekly(k.inProgress.delta, "started", "None started this week", "neutral")}
+        delta={periodDelta(k.inProgress.delta, "started", phrase, "neutral")}
       />
       <StatCard
         label="Blocked"
         value={k.blocked.value}
         trend={k.blocked.trend}
-        delta={weekly(k.blocked.delta, "blocked", "No new blockers this week", "bad")}
+        delta={periodDelta(k.blocked.delta, "blocked", phrase, "bad")}
       />
       <StatCard
         label="In review"
         value={k.inReview.value}
         trend={k.inReview.trend}
-        delta={weekly(k.inReview.delta, "sent to review", "None sent to review this week", "neutral")}
+        delta={periodDelta(k.inReview.delta, "sent to review", phrase, "neutral")}
       />
     </div>
   )

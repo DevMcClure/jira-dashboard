@@ -2,7 +2,15 @@
  * Pure metric functions. Inputs are already-filtered issues; "now" is a
  * reference date (normally `meta.generatedAt`, never the real clock).
  */
-import { differenceInDays, eachDayOfInterval, endOfDay, startOfDay } from "date-fns"
+import {
+  differenceInDays,
+  eachDayOfInterval,
+  eachHourOfInterval,
+  endOfDay,
+  endOfHour,
+  startOfDay,
+  startOfHour,
+} from "date-fns"
 import { categoryForStatus, compareStatus, statusColorVar } from "./constants"
 import type { DateRange, Issue, Sprint, StatusCategory, Team, Transition } from "./types"
 
@@ -55,6 +63,18 @@ function days(range: DateRange): Date[] {
   if (range.end < range.start) return []
   return eachDayOfInterval({ start: startOfDay(range.start), end: startOfDay(range.end) })
 }
+
+/** Time-series granularity: "hour" for single-day views (Today), otherwise "day". */
+export type Bucket = "day" | "hour"
+
+function buckets(range: DateRange, bucket: Bucket): Date[] {
+  if (bucket === "day") return days(range)
+  if (range.end < range.start) return []
+  return eachHourOfInterval({ start: startOfHour(range.start), end: startOfHour(range.end) })
+}
+const bucketStart = (d: Date, bucket: Bucket) => (bucket === "hour" ? startOfHour(d) : startOfDay(d))
+const bucketEnd = (d: Date, bucket: Bucket) => (bucket === "hour" ? endOfHour(d) : endOfDay(d))
+const inRange = (d: Date, range: DateRange) => d >= range.start && d <= range.end
 
 // ---------------------------------------------------------------------------
 // Counts
@@ -261,11 +281,16 @@ export function workloadByPerson(issues: Issue[]): Workload[] {
 
 export type DailyStatusCounts = { date: Date; total: number; counts: Record<string, number> }
 
-export function transitionsPerDay(transitions: Transition[], range: DateRange): DailyStatusCounts[] {
-  const rows = days(range).map((date) => ({ date, total: 0, counts: {} as Record<string, number> }))
+/** Status changes per bucket (day or hour), counted by destination status. */
+export function transitionsPerDay(
+  transitions: Transition[],
+  range: DateRange,
+  bucket: Bucket = "day",
+): DailyStatusCounts[] {
+  const rows = buckets(range, bucket).map((date) => ({ date, total: 0, counts: {} as Record<string, number> }))
   const index = new Map(rows.map((r) => [r.date.getTime(), r]))
   for (const t of transitions) {
-    const row = index.get(startOfDay(t.at).getTime())
+    const row = index.get(bucketStart(t.at, bucket).getTime())
     if (!row) continue
     row.total++
     row.counts[t.to] = (row.counts[t.to] ?? 0) + 1
@@ -273,24 +298,24 @@ export function transitionsPerDay(transitions: Transition[], range: DateRange): 
   return rows
 }
 
-export function createdVsResolvedPerDay(issues: Issue[], range: DateRange) {
-  const rows = days(range).map((date) => ({ date, created: 0, resolved: 0 }))
+export function createdVsResolvedPerDay(issues: Issue[], range: DateRange, bucket: Bucket = "day") {
+  const rows = buckets(range, bucket).map((date) => ({ date, created: 0, resolved: 0 }))
   const index = new Map(rows.map((r) => [r.date.getTime(), r]))
   for (const i of issues) {
-    const c = index.get(startOfDay(i.created).getTime())
+    const c = index.get(bucketStart(i.created, bucket).getTime())
     if (c) c.created++
     if (i.resolved) {
-      const r = index.get(startOfDay(i.resolved).getTime())
+      const r = index.get(bucketStart(i.resolved, bucket).getTime())
       if (r) r.resolved++
     }
   }
   return rows
 }
 
-/** Tickets in each status at end of each day (capped at range end), replaying changelogs. */
-export function cumulativeFlow(issues: Issue[], range: DateRange): DailyStatusCounts[] {
-  return days(range).map((date) => {
-    const t = minDate(endOfDay(date), range.end)
+/** Tickets in each status at the end of each bucket (capped at range end), replaying changelogs. */
+export function cumulativeFlow(issues: Issue[], range: DateRange, bucket: Bucket = "day"): DailyStatusCounts[] {
+  return buckets(range, bucket).map((date) => {
+    const t = minDate(bucketEnd(date, bucket), range.end)
     const counts: Record<string, number> = {}
     let total = 0
     for (const i of issues) {
@@ -306,34 +331,48 @@ export function cumulativeFlow(issues: Issue[], range: DateRange): DailyStatusCo
 export type Kpi = { value: number; delta: number; trend: number[] }
 
 /**
- * Headline numbers for the Overview stat cards: current value, change over the
- * last 7 days, and a daily trend (end of day) for the last `trendDays` days.
+ * Headline numbers for the stat cards: current value, change within `range`
+ * (the selected period), and a daily trend for the last `trendDays` days.
  * Status cards count tickets currently in that status; their delta is how many
- * distinct tickets moved into it this week.
+ * distinct tickets moved into it during the period.
  */
-export function kpiSummary(issues: Issue[], transitions: Transition[], now: Date, trendDays = 14) {
-  const weekAgo = new Date(now.getTime() - 7 * DAY_MS)
-  const range = { start: new Date(now.getTime() - (trendDays - 1) * DAY_MS), end: now }
-  const flow = cumulativeFlow(issues, range)
+export function kpiSummary(
+  issues: Issue[],
+  transitions: Transition[],
+  range: DateRange,
+  now: Date,
+  trendDays = 14,
+) {
+  const trendRange = { start: new Date(now.getTime() - (trendDays - 1) * DAY_MS), end: now }
+  const flow = cumulativeFlow(issues, trendRange)
 
   const statusKpi = (status: string): Kpi => ({
     value: issues.filter((i) => i.status === status).length,
     // Distinct tickets, so one bouncing between statuses counts once.
-    delta: new Set(
-      transitions.filter((t) => t.to === status && t.at >= weekAgo && t.at <= now).map((t) => t.issueKey),
-    ).size,
+    delta: new Set(transitions.filter((t) => t.to === status && inRange(t.at, range)).map((t) => t.issueKey)).size,
     trend: flow.map((r) => r.counts[status] ?? 0),
   })
 
   return {
     total: {
       value: issues.length,
-      delta: createdSince(issues, weekAgo),
+      delta: issues.filter((i) => inRange(i.created, range)).length,
       trend: flow.map((r) => r.total),
     } satisfies Kpi,
     inProgress: statusKpi("In Progress"),
     blocked: statusKpi("Blocked"),
     inReview: statusKpi("In Review"),
+  }
+}
+
+/** What happened in a period: tickets created/resolved, status moves, tickets newly blocked. */
+export function activitySummary(issues: Issue[], transitions: Transition[], range: DateRange) {
+  const moves = transitions.filter((t) => inRange(t.at, range))
+  return {
+    created: issues.filter((i) => inRange(i.created, range)).length,
+    resolved: issues.filter((i) => i.resolved !== null && inRange(i.resolved, range)).length,
+    moves: moves.length,
+    blocked: new Set(moves.filter((t) => t.to === "Blocked").map((t) => t.issueKey)).size,
   }
 }
 

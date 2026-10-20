@@ -28,7 +28,7 @@ One-time setup: in the repo on GitHub, go to **Settings → Pages** and set **So
 - **Quick:** open the **Import** page and drop in a Trawler JSON file.
 - **As the default:** replace `src/data/jira-export.json`. ⚠️ Anything bundled is published on GitHub Pages, so don't commit real company data. Use the Import page for that (files stay in your browser).
 
-The expected format is in [`docs/02-DATA_CONTRACT.md`](docs/02-DATA_CONTRACT.md). If the real export looks different, only `src/lib/jira/adapter.ts` (and `schema.ts`) need to change.
+The Import page shows an example of the expected format, and `src/lib/jira/schema.ts` defines it exactly. If the real export looks different, only `src/lib/jira/adapter.ts` (and `schema.ts`) need to change.
 
 ## Built with
 

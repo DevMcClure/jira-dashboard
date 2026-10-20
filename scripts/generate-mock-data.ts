@@ -97,7 +97,7 @@ const iso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z")
 // Static world
 // ---------------------------------------------------------------------------
 
-const GENERATED_AT = new Date("2026-10-19T08:00:00Z") // Monday morning
+const GENERATED_AT = new Date("2026-10-19T17:00:00Z") // Monday, end of the working day
 /** Active sprints started Mon 12 Oct → ~60% elapsed at GENERATED_AT. */
 const ACTIVE_START = new Date("2026-10-12T09:00:00Z")
 

@@ -1,4 +1,3 @@
-import { format } from "date-fns"
 import { useMemo } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { EmptyState } from "@/components/common/EmptyState"
@@ -11,23 +10,26 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { useStatusSeries } from "@/hooks/useStatusSeries"
-import { transitionsPerDay } from "@/lib/jira/metrics"
+import { transitionsPerDay, type Bucket } from "@/lib/jira/metrics"
 import type { DateRange, Transition } from "@/lib/jira/types"
+import { bucketLabel } from "./bucket-label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFirstLoad } from "@/hooks/useFirstLoad"
 
-/** Status changes per day, stacked by the status tickets moved into. */
-export function TransitionsPerDayChart({ transitions, range }: { transitions: Transition[]; range: DateRange }) {
+type Props = { transitions: Transition[]; range: DateRange; bucket: Bucket }
+
+/** Status changes per day (or hour), stacked by the status tickets moved into. */
+export function TransitionsPerDayChart({ transitions, range, bucket }: Props) {
   const { series, config } = useStatusSeries()
   // Only statuses tickets actually move into (To Do rarely is one).
   const used = useMemo(() => series.filter((s) => transitions.some((t) => t.to === s.status)), [series, transitions])
   const data = useMemo(
     () =>
-      transitionsPerDay(transitions, range).map((row) => ({
-        day: format(row.date, "d MMM"),
+      transitionsPerDay(transitions, range, bucket).map((row) => ({
+        day: bucketLabel(row.date, bucket),
         ...Object.fromEntries(used.map((s) => [s.key, row.counts[s.status] ?? 0])),
       })),
-    [transitions, range, used],
+    [transitions, range, bucket, used],
   )
   const loading = useFirstLoad()
   const total = transitions.filter((t) => t.at >= range.start && t.at <= range.end).length
@@ -35,7 +37,7 @@ export function TransitionsPerDayChart({ transitions, range }: { transitions: Tr
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Transitions per day</CardTitle>
+        <CardTitle>Transitions per {bucket}</CardTitle>
         <CardDescription className="tabular-nums">
           {total} status changes, by destination status
         </CardDescription>

@@ -1,6 +1,7 @@
 import { Fragment } from "react"
 import { Link, useLocation, useMatch } from "react-router-dom"
 import { GlobalFilters } from "@/components/filters/GlobalFilters"
+import { PeriodPicker } from "@/components/filters/PeriodPicker"
 import { ThemeToggle } from "@/components/theme/ThemeToggle"
 import {
   Breadcrumb,
@@ -12,14 +13,18 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { useData } from "@/hooks/useData"
 import { LogoMark } from "./LogoMark"
 import { navItemFor } from "./nav"
 
 export function SiteHeader() {
   const { pathname } = useLocation()
+  const { dataset } = useData()
   const key = useMatch("/tickets/:key")?.params.key
+  const teamId = useMatch("/teams/:teamId")?.params.teamId
   const item = navItemFor(pathname)
-  const crumbs = [item?.title ?? "Not found", ...(key ? [key] : [])]
+  const leaf = key ?? (teamId ? (dataset.teamById.get(teamId)?.name ?? teamId) : undefined)
+  const crumbs = [item?.title ?? "Not found", ...(leaf ? [leaf] : [])]
 
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur">
@@ -44,6 +49,7 @@ export function SiteHeader() {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="ml-auto flex items-center gap-2">
+        <PeriodPicker />
         <GlobalFilters />
         <ThemeToggle />
         <LogoMark />

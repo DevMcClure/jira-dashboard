@@ -11,7 +11,7 @@ describe("bundled mock export", () => {
     expect(ds.issues.length).toBeGreaterThanOrEqual(160)
     expect(ds.teams).toHaveLength(3)
     expect(ds.sprints).toHaveLength(12)
-    expect(ds.meta.generatedAt.toISOString()).toBe("2026-10-19T08:00:00.000Z")
+    expect(ds.meta.generatedAt.toISOString()).toBe("2026-10-19T17:00:00.000Z")
   })
 
   it("has internally consistent changelogs", () => {

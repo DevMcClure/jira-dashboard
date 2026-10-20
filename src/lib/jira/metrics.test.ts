@@ -6,6 +6,7 @@ import {
   countByStatus,
   countByStatusCategory,
   createdSince,
+  activitySummary,
   createdVsResolvedPerDay,
   kpiSummary,
   cumulativeFlow,
@@ -224,8 +225,9 @@ describe("movement over time", () => {
 })
 
 describe("kpis", () => {
-  it("kpiSummary gives value, weekly delta and a daily trend", () => {
-    const k = kpiSummary(issues, ds.transitions, now)
+  it("kpiSummary gives value, period delta and a daily trend", () => {
+    const week = { start: d("2026-10-01T12:00:00Z"), end: now }
+    const k = kpiSummary(issues, ds.transitions, week, now)
     expect(k.total).toMatchObject({ value: 3, delta: 1 })
     // Nothing is In Progress right now, but TST-1 and TST-2 both moved into it this week.
     expect(k.inProgress).toMatchObject({ value: 0, delta: 2 })
@@ -237,6 +239,28 @@ describe("kpis", () => {
     expect(k.inProgress.trend.slice(-4)).toEqual([1, 0, 1, 0])
     expect(k.blocked.trend.at(-1)).toBe(1)
     expect(k.inReview.trend.every((n) => n === 0)).toBe(true)
+  })
+})
+
+describe("activity", () => {
+  it("activitySummary counts what happened in the period", () => {
+    const twoDays = { start: d("2026-10-06T00:00:00Z"), end: d("2026-10-07T23:59:59Z") }
+    expect(activitySummary(issues, ds.transitions, twoDays)).toEqual({ created: 1, resolved: 1, moves: 4, blocked: 0 })
+    const today = { start: d("2026-10-08T00:00:00Z"), end: now }
+    expect(activitySummary(issues, ds.transitions, today)).toEqual({ created: 0, resolved: 0, moves: 1, blocked: 1 })
+  })
+
+  it("time series can bucket by hour for a single day", () => {
+    const day = { start: d("2026-10-07T00:00:00Z"), end: d("2026-10-07T23:59:59Z") }
+    const moves = transitionsPerDay(ds.transitions, day, "hour")
+    expect(moves).toHaveLength(24)
+    expect(moves[10].counts).toEqual({ "In Progress": 1 })
+    expect(moves[15].counts).toEqual({ Done: 1 })
+    expect(moves.reduce((n, r) => n + r.total, 0)).toBe(2)
+    const flow = cumulativeFlow(issues, day, "hour")
+    expect(flow[10].counts).toEqual({ QA: 1, "In Progress": 1, Triage: 1 })
+    expect(flow[15].counts).toEqual({ Done: 1, "In Progress": 1, Triage: 1 })
+    expect(createdVsResolvedPerDay(issues, day, "hour")[15]).toMatchObject({ created: 0, resolved: 1 })
   })
 })
 

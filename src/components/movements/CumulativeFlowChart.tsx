@@ -1,4 +1,3 @@
-import { format } from "date-fns"
 import { useMemo } from "react"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { EmptyState } from "@/components/common/EmptyState"
@@ -11,8 +10,9 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { useStatusSeries } from "@/hooks/useStatusSeries"
-import { cumulativeFlow } from "@/lib/jira/metrics"
+import { cumulativeFlow, type Bucket } from "@/lib/jira/metrics"
 import type { DateRange, Issue } from "@/lib/jira/types"
+import { bucketLabel } from "./bucket-label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFirstLoad } from "@/hooks/useFirstLoad"
 
@@ -20,15 +20,17 @@ import { useFirstLoad } from "@/hooks/useFirstLoad"
  * The showpiece: tickets in each status at the end of every day, stacked.
  * Done sits at the bottom so the "work finished" band grows upward over time.
  */
-export function CumulativeFlowChart({ issues, range }: { issues: Issue[]; range: DateRange }) {
+type Props = { issues: Issue[]; range: DateRange; bucket: Bucket }
+
+export function CumulativeFlowChart({ issues, range, bucket }: Props) {
   const { series, config } = useStatusSeries()
   const data = useMemo(
     () =>
-      cumulativeFlow(issues, range).map((row) => ({
-        day: format(row.date, "d MMM"),
+      cumulativeFlow(issues, range, bucket).map((row) => ({
+        day: bucketLabel(row.date, bucket),
         ...Object.fromEntries(series.map((s) => [s.key, row.counts[s.status] ?? 0])),
       })),
-    [issues, range, series],
+    [issues, range, bucket, series],
   )
   const loading = useFirstLoad()
   // Bottom-to-top stacking order = reverse workflow (Done first).
@@ -39,7 +41,7 @@ export function CumulativeFlowChart({ issues, range }: { issues: Issue[]; range:
       <CardHeader>
         <CardTitle>Cumulative flow</CardTitle>
         <CardDescription>
-          Tickets in each status at the end of every day. Widening bands show where work is piling up.
+          Tickets in each status at the end of every {bucket}. Widening bands show where work is piling up.
         </CardDescription>
       </CardHeader>
       <CardContent>

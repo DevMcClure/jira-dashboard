@@ -2,7 +2,7 @@
   "meta": {
     "source": "jira-trawler",
     "version": "1.0",
-    "generatedAt": "2026-10-19T08:00:00Z",
+    "generatedAt": "2026-10-19T17:00:00Z",
     "jiraBaseUrl": "https://example.atlassian.net",
     "query": {
       "teamIds": [
@@ -1015,7 +1015,7 @@
       "epicKey": "PLAT-1142",
       "parentKey": null,
       "created": "2026-09-08T10:11:23Z",
-      "updated": "2026-10-16T14:20:58Z",
+      "updated": "2026-10-19T12:41:36Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -1062,7 +1062,7 @@
           "to": "103"
         },
         {
-          "at": "2026-10-16T14:20:58Z",
+          "at": "2026-10-19T12:41:36Z",
           "authorId": "u-04",
           "field": "status",
           "from": "In Progress",
@@ -2060,7 +2060,7 @@
       "epicKey": "PLAT-1142",
       "parentKey": null,
       "created": "2026-09-22T15:27:58Z",
-      "updated": "2026-10-14T09:35:41Z",
+      "updated": "2026-10-14T12:52:27Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -2072,7 +2072,7 @@
           "to": "u-02"
         },
         {
-          "at": "2026-10-14T09:35:41Z",
+          "at": "2026-10-14T12:52:27Z",
           "authorId": "u-02",
           "field": "status",
           "from": "To Do",
@@ -2102,8 +2102,8 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-09-22T15:32:04Z",
-      "updated": "2026-10-14T13:50:53Z",
-      "resolved": "2026-10-14T13:50:53Z",
+      "updated": "2026-10-14T17:53:16Z",
+      "resolved": "2026-10-14T17:53:16Z",
       "dueDate": null,
       "changelog": [
         {
@@ -2114,28 +2114,28 @@
           "to": "u-02"
         },
         {
-          "at": "2026-10-12T12:46:00Z",
+          "at": "2026-10-12T13:23:43Z",
           "authorId": "u-02",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T17:17:12Z",
+          "at": "2026-10-13T09:43:25Z",
           "authorId": "u-02",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T12:16:27Z",
+          "at": "2026-10-13T14:25:25Z",
           "authorId": "u-02",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-14T13:50:53Z",
+          "at": "2026-10-14T17:53:16Z",
           "authorId": "u-02",
           "field": "status",
           "from": "QA",
@@ -2368,7 +2368,7 @@
       "epicKey": "PLAT-1100",
       "parentKey": null,
       "created": "2026-09-25T14:32:43Z",
-      "updated": "2026-10-15T15:04:53Z",
+      "updated": "2026-10-16T11:57:03Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -2380,7 +2380,7 @@
           "to": "u-02"
         },
         {
-          "at": "2026-10-15T15:04:53Z",
+          "at": "2026-10-16T11:57:03Z",
           "authorId": "u-02",
           "field": "status",
           "from": "To Do",
@@ -2467,8 +2467,8 @@
       "epicKey": "PLAT-1100",
       "parentKey": null,
       "created": "2026-09-28T09:05:06Z",
-      "updated": "2026-10-13T12:04:20Z",
-      "resolved": "2026-10-13T12:04:20Z",
+      "updated": "2026-10-13T14:11:08Z",
+      "resolved": "2026-10-13T14:11:08Z",
       "dueDate": null,
       "changelog": [
         {
@@ -2479,56 +2479,56 @@
           "to": "u-05"
         },
         {
-          "at": "2026-10-12T10:40:19Z",
+          "at": "2026-10-12T10:55:34Z",
           "authorId": "u-05",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T11:17:03Z",
+          "at": "2026-10-12T11:37:37Z",
           "authorId": "u-05",
           "field": "storyPoints",
           "from": "5",
           "to": "8"
         },
         {
-          "at": "2026-10-12T11:39:47Z",
+          "at": "2026-10-12T12:05:41Z",
           "authorId": "u-05",
           "field": "status",
           "from": "In Progress",
           "to": "Blocked"
         },
         {
-          "at": "2026-10-12T14:13:43Z",
+          "at": "2026-10-12T15:07:07Z",
           "authorId": "u-05",
           "field": "status",
           "from": "Blocked",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T15:40:03Z",
+          "at": "2026-10-12T16:48:54Z",
           "authorId": "u-05",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-12T17:04:07Z",
+          "at": "2026-10-13T09:27:58Z",
           "authorId": "u-03",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T10:19:52Z",
+          "at": "2026-10-13T12:08:00Z",
           "authorId": "u-05",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T12:04:20Z",
+          "at": "2026-10-13T14:11:08Z",
           "authorId": "u-03",
           "field": "status",
           "from": "In Review",
@@ -2656,8 +2656,8 @@
       "epicKey": "PLAT-1100",
       "parentKey": null,
       "created": "2026-09-28T11:04:11Z",
-      "updated": "2026-10-14T17:48:33Z",
-      "resolved": "2026-10-14T17:48:33Z",
+      "updated": "2026-10-15T13:33:26Z",
+      "resolved": "2026-10-15T13:33:26Z",
       "dueDate": null,
       "changelog": [
         {
@@ -2668,21 +2668,21 @@
           "to": "u-01"
         },
         {
-          "at": "2026-10-12T17:51:16Z",
+          "at": "2026-10-13T10:23:34Z",
           "authorId": "u-01",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-14T12:30:06Z",
+          "at": "2026-10-14T16:18:03Z",
           "authorId": "u-01",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-14T17:48:33Z",
+          "at": "2026-10-15T13:33:26Z",
           "authorId": "u-01",
           "field": "status",
           "from": "In Review",
@@ -2712,8 +2712,8 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-09-28T12:19:23Z",
-      "updated": "2026-10-15T16:25:06Z",
-      "resolved": "2026-10-15T16:25:06Z",
+      "updated": "2026-10-16T13:31:36Z",
+      "resolved": "2026-10-16T13:31:36Z",
       "dueDate": null,
       "changelog": [
         {
@@ -2724,35 +2724,35 @@
           "to": "u-01"
         },
         {
-          "at": "2026-10-13T11:27:30Z",
+          "at": "2026-10-13T13:27:43Z",
           "authorId": "u-01",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T22:38:46Z",
+          "at": "2026-10-14T01:18:33Z",
           "authorId": "u-04",
           "field": "assignee",
           "from": "u-01",
           "to": "u-04"
         },
         {
-          "at": "2026-10-14T09:50:02Z",
+          "at": "2026-10-14T13:09:22Z",
           "authorId": "u-04",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-15T11:55:22Z",
+          "at": "2026-10-15T17:13:39Z",
           "authorId": "u-03",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-15T16:25:06Z",
+          "at": "2026-10-16T13:31:36Z",
           "authorId": "u-05",
           "field": "status",
           "from": "QA",
@@ -2950,8 +2950,8 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-10-02T09:36:44Z",
-      "updated": "2026-10-15T15:54:56Z",
-      "resolved": "2026-10-15T15:54:56Z",
+      "updated": "2026-10-16T12:56:02Z",
+      "resolved": "2026-10-16T12:56:02Z",
       "dueDate": null,
       "changelog": [
         {
@@ -2962,21 +2962,21 @@
           "to": "u-03"
         },
         {
-          "at": "2026-10-13T14:47:58Z",
+          "at": "2026-10-13T17:24:02Z",
           "authorId": "u-03",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-15T09:36:16Z",
+          "at": "2026-10-15T14:29:41Z",
           "authorId": "u-03",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-15T15:54:56Z",
+          "at": "2026-10-16T12:56:02Z",
           "authorId": "u-02",
           "field": "status",
           "from": "In Review",
@@ -3006,7 +3006,7 @@
       "epicKey": "PLAT-1105",
       "parentKey": null,
       "created": "2026-10-05T09:39:48Z",
-      "updated": "2026-10-14T10:10:03Z",
+      "updated": "2026-10-14T13:32:58Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -3018,28 +3018,28 @@
           "to": "u-04"
         },
         {
-          "at": "2026-10-12T12:03:19Z",
+          "at": "2026-10-12T12:33:25Z",
           "authorId": "u-04",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T09:23:38Z",
+          "at": "2026-10-13T11:01:43Z",
           "authorId": "u-03",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T12:49:11Z",
+          "at": "2026-10-13T15:04:01Z",
           "authorId": "u-02",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-14T10:10:03Z",
+          "at": "2026-10-14T13:32:58Z",
           "authorId": "u-04",
           "field": "status",
           "from": "QA",
@@ -3069,8 +3069,8 @@
       "epicKey": "PLAT-1105",
       "parentKey": null,
       "created": "2026-10-05T15:53:03Z",
-      "updated": "2026-10-13T15:09:35Z",
-      "resolved": "2026-10-13T15:09:35Z",
+      "updated": "2026-10-13T17:49:30Z",
+      "resolved": "2026-10-13T17:49:30Z",
       "dueDate": null,
       "changelog": [
         {
@@ -3088,63 +3088,63 @@
           "to": "Highest"
         },
         {
-          "at": "2026-10-12T10:19:16Z",
+          "at": "2026-10-12T10:30:45Z",
           "authorId": "u-05",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T11:56:15Z",
+          "at": "2026-10-12T12:25:05Z",
           "authorId": "u-05",
           "field": "status",
           "from": "In Progress",
           "to": "Blocked"
         },
         {
-          "at": "2026-10-12T13:32:53Z",
+          "at": "2026-10-12T14:18:59Z",
           "authorId": "u-05",
           "field": "status",
           "from": "Blocked",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T15:57:26Z",
+          "at": "2026-10-12T17:09:23Z",
           "authorId": "u-05",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-12T17:47:17Z",
+          "at": "2026-10-13T10:18:52Z",
           "authorId": "u-04",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-13T10:38:56Z",
+          "at": "2026-10-13T12:30:28Z",
           "authorId": "u-05",
           "field": "status",
           "from": "QA",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T11:57:24Z",
+          "at": "2026-10-13T14:02:58Z",
           "authorId": "u-05",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T13:41:45Z",
+          "at": "2026-10-13T16:05:59Z",
           "authorId": "u-05",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-13T15:09:35Z",
+          "at": "2026-10-13T17:49:30Z",
           "authorId": "u-05",
           "field": "status",
           "from": "QA",
@@ -3174,7 +3174,7 @@
       "epicKey": "PLAT-1100",
       "parentKey": null,
       "created": "2026-10-05T16:38:42Z",
-      "updated": "2026-10-15T10:42:27Z",
+      "updated": "2026-10-15T15:47:42Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -3186,7 +3186,7 @@
           "to": "u-01"
         },
         {
-          "at": "2026-10-15T10:42:27Z",
+          "at": "2026-10-15T15:47:42Z",
           "authorId": "u-01",
           "field": "status",
           "from": "To Do",
@@ -3216,8 +3216,8 @@
       "epicKey": "PLAT-1105",
       "parentKey": null,
       "created": "2026-10-05T17:24:04Z",
-      "updated": "2026-10-15T12:09:06Z",
-      "resolved": "2026-10-15T12:09:06Z",
+      "updated": "2026-10-15T17:29:50Z",
+      "resolved": "2026-10-15T17:29:50Z",
       "dueDate": null,
       "changelog": [
         {
@@ -3228,28 +3228,28 @@
           "to": "u-04"
         },
         {
-          "at": "2026-10-12T15:29:05Z",
+          "at": "2026-10-12T16:35:58Z",
           "authorId": "u-04",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T13:15:05Z",
+          "at": "2026-10-13T15:34:32Z",
           "authorId": "u-04",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-14T12:58:29Z",
+          "at": "2026-10-14T16:51:30Z",
           "authorId": "u-05",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-15T12:09:06Z",
+          "at": "2026-10-15T17:29:50Z",
           "authorId": "u-01",
           "field": "status",
           "from": "QA",
@@ -3279,7 +3279,7 @@
       "epicKey": "PLAT-1105",
       "parentKey": null,
       "created": "2026-10-07T10:03:11Z",
-      "updated": "2026-10-15T13:46:43Z",
+      "updated": "2026-10-16T10:24:54Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -3291,7 +3291,7 @@
           "to": "u-01"
         },
         {
-          "at": "2026-10-15T13:46:43Z",
+          "at": "2026-10-16T10:24:54Z",
           "authorId": "u-02",
           "field": "status",
           "from": "To Do",
@@ -3357,8 +3357,8 @@
       "epicKey": "PLAT-1105",
       "parentKey": null,
       "created": "2026-10-08T16:16:33Z",
-      "updated": "2026-10-15T13:00:10Z",
-      "resolved": "2026-10-15T13:00:10Z",
+      "updated": "2026-10-16T09:30:01Z",
+      "resolved": "2026-10-16T09:30:01Z",
       "dueDate": null,
       "changelog": [
         {
@@ -3369,28 +3369,28 @@
           "to": "u-02"
         },
         {
-          "at": "2026-10-12T14:57:47Z",
+          "at": "2026-10-12T15:59:04Z",
           "authorId": "u-02",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T11:28:48Z",
+          "at": "2026-10-13T13:29:15Z",
           "authorId": "u-02",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-14T09:27:17Z",
+          "at": "2026-10-14T12:42:34Z",
           "authorId": "u-02",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-15T13:00:10Z",
+          "at": "2026-10-16T09:30:01Z",
           "authorId": "u-01",
           "field": "status",
           "from": "QA",
@@ -3456,8 +3456,8 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-10-12T09:55:35Z",
-      "updated": "2026-10-12T16:21:05Z",
-      "resolved": "2026-10-12T16:21:05Z",
+      "updated": "2026-10-12T17:28:43Z",
+      "resolved": "2026-10-12T17:28:43Z",
       "dueDate": null,
       "changelog": [
         {
@@ -3468,28 +3468,28 @@
           "to": "u-05"
         },
         {
-          "at": "2026-10-12T11:46:01Z",
+          "at": "2026-10-12T12:03:26Z",
           "authorId": "u-05",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T13:06:40Z",
+          "at": "2026-10-12T13:38:48Z",
           "authorId": "u-05",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-12T15:20:52Z",
+          "at": "2026-10-12T16:17:31Z",
           "authorId": "u-05",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-12T16:21:05Z",
+          "at": "2026-10-12T17:28:43Z",
           "authorId": "u-02",
           "field": "status",
           "from": "QA",
@@ -3519,7 +3519,7 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-10-12T12:08:53Z",
-      "updated": "2026-10-13T11:33:05Z",
+      "updated": "2026-10-13T13:07:09Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -3531,28 +3531,28 @@
           "to": "u-01"
         },
         {
-          "at": "2026-10-12T14:45:51Z",
+          "at": "2026-10-12T15:13:09Z",
           "authorId": "u-01",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T00:33:39Z",
+          "at": "2026-10-13T01:26:06Z",
           "authorId": "u-01",
           "field": "storyPoints",
           "from": "2",
           "to": "3"
         },
         {
-          "at": "2026-10-13T10:07:27Z",
+          "at": "2026-10-13T11:25:03Z",
           "authorId": "u-01",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T11:33:05Z",
+          "at": "2026-10-13T13:07:09Z",
           "authorId": "u-01",
           "field": "status",
           "from": "In Review",
@@ -3583,7 +3583,7 @@
       "epicKey": "PLAT-1105",
       "parentKey": null,
       "created": "2026-10-12T12:33:15Z",
-      "updated": "2026-10-16T16:39:38Z",
+      "updated": "2026-10-19T15:24:02Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -3595,7 +3595,7 @@
           "to": "u-03"
         },
         {
-          "at": "2026-10-16T16:39:38Z",
+          "at": "2026-10-19T15:24:02Z",
           "authorId": "u-03",
           "field": "status",
           "from": "To Do",
@@ -3625,7 +3625,7 @@
       "epicKey": "PLAT-1142",
       "parentKey": null,
       "created": "2026-10-12T14:21:51Z",
-      "updated": "2026-10-16T11:07:41Z",
+      "updated": "2026-10-16T17:43:56Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -3637,7 +3637,7 @@
           "to": "u-03"
         },
         {
-          "at": "2026-10-16T11:07:41Z",
+          "at": "2026-10-16T17:43:56Z",
           "authorId": "u-03",
           "field": "status",
           "from": "To Do",
@@ -3667,8 +3667,8 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-10-12T14:59:07Z",
-      "updated": "2026-10-16T10:17:56Z",
-      "resolved": "2026-10-16T10:17:56Z",
+      "updated": "2026-10-16T16:42:34Z",
+      "resolved": "2026-10-16T16:42:34Z",
       "dueDate": null,
       "changelog": [
         {
@@ -3679,28 +3679,28 @@
           "to": "u-04"
         },
         {
-          "at": "2026-10-13T13:08:31Z",
+          "at": "2026-10-13T14:34:02Z",
           "authorId": "u-04",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-14T13:45:14Z",
+          "at": "2026-10-14T17:09:46Z",
           "authorId": "u-04",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-15T13:07:50Z",
+          "at": "2026-10-16T09:16:06Z",
           "authorId": "u-04",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-16T10:17:56Z",
+          "at": "2026-10-16T16:42:34Z",
           "authorId": "u-01",
           "field": "status",
           "from": "QA",
@@ -3765,13 +3765,13 @@
       ],
       "epicKey": "PLAT-1142",
       "parentKey": null,
-      "created": "2026-10-13T15:21:55Z",
-      "updated": "2026-10-13T15:42:55Z",
+      "created": "2026-10-14T14:34:12Z",
+      "updated": "2026-10-14T14:55:12Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
         {
-          "at": "2026-10-13T15:42:55Z",
+          "at": "2026-10-14T14:55:12Z",
           "authorId": "u-03",
           "field": "assignee",
           "from": null,
@@ -3800,48 +3800,48 @@
       ],
       "epicKey": "PLAT-1142",
       "parentKey": null,
-      "created": "2026-10-14T12:01:30Z",
-      "updated": "2026-10-16T16:48:06Z",
+      "created": "2026-10-14T15:38:12Z",
+      "updated": "2026-10-19T15:34:48Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
         {
-          "at": "2026-10-14T13:12:30Z",
+          "at": "2026-10-14T16:49:12Z",
           "authorId": "u-01",
           "field": "assignee",
           "from": null,
           "to": "u-01"
         },
         {
-          "at": "2026-10-15T13:58:01Z",
+          "at": "2026-10-16T10:33:23Z",
           "authorId": "u-01",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-16T00:05:38Z",
+          "at": "2026-10-16T13:40:08Z",
           "authorId": "u-04",
           "field": "assignee",
           "from": "u-01",
           "to": "u-04"
         },
         {
-          "at": "2026-10-16T10:13:14Z",
+          "at": "2026-10-16T16:46:54Z",
           "authorId": "u-05",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-16T13:39:18Z",
+          "at": "2026-10-19T11:51:05Z",
           "authorId": "u-01",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-16T16:48:06Z",
+          "at": "2026-10-19T15:34:48Z",
           "authorId": "u-01",
           "field": "status",
           "from": "In Progress",
@@ -3852,41 +3852,6 @@
     {
       "key": "PLAT-1258",
       "id": "10058",
-      "summary": "Set up alerting for webhook failure rate",
-      "description": "Set up alerting for webhook failure rate. No user-facing change expected; coordinate with on-call before rolling out.",
-      "type": "Task",
-      "status": "To Do",
-      "statusCategory": "todo",
-      "priority": "Highest",
-      "assigneeId": "u-03",
-      "reporterId": "u-02",
-      "teamId": "TEAM-PLAT",
-      "sprintIds": [
-        103
-      ],
-      "storyPoints": 1,
-      "labels": [
-        "api"
-      ],
-      "epicKey": null,
-      "parentKey": null,
-      "created": "2026-10-14T13:14:25Z",
-      "updated": "2026-10-14T13:37:25Z",
-      "resolved": null,
-      "dueDate": null,
-      "changelog": [
-        {
-          "at": "2026-10-14T13:37:25Z",
-          "authorId": "u-02",
-          "field": "assignee",
-          "from": null,
-          "to": "u-03"
-        }
-      ]
-    },
-    {
-      "key": "PLAT-1259",
-      "id": "10059",
       "summary": "Load test the payments API at 2x peak (part 2)",
       "description": "Load test the payments API at 2x peak (part 2). No user-facing change expected; coordinate with on-call before rolling out.",
       "type": "Task",
@@ -3905,17 +3870,52 @@
       ],
       "epicKey": null,
       "parentKey": null,
-      "created": "2026-10-14T14:55:49Z",
-      "updated": "2026-10-14T15:06:49Z",
+      "created": "2026-10-14T16:11:47Z",
+      "updated": "2026-10-14T16:22:47Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
         {
-          "at": "2026-10-14T15:06:49Z",
+          "at": "2026-10-14T16:22:47Z",
           "authorId": "u-02",
           "field": "assignee",
           "from": null,
           "to": "u-01"
+        }
+      ]
+    },
+    {
+      "key": "PLAT-1259",
+      "id": "10059",
+      "summary": "Set up alerting for webhook failure rate",
+      "description": "Set up alerting for webhook failure rate. No user-facing change expected; coordinate with on-call before rolling out.",
+      "type": "Task",
+      "status": "To Do",
+      "statusCategory": "todo",
+      "priority": "Highest",
+      "assigneeId": "u-03",
+      "reporterId": "u-02",
+      "teamId": "TEAM-PLAT",
+      "sprintIds": [
+        103
+      ],
+      "storyPoints": 1,
+      "labels": [
+        "api"
+      ],
+      "epicKey": null,
+      "parentKey": null,
+      "created": "2026-10-14T17:04:58Z",
+      "updated": "2026-10-14T17:27:58Z",
+      "resolved": null,
+      "dueDate": null,
+      "changelog": [
+        {
+          "at": "2026-10-14T17:27:58Z",
+          "authorId": "u-02",
+          "field": "assignee",
+          "from": null,
+          "to": "u-03"
         }
       ]
     },
@@ -3940,8 +3940,8 @@
       ],
       "epicKey": "PLAT-1100",
       "parentKey": null,
-      "created": "2026-10-15T16:01:02Z",
-      "updated": "2026-10-15T16:01:02Z",
+      "created": "2026-10-16T10:33:44Z",
+      "updated": "2026-10-16T10:33:44Z",
       "resolved": null,
       "dueDate": null,
       "changelog": []
@@ -5159,7 +5159,7 @@
       "epicKey": "WEB-790",
       "parentKey": null,
       "created": "2026-09-11T14:01:33Z",
-      "updated": "2026-10-15T17:10:38Z",
+      "updated": "2026-10-16T14:24:40Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -5199,14 +5199,14 @@
           "to": "203"
         },
         {
-          "at": "2026-10-14T11:18:22Z",
+          "at": "2026-10-14T14:52:00Z",
           "authorId": "u-07",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-15T17:10:38Z",
+          "at": "2026-10-16T14:24:40Z",
           "authorId": "u-09",
           "field": "status",
           "from": "In Progress",
@@ -5752,7 +5752,7 @@
       "epicKey": "WEB-790",
       "parentKey": null,
       "created": "2026-09-16T16:22:29Z",
-      "updated": "2026-10-13T10:29:23Z",
+      "updated": "2026-10-13T12:17:08Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -5778,21 +5778,21 @@
           "to": "203"
         },
         {
-          "at": "2026-10-12T12:15:39Z",
+          "at": "2026-10-12T12:45:26Z",
           "authorId": "u-09",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-12T15:38:54Z",
+          "at": "2026-10-12T16:45:13Z",
           "authorId": "u-09",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T10:29:23Z",
+          "at": "2026-10-13T12:17:08Z",
           "authorId": "u-09",
           "field": "status",
           "from": "In Progress",
@@ -6154,7 +6154,7 @@
       "epicKey": "WEB-790",
       "parentKey": null,
       "created": "2026-09-22T10:17:09Z",
-      "updated": "2026-10-14T10:27:21Z",
+      "updated": "2026-10-14T13:53:21Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -6166,7 +6166,7 @@
           "to": "u-08"
         },
         {
-          "at": "2026-10-14T10:27:21Z",
+          "at": "2026-10-14T13:53:21Z",
           "authorId": "u-08",
           "field": "status",
           "from": "To Do",
@@ -6197,8 +6197,8 @@
       "epicKey": "WEB-790",
       "parentKey": null,
       "created": "2026-09-22T16:09:24Z",
-      "updated": "2026-10-15T09:20:32Z",
-      "resolved": "2026-10-15T09:20:32Z",
+      "updated": "2026-10-15T14:11:08Z",
+      "resolved": "2026-10-15T14:11:08Z",
       "dueDate": null,
       "changelog": [
         {
@@ -6209,21 +6209,21 @@
           "to": "u-08"
         },
         {
-          "at": "2026-10-13T09:36:17Z",
+          "at": "2026-10-13T11:16:37Z",
           "authorId": "u-14",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-14T13:22:24Z",
+          "at": "2026-10-14T17:19:42Z",
           "authorId": "u-08",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-15T09:20:32Z",
+          "at": "2026-10-15T14:11:08Z",
           "authorId": "u-08",
           "field": "status",
           "from": "In Review",
@@ -6254,8 +6254,8 @@
       "epicKey": "WEB-700",
       "parentKey": null,
       "created": "2026-09-23T13:41:59Z",
-      "updated": "2026-10-13T12:42:17Z",
-      "resolved": "2026-10-13T12:42:17Z",
+      "updated": "2026-10-13T14:55:52Z",
+      "resolved": "2026-10-13T14:55:52Z",
       "dueDate": null,
       "changelog": [
         {
@@ -6266,28 +6266,28 @@
           "to": "u-07"
         },
         {
-          "at": "2026-10-12T12:05:04Z",
+          "at": "2026-10-12T12:35:28Z",
           "authorId": "u-07",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T14:55:46Z",
+          "at": "2026-10-12T15:56:42Z",
           "authorId": "u-07",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T09:14:51Z",
+          "at": "2026-10-13T10:51:22Z",
           "authorId": "u-07",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-13T12:42:17Z",
+          "at": "2026-10-13T14:55:52Z",
           "authorId": "u-07",
           "field": "status",
           "from": "QA",
@@ -6318,8 +6318,8 @@
       "epicKey": "WEB-790",
       "parentKey": null,
       "created": "2026-09-23T14:59:46Z",
-      "updated": "2026-10-13T10:58:11Z",
-      "resolved": "2026-10-13T10:58:11Z",
+      "updated": "2026-10-13T12:53:10Z",
+      "resolved": "2026-10-13T12:53:10Z",
       "dueDate": null,
       "changelog": [
         {
@@ -6330,28 +6330,28 @@
           "to": "u-08"
         },
         {
-          "at": "2026-10-12T13:07:54Z",
+          "at": "2026-10-12T13:49:32Z",
           "authorId": "u-08",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T14:49:55Z",
+          "at": "2026-10-12T15:49:48Z",
           "authorId": "u-08",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T09:14:04Z",
+          "at": "2026-10-13T10:50:26Z",
           "authorId": "u-08",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-13T10:58:11Z",
+          "at": "2026-10-13T12:53:10Z",
           "authorId": "u-06",
           "field": "status",
           "from": "QA",
@@ -6382,8 +6382,8 @@
       "epicKey": "WEB-790",
       "parentKey": null,
       "created": "2026-09-23T16:22:33Z",
-      "updated": "2026-10-15T11:57:22Z",
-      "resolved": "2026-10-15T11:57:22Z",
+      "updated": "2026-10-15T17:16:00Z",
+      "resolved": "2026-10-15T17:16:00Z",
       "dueDate": null,
       "changelog": [
         {
@@ -6394,35 +6394,35 @@
           "to": "u-03"
         },
         {
-          "at": "2026-10-12T15:43:12Z",
+          "at": "2026-10-12T16:52:36Z",
           "authorId": "u-08",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T13:24:52Z",
+          "at": "2026-10-13T15:46:05Z",
           "authorId": "u-03",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-14T10:50:21Z",
+          "at": "2026-10-14T14:20:29Z",
           "authorId": "u-03",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-14T17:43:13Z",
+          "at": "2026-10-15T13:27:08Z",
           "authorId": "u-06",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-15T11:57:22Z",
+          "at": "2026-10-15T17:16:00Z",
           "authorId": "u-03",
           "field": "status",
           "from": "In Review",
@@ -6551,8 +6551,8 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-09-24T12:52:35Z",
-      "updated": "2026-10-13T14:43:36Z",
-      "resolved": "2026-10-13T14:43:36Z",
+      "updated": "2026-10-13T17:18:53Z",
+      "resolved": "2026-10-13T17:18:53Z",
       "dueDate": null,
       "changelog": [
         {
@@ -6563,21 +6563,21 @@
           "to": "u-07"
         },
         {
-          "at": "2026-10-12T15:14:07Z",
+          "at": "2026-10-12T16:18:20Z",
           "authorId": "u-07",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T11:48:04Z",
+          "at": "2026-10-13T13:51:58Z",
           "authorId": "u-07",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T14:43:36Z",
+          "at": "2026-10-13T17:18:53Z",
           "authorId": "u-03",
           "field": "status",
           "from": "In Review",
@@ -6607,8 +6607,8 @@
       "epicKey": "WEB-790",
       "parentKey": null,
       "created": "2026-09-24T16:03:41Z",
-      "updated": "2026-10-12T15:32:40Z",
-      "resolved": "2026-10-12T15:32:40Z",
+      "updated": "2026-10-12T16:40:11Z",
+      "resolved": "2026-10-12T16:40:11Z",
       "dueDate": null,
       "changelog": [
         {
@@ -6619,28 +6619,28 @@
           "to": "u-14"
         },
         {
-          "at": "2026-10-12T11:13:37Z",
+          "at": "2026-10-12T11:34:49Z",
           "authorId": "u-14",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T13:26:04Z",
+          "at": "2026-10-12T14:10:57Z",
           "authorId": "u-14",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-12T14:46:58Z",
+          "at": "2026-10-12T15:46:19Z",
           "authorId": "u-08",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-12T15:32:40Z",
+          "at": "2026-10-12T16:40:11Z",
           "authorId": "u-09",
           "field": "status",
           "from": "QA",
@@ -6697,8 +6697,8 @@
       "epicKey": "WEB-790",
       "parentKey": null,
       "created": "2026-09-25T11:01:01Z",
-      "updated": "2026-10-15T14:55:45Z",
-      "resolved": "2026-10-15T14:55:45Z",
+      "updated": "2026-10-16T11:46:17Z",
+      "resolved": "2026-10-16T11:46:17Z",
       "dueDate": null,
       "changelog": [
         {
@@ -6709,21 +6709,21 @@
           "to": "u-07"
         },
         {
-          "at": "2026-10-13T13:23:25Z",
+          "at": "2026-10-13T15:44:21Z",
           "authorId": "u-07",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-14T12:13:54Z",
+          "at": "2026-10-14T15:58:58Z",
           "authorId": "u-07",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-15T14:55:45Z",
+          "at": "2026-10-16T11:46:17Z",
           "authorId": "u-07",
           "field": "status",
           "from": "In Review",
@@ -6754,7 +6754,7 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-09-28T14:06:07Z",
-      "updated": "2026-10-15T11:40:24Z",
+      "updated": "2026-10-15T16:56:00Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -6766,28 +6766,28 @@
           "to": "u-06"
         },
         {
-          "at": "2026-10-12T16:01:26Z",
+          "at": "2026-10-12T17:14:05Z",
           "authorId": "u-06",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T13:04:20Z",
+          "at": "2026-10-13T15:21:52Z",
           "authorId": "u-06",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-14T14:47:58Z",
+          "at": "2026-10-15T10:00:33Z",
           "authorId": "u-06",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-15T11:40:24Z",
+          "at": "2026-10-15T16:56:00Z",
           "authorId": "u-06",
           "field": "status",
           "from": "In Progress",
@@ -6818,7 +6818,7 @@
       "epicKey": "WEB-700",
       "parentKey": null,
       "created": "2026-09-28T14:20:00Z",
-      "updated": "2026-10-14T17:15:16Z",
+      "updated": "2026-10-15T12:54:12Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -6830,35 +6830,35 @@
           "to": "u-08"
         },
         {
-          "at": "2026-10-12T12:20:09Z",
+          "at": "2026-10-12T12:53:15Z",
           "authorId": "u-08",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T17:12:05Z",
+          "at": "2026-10-13T09:37:22Z",
           "authorId": "u-08",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T15:08:15Z",
+          "at": "2026-10-13T17:47:56Z",
           "authorId": "u-14",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-14T10:48:50Z",
+          "at": "2026-10-14T14:18:41Z",
           "authorId": "u-08",
           "field": "status",
           "from": "QA",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-14T17:15:16Z",
+          "at": "2026-10-15T12:54:12Z",
           "authorId": "u-08",
           "field": "status",
           "from": "In Progress",
@@ -6888,7 +6888,7 @@
       "epicKey": "WEB-790",
       "parentKey": null,
       "created": "2026-09-28T15:20:53Z",
-      "updated": "2026-10-12T16:26:00Z",
+      "updated": "2026-10-12T17:43:04Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -6900,14 +6900,14 @@
           "to": "u-03"
         },
         {
-          "at": "2026-10-12T11:44:34Z",
+          "at": "2026-10-12T12:11:18Z",
           "authorId": "u-03",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T16:26:00Z",
+          "at": "2026-10-12T17:43:04Z",
           "authorId": "u-14",
           "field": "status",
           "from": "In Progress",
@@ -6937,7 +6937,7 @@
       "epicKey": "WEB-700",
       "parentKey": null,
       "created": "2026-09-28T15:25:23Z",
-      "updated": "2026-10-14T12:50:03Z",
+      "updated": "2026-10-14T16:41:34Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -6949,28 +6949,28 @@
           "to": "u-06"
         },
         {
-          "at": "2026-10-12T17:01:50Z",
+          "at": "2026-10-13T09:25:17Z",
           "authorId": "u-06",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T10:23:48Z",
+          "at": "2026-10-13T12:12:39Z",
           "authorId": "u-06",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T14:07:28Z",
+          "at": "2026-10-13T16:36:17Z",
           "authorId": "u-07",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-14T12:50:03Z",
+          "at": "2026-10-14T16:41:34Z",
           "authorId": "u-14",
           "field": "status",
           "from": "QA",
@@ -7000,7 +7000,7 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-09-30T16:40:25Z",
-      "updated": "2026-10-14T11:13:45Z",
+      "updated": "2026-10-14T14:48:03Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -7012,7 +7012,7 @@
           "to": "u-09"
         },
         {
-          "at": "2026-10-14T11:13:45Z",
+          "at": "2026-10-14T14:48:03Z",
           "authorId": "u-09",
           "field": "status",
           "from": "To Do",
@@ -7043,7 +7043,7 @@
       "epicKey": "WEB-700",
       "parentKey": null,
       "created": "2026-10-02T16:42:01Z",
-      "updated": "2026-10-15T16:42:30Z",
+      "updated": "2026-10-16T13:52:06Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -7055,14 +7055,14 @@
           "to": "u-07"
         },
         {
-          "at": "2026-10-14T13:20:26Z",
+          "at": "2026-10-14T17:17:23Z",
           "authorId": "u-07",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-15T16:42:30Z",
+          "at": "2026-10-16T13:52:06Z",
           "authorId": "u-07",
           "field": "status",
           "from": "In Progress",
@@ -7092,7 +7092,7 @@
       "epicKey": "WEB-722",
       "parentKey": null,
       "created": "2026-10-05T11:31:54Z",
-      "updated": "2026-10-12T13:48:26Z",
+      "updated": "2026-10-12T14:37:19Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -7104,14 +7104,14 @@
           "to": "u-14"
         },
         {
-          "at": "2026-10-12T11:35:29Z",
+          "at": "2026-10-12T12:00:36Z",
           "authorId": "u-14",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T13:48:26Z",
+          "at": "2026-10-12T14:37:19Z",
           "authorId": "u-14",
           "field": "status",
           "from": "In Progress",
@@ -7141,8 +7141,8 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-10-05T12:38:43Z",
-      "updated": "2026-10-14T12:58:02Z",
-      "resolved": "2026-10-14T12:58:02Z",
+      "updated": "2026-10-14T16:50:58Z",
+      "resolved": "2026-10-14T16:50:58Z",
       "dueDate": null,
       "changelog": [
         {
@@ -7153,56 +7153,56 @@
           "to": "u-06"
         },
         {
-          "at": "2026-10-12T11:18:39Z",
+          "at": "2026-10-12T11:40:46Z",
           "authorId": "u-06",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T15:37:02Z",
+          "at": "2026-10-12T16:45:20Z",
           "authorId": "u-06",
           "field": "status",
           "from": "In Progress",
           "to": "Blocked"
         },
         {
-          "at": "2026-10-13T09:28:59Z",
+          "at": "2026-10-13T11:08:01Z",
           "authorId": "u-06",
           "field": "status",
           "from": "Blocked",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T12:25:27Z",
+          "at": "2026-10-13T14:36:02Z",
           "authorId": "u-06",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T14:56:23Z",
+          "at": "2026-10-13T17:33:57Z",
           "authorId": "u-06",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T17:27:15Z",
+          "at": "2026-10-14T11:31:47Z",
           "authorId": "u-06",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-14T11:24:58Z",
+          "at": "2026-10-14T15:01:17Z",
           "authorId": "u-06",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-14T12:58:02Z",
+          "at": "2026-10-14T16:50:58Z",
           "authorId": "u-07",
           "field": "status",
           "from": "QA",
@@ -7232,7 +7232,7 @@
       "epicKey": "WEB-790",
       "parentKey": null,
       "created": "2026-10-07T15:08:54Z",
-      "updated": "2026-10-16T09:49:53Z",
+      "updated": "2026-10-16T16:22:16Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -7244,7 +7244,7 @@
           "to": "u-03"
         },
         {
-          "at": "2026-10-16T09:49:53Z",
+          "at": "2026-10-16T16:22:16Z",
           "authorId": "u-03",
           "field": "status",
           "from": "To Do",
@@ -7273,8 +7273,8 @@
       ],
       "epicKey": null,
       "parentKey": null,
-      "created": "2026-10-08T10:54:20Z",
-      "updated": "2026-10-08T10:54:20Z",
+      "created": "2026-10-08T17:06:12Z",
+      "updated": "2026-10-08T17:06:12Z",
       "resolved": null,
       "dueDate": null,
       "changelog": []
@@ -7400,7 +7400,7 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-10-12T15:18:29Z",
-      "updated": "2026-10-14T17:32:25Z",
+      "updated": "2026-10-15T12:41:55Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -7412,7 +7412,7 @@
           "to": "u-08"
         },
         {
-          "at": "2026-10-14T17:32:25Z",
+          "at": "2026-10-15T12:41:55Z",
           "authorId": "u-08",
           "field": "status",
           "from": "To Do",
@@ -7442,8 +7442,8 @@
       ],
       "epicKey": "WEB-700",
       "parentKey": null,
-      "created": "2026-10-14T16:16:02Z",
-      "updated": "2026-10-14T16:16:02Z",
+      "created": "2026-10-14T17:59:49Z",
+      "updated": "2026-10-14T17:59:49Z",
       "resolved": null,
       "dueDate": null,
       "changelog": []
@@ -7470,55 +7470,55 @@
       ],
       "epicKey": "WEB-722",
       "parentKey": null,
-      "created": "2026-10-15T09:29:53Z",
-      "updated": "2026-10-16T11:26:20Z",
-      "resolved": "2026-10-16T11:26:20Z",
+      "created": "2026-10-15T14:20:18Z",
+      "updated": "2026-10-19T09:14:14Z",
+      "resolved": "2026-10-19T09:14:14Z",
       "dueDate": null,
       "changelog": [
         {
-          "at": "2026-10-15T10:58:53Z",
+          "at": "2026-10-15T15:49:18Z",
           "authorId": "u-09",
           "field": "assignee",
           "from": null,
           "to": "u-08"
         },
         {
-          "at": "2026-10-15T11:50:44Z",
+          "at": "2026-10-15T17:04:12Z",
           "authorId": "u-08",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-15T14:13:09Z",
+          "at": "2026-10-16T10:52:42Z",
           "authorId": "u-08",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-15T15:58:39Z",
+          "at": "2026-10-16T12:57:32Z",
           "authorId": "u-08",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-15T17:13:24Z",
+          "at": "2026-10-16T14:25:58Z",
           "authorId": "u-08",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-16T10:42:39Z",
+          "at": "2026-10-16T17:22:32Z",
           "authorId": "u-14",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-16T11:26:20Z",
+          "at": "2026-10-19T09:14:14Z",
           "authorId": "u-06",
           "field": "status",
           "from": "QA",
@@ -8775,8 +8775,8 @@
       "epicKey": "MOB-400",
       "parentKey": null,
       "created": "2026-09-14T10:02:54Z",
-      "updated": "2026-10-14T12:31:07Z",
-      "resolved": "2026-10-14T12:31:07Z",
+      "updated": "2026-10-14T16:17:50Z",
+      "resolved": "2026-10-14T16:17:50Z",
       "dueDate": null,
       "changelog": [
         {
@@ -8808,14 +8808,14 @@
           "to": "303"
         },
         {
-          "at": "2026-10-13T11:08:02Z",
+          "at": "2026-10-13T13:02:45Z",
           "authorId": "u-13",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-14T12:31:07Z",
+          "at": "2026-10-14T16:17:50Z",
           "authorId": "u-13",
           "field": "status",
           "from": "QA",
@@ -9066,7 +9066,7 @@
       "epicKey": "MOB-431",
       "parentKey": null,
       "created": "2026-09-14T14:48:24Z",
-      "updated": "2026-10-16T13:02:30Z",
+      "updated": "2026-10-19T11:09:01Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -9113,14 +9113,14 @@
           "to": "303"
         },
         {
-          "at": "2026-10-14T09:01:46Z",
+          "at": "2026-10-14T12:10:52Z",
           "authorId": "u-10",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-16T13:02:30Z",
+          "at": "2026-10-19T11:09:01Z",
           "authorId": "u-13",
           "field": "status",
           "from": "QA",
@@ -9151,7 +9151,7 @@
       "epicKey": "MOB-466",
       "parentKey": null,
       "created": "2026-09-14T15:30:47Z",
-      "updated": "2026-10-15T14:58:05Z",
+      "updated": "2026-10-16T11:48:18Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -9184,14 +9184,14 @@
           "to": "303"
         },
         {
-          "at": "2026-10-13T15:27:43Z",
+          "at": "2026-10-14T09:09:07Z",
           "authorId": "u-13",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-15T14:58:05Z",
+          "at": "2026-10-16T11:48:18Z",
           "authorId": "u-13",
           "field": "status",
           "from": "In Progress",
@@ -9223,8 +9223,8 @@
       "epicKey": "MOB-466",
       "parentKey": null,
       "created": "2026-09-15T12:14:47Z",
-      "updated": "2026-10-14T10:22:49Z",
-      "resolved": "2026-10-14T10:22:49Z",
+      "updated": "2026-10-14T13:46:28Z",
+      "resolved": "2026-10-14T13:46:28Z",
       "dueDate": null,
       "changelog": [
         {
@@ -9256,14 +9256,14 @@
           "to": "303"
         },
         {
-          "at": "2026-10-12T14:00:46Z",
+          "at": "2026-10-12T14:49:27Z",
           "authorId": "u-11",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-14T10:22:49Z",
+          "at": "2026-10-14T13:46:28Z",
           "authorId": "u-10",
           "field": "status",
           "from": "QA",
@@ -9475,7 +9475,7 @@
       "epicKey": "MOB-400",
       "parentKey": null,
       "created": "2026-09-22T11:09:34Z",
-      "updated": "2026-10-15T15:13:51Z",
+      "updated": "2026-10-16T12:07:37Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -9487,28 +9487,28 @@
           "to": "u-12"
         },
         {
-          "at": "2026-10-12T16:25:58Z",
+          "at": "2026-10-12T17:43:00Z",
           "authorId": "u-12",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T14:08:50Z",
+          "at": "2026-10-13T16:37:54Z",
           "authorId": "u-12",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-14T14:20:25Z",
+          "at": "2026-10-15T09:28:05Z",
           "authorId": "u-12",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-15T15:13:51Z",
+          "at": "2026-10-16T12:07:37Z",
           "authorId": "u-12",
           "field": "status",
           "from": "In Progress",
@@ -9539,7 +9539,7 @@
       "epicKey": "MOB-431",
       "parentKey": null,
       "created": "2026-09-22T11:25:46Z",
-      "updated": "2026-10-14T17:15:42Z",
+      "updated": "2026-10-15T12:54:43Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -9551,21 +9551,21 @@
           "to": "u-13"
         },
         {
-          "at": "2026-10-12T16:30:45Z",
+          "at": "2026-10-12T17:48:39Z",
           "authorId": "u-13",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-14T11:52:47Z",
+          "at": "2026-10-14T15:34:03Z",
           "authorId": "u-11",
           "field": "status",
           "from": "In Progress",
           "to": "Blocked"
         },
         {
-          "at": "2026-10-14T17:15:42Z",
+          "at": "2026-10-15T12:54:43Z",
           "authorId": "u-12",
           "field": "status",
           "from": "Blocked",
@@ -9596,7 +9596,7 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-09-22T13:13:52Z",
-      "updated": "2026-10-16T09:32:03Z",
+      "updated": "2026-10-16T16:01:15Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -9615,28 +9615,28 @@
           "to": "Highest"
         },
         {
-          "at": "2026-10-12T13:47:17Z",
+          "at": "2026-10-12T14:35:58Z",
           "authorId": "u-11",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T10:34:29Z",
+          "at": "2026-10-13T12:25:14Z",
           "authorId": "u-13",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-14T13:27:53Z",
+          "at": "2026-10-14T17:26:10Z",
           "authorId": "u-11",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-16T09:32:03Z",
+          "at": "2026-10-16T16:01:15Z",
           "authorId": "u-11",
           "field": "status",
           "from": "In Progress",
@@ -9744,8 +9744,8 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-09-22T16:36:02Z",
-      "updated": "2026-10-16T11:00:21Z",
-      "resolved": "2026-10-16T11:00:21Z",
+      "updated": "2026-10-16T17:45:20Z",
+      "resolved": "2026-10-16T17:45:20Z",
       "dueDate": null,
       "changelog": [
         {
@@ -9756,21 +9756,21 @@
           "to": "u-11"
         },
         {
-          "at": "2026-10-13T14:01:49Z",
+          "at": "2026-10-13T16:29:38Z",
           "authorId": "u-11",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-15T09:23:09Z",
+          "at": "2026-10-15T14:14:13Z",
           "authorId": "u-12",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-16T11:00:21Z",
+          "at": "2026-10-16T17:45:20Z",
           "authorId": "u-10",
           "field": "status",
           "from": "In Review",
@@ -9828,8 +9828,8 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-09-23T11:09:55Z",
-      "updated": "2026-10-13T13:34:52Z",
-      "resolved": "2026-10-13T13:34:52Z",
+      "updated": "2026-10-13T15:57:52Z",
+      "resolved": "2026-10-13T15:57:52Z",
       "dueDate": null,
       "changelog": [
         {
@@ -9840,28 +9840,28 @@
           "to": "u-12"
         },
         {
-          "at": "2026-10-12T12:40:35Z",
+          "at": "2026-10-12T13:17:20Z",
           "authorId": "u-12",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T16:34:07Z",
+          "at": "2026-10-12T17:52:37Z",
           "authorId": "u-12",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T09:37:15Z",
+          "at": "2026-10-13T11:17:46Z",
           "authorId": "u-11",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-13T13:34:52Z",
+          "at": "2026-10-13T15:57:52Z",
           "authorId": "u-10",
           "field": "status",
           "from": "QA",
@@ -9892,7 +9892,7 @@
       "epicKey": "MOB-400",
       "parentKey": null,
       "created": "2026-09-23T16:37:41Z",
-      "updated": "2026-10-14T12:11:29Z",
+      "updated": "2026-10-14T15:56:07Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -9904,28 +9904,28 @@
           "to": "u-12"
         },
         {
-          "at": "2026-10-12T13:54:19Z",
+          "at": "2026-10-12T14:44:15Z",
           "authorId": "u-12",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T02:44:06Z",
+          "at": "2026-10-13T11:59:57Z",
           "authorId": "u-12",
           "field": "storyPoints",
           "from": "8",
           "to": "2"
         },
         {
-          "at": "2026-10-13T15:19:53Z",
+          "at": "2026-10-14T09:01:39Z",
           "authorId": "u-12",
           "field": "status",
           "from": "In Progress",
           "to": "Blocked"
         },
         {
-          "at": "2026-10-14T12:11:29Z",
+          "at": "2026-10-14T15:56:07Z",
           "authorId": "u-12",
           "field": "status",
           "from": "Blocked",
@@ -10026,8 +10026,8 @@
       "epicKey": "MOB-400",
       "parentKey": null,
       "created": "2026-09-24T11:26:03Z",
-      "updated": "2026-10-16T09:45:01Z",
-      "resolved": "2026-10-16T09:45:01Z",
+      "updated": "2026-10-16T16:16:32Z",
+      "resolved": "2026-10-16T16:16:32Z",
       "dueDate": null,
       "changelog": [
         {
@@ -10038,35 +10038,35 @@
           "to": "u-11"
         },
         {
-          "at": "2026-10-13T09:33:16Z",
+          "at": "2026-10-13T11:13:05Z",
           "authorId": "u-11",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T13:14:05Z",
+          "at": "2026-10-13T23:03:22Z",
           "authorId": "u-12",
           "field": "assignee",
           "from": "u-11",
           "to": "u-12"
         },
         {
-          "at": "2026-10-13T16:54:54Z",
+          "at": "2026-10-14T10:53:39Z",
           "authorId": "u-11",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-14T14:45:19Z",
+          "at": "2026-10-15T09:57:26Z",
           "authorId": "u-11",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-16T09:45:01Z",
+          "at": "2026-10-16T16:16:32Z",
           "authorId": "u-11",
           "field": "status",
           "from": "QA",
@@ -10160,7 +10160,7 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-09-25T11:44:56Z",
-      "updated": "2026-10-16T13:27:26Z",
+      "updated": "2026-10-19T11:38:43Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -10172,14 +10172,14 @@
           "to": "u-11"
         },
         {
-          "at": "2026-10-14T10:46:22Z",
+          "at": "2026-10-14T14:15:47Z",
           "authorId": "u-10",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-16T13:27:26Z",
+          "at": "2026-10-19T11:38:43Z",
           "authorId": "u-12",
           "field": "status",
           "from": "In Progress",
@@ -10399,7 +10399,7 @@
       "epicKey": "MOB-400",
       "parentKey": null,
       "created": "2026-09-29T13:47:54Z",
-      "updated": "2026-10-14T12:08:15Z",
+      "updated": "2026-10-14T15:52:18Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -10411,28 +10411,28 @@
           "to": "u-11"
         },
         {
-          "at": "2026-10-12T13:11:29Z",
+          "at": "2026-10-12T13:53:46Z",
           "authorId": "u-11",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T15:38:49Z",
+          "at": "2026-10-12T16:47:27Z",
           "authorId": "u-11",
           "field": "status",
           "from": "In Progress",
           "to": "Blocked"
         },
         {
-          "at": "2026-10-13T11:57:39Z",
+          "at": "2026-10-13T14:03:16Z",
           "authorId": "u-10",
           "field": "status",
           "from": "Blocked",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-14T12:08:15Z",
+          "at": "2026-10-14T15:52:18Z",
           "authorId": "u-11",
           "field": "status",
           "from": "In Progress",
@@ -10462,7 +10462,7 @@
       "epicKey": "MOB-466",
       "parentKey": null,
       "created": "2026-09-29T15:27:29Z",
-      "updated": "2026-10-13T09:01:34Z",
+      "updated": "2026-10-13T10:35:42Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -10474,7 +10474,7 @@
           "to": "u-11"
         },
         {
-          "at": "2026-10-13T09:01:34Z",
+          "at": "2026-10-13T10:35:42Z",
           "authorId": "u-11",
           "field": "status",
           "from": "To Do",
@@ -10504,7 +10504,7 @@
       "epicKey": "MOB-431",
       "parentKey": null,
       "created": "2026-09-30T10:36:59Z",
-      "updated": "2026-10-14T17:39:34Z",
+      "updated": "2026-10-15T13:22:50Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -10516,28 +10516,28 @@
           "to": "u-12"
         },
         {
-          "at": "2026-10-12T17:43:07Z",
+          "at": "2026-10-13T10:13:57Z",
           "authorId": "u-11",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T12:55:05Z",
+          "at": "2026-10-13T15:10:58Z",
           "authorId": "u-12",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-14T09:23:18Z",
+          "at": "2026-10-14T12:37:51Z",
           "authorId": "u-12",
           "field": "status",
           "from": "In Review",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-14T17:39:34Z",
+          "at": "2026-10-15T13:22:50Z",
           "authorId": "u-12",
           "field": "status",
           "from": "In Progress",
@@ -10595,7 +10595,7 @@
       "epicKey": "MOB-431",
       "parentKey": null,
       "created": "2026-10-01T17:37:28Z",
-      "updated": "2026-10-12T13:17:35Z",
+      "updated": "2026-10-12T14:00:58Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -10607,7 +10607,7 @@
           "to": "u-11"
         },
         {
-          "at": "2026-10-12T13:17:35Z",
+          "at": "2026-10-12T14:00:58Z",
           "authorId": "u-11",
           "field": "status",
           "from": "To Do",
@@ -10638,7 +10638,7 @@
       "epicKey": "MOB-400",
       "parentKey": null,
       "created": "2026-10-05T11:05:41Z",
-      "updated": "2026-10-16T15:49:31Z",
+      "updated": "2026-10-19T14:26:12Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -10650,7 +10650,7 @@
           "to": "u-12"
         },
         {
-          "at": "2026-10-16T15:49:31Z",
+          "at": "2026-10-19T14:26:12Z",
           "authorId": "u-12",
           "field": "status",
           "from": "To Do",
@@ -10680,7 +10680,7 @@
       "epicKey": "MOB-431",
       "parentKey": null,
       "created": "2026-10-05T14:47:21Z",
-      "updated": "2026-10-16T10:00:29Z",
+      "updated": "2026-10-16T16:34:46Z",
       "resolved": null,
       "dueDate": "2026-10-23T17:00:00Z",
       "changelog": [
@@ -10692,42 +10692,42 @@
           "to": "u-13"
         },
         {
-          "at": "2026-10-12T12:06:27Z",
+          "at": "2026-10-12T12:37:06Z",
           "authorId": "u-13",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-13T10:00:25Z",
+          "at": "2026-10-13T11:45:05Z",
           "authorId": "u-13",
           "field": "status",
           "from": "In Progress",
           "to": "Blocked"
         },
         {
-          "at": "2026-10-13T17:49:20Z",
+          "at": "2026-10-14T11:57:49Z",
           "authorId": "u-11",
           "field": "status",
           "from": "Blocked",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-14T17:16:24Z",
+          "at": "2026-10-15T12:55:32Z",
           "authorId": "u-13",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-15T13:16:11Z",
+          "at": "2026-10-16T09:48:54Z",
           "authorId": "u-12",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-16T10:00:29Z",
+          "at": "2026-10-16T16:34:46Z",
           "authorId": "u-13",
           "field": "status",
           "from": "QA",
@@ -10757,7 +10757,7 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-10-05T14:49:50Z",
-      "updated": "2026-10-13T14:01:31Z",
+      "updated": "2026-10-13T16:29:17Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -10769,7 +10769,7 @@
           "to": "u-13"
         },
         {
-          "at": "2026-10-13T14:01:31Z",
+          "at": "2026-10-13T16:29:17Z",
           "authorId": "u-13",
           "field": "status",
           "from": "To Do",
@@ -10800,7 +10800,7 @@
       "epicKey": null,
       "parentKey": null,
       "created": "2026-10-06T13:26:58Z",
-      "updated": "2026-10-16T15:08:12Z",
+      "updated": "2026-10-19T13:37:30Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -10812,7 +10812,7 @@
           "to": "u-10"
         },
         {
-          "at": "2026-10-16T15:08:12Z",
+          "at": "2026-10-19T13:37:30Z",
           "authorId": "u-10",
           "field": "status",
           "from": "To Do",
@@ -10842,7 +10842,7 @@
       "epicKey": "MOB-431",
       "parentKey": null,
       "created": "2026-10-12T09:06:38Z",
-      "updated": "2026-10-14T12:43:30Z",
+      "updated": "2026-10-14T16:33:13Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
@@ -10854,28 +10854,28 @@
           "to": "u-13"
         },
         {
-          "at": "2026-10-12T12:38:11Z",
+          "at": "2026-10-12T13:13:25Z",
           "authorId": "u-13",
           "field": "status",
           "from": "To Do",
           "to": "In Progress"
         },
         {
-          "at": "2026-10-12T17:29:23Z",
+          "at": "2026-10-13T09:56:48Z",
           "authorId": "u-13",
           "field": "status",
           "from": "In Progress",
           "to": "In Review"
         },
         {
-          "at": "2026-10-13T13:43:20Z",
+          "at": "2026-10-13T16:07:00Z",
           "authorId": "u-10",
           "field": "status",
           "from": "In Review",
           "to": "QA"
         },
         {
-          "at": "2026-10-14T12:43:30Z",
+          "at": "2026-10-14T16:33:13Z",
           "authorId": "u-13",
           "field": "status",
           "from": "QA",
@@ -10995,13 +10995,13 @@
       ],
       "epicKey": "MOB-431",
       "parentKey": null,
-      "created": "2026-10-12T15:41:36Z",
-      "updated": "2026-10-12T17:09:36Z",
+      "created": "2026-10-12T16:14:11Z",
+      "updated": "2026-10-12T17:42:11Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
         {
-          "at": "2026-10-12T17:09:36Z",
+          "at": "2026-10-12T17:42:11Z",
           "authorId": "u-13",
           "field": "assignee",
           "from": null,
@@ -11012,69 +11012,6 @@
     {
       "key": "MOB-577",
       "id": "10177",
-      "summary": "Offline queue replays edits out of order",
-      "description": null,
-      "type": "Bug",
-      "status": "Done",
-      "statusCategory": "done",
-      "priority": "Highest",
-      "assigneeId": "u-10",
-      "reporterId": "u-10",
-      "teamId": "TEAM-MOB",
-      "sprintIds": [
-        303
-      ],
-      "storyPoints": 2,
-      "labels": [
-        "offline"
-      ],
-      "epicKey": "MOB-400",
-      "parentKey": null,
-      "created": "2026-10-13T09:39:51Z",
-      "updated": "2026-10-15T13:55:30Z",
-      "resolved": "2026-10-15T13:55:30Z",
-      "dueDate": null,
-      "changelog": [
-        {
-          "at": "2026-10-13T10:32:51Z",
-          "authorId": "u-10",
-          "field": "assignee",
-          "from": null,
-          "to": "u-10"
-        },
-        {
-          "at": "2026-10-13T16:14:37Z",
-          "authorId": "u-11",
-          "field": "status",
-          "from": "To Do",
-          "to": "In Progress"
-        },
-        {
-          "at": "2026-10-14T11:37:11Z",
-          "authorId": "u-10",
-          "field": "status",
-          "from": "In Progress",
-          "to": "In Review"
-        },
-        {
-          "at": "2026-10-14T15:04:16Z",
-          "authorId": "u-13",
-          "field": "status",
-          "from": "In Review",
-          "to": "QA"
-        },
-        {
-          "at": "2026-10-15T13:55:30Z",
-          "authorId": "u-10",
-          "field": "status",
-          "from": "QA",
-          "to": "Done"
-        }
-      ]
-    },
-    {
-      "key": "MOB-578",
-      "id": "10178",
       "summary": "Biometric prompt shown twice on resume (part 2)",
       "description": "Steps to reproduce:\n1. Open the affected screen\n2. Leave the app idle for 10 minutes\n\nExpected: works normally.\nActual: biometric prompt shown twice on resume (part 2).",
       "type": "Bug",
@@ -11100,6 +11037,69 @@
       "changelog": []
     },
     {
+      "key": "MOB-578",
+      "id": "10178",
+      "summary": "Offline queue replays edits out of order",
+      "description": null,
+      "type": "Bug",
+      "status": "Done",
+      "statusCategory": "done",
+      "priority": "Highest",
+      "assigneeId": "u-10",
+      "reporterId": "u-10",
+      "teamId": "TEAM-MOB",
+      "sprintIds": [
+        303
+      ],
+      "storyPoints": 2,
+      "labels": [
+        "offline"
+      ],
+      "epicKey": "MOB-400",
+      "parentKey": null,
+      "created": "2026-10-13T11:07:09Z",
+      "updated": "2026-10-16T10:29:10Z",
+      "resolved": "2026-10-16T10:29:10Z",
+      "dueDate": null,
+      "changelog": [
+        {
+          "at": "2026-10-13T12:00:09Z",
+          "authorId": "u-10",
+          "field": "assignee",
+          "from": null,
+          "to": "u-10"
+        },
+        {
+          "at": "2026-10-14T09:52:45Z",
+          "authorId": "u-11",
+          "field": "status",
+          "from": "To Do",
+          "to": "In Progress"
+        },
+        {
+          "at": "2026-10-14T15:04:19Z",
+          "authorId": "u-10",
+          "field": "status",
+          "from": "In Progress",
+          "to": "In Review"
+        },
+        {
+          "at": "2026-10-15T10:10:01Z",
+          "authorId": "u-13",
+          "field": "status",
+          "from": "In Review",
+          "to": "QA"
+        },
+        {
+          "at": "2026-10-16T10:29:10Z",
+          "authorId": "u-10",
+          "field": "status",
+          "from": "QA",
+          "to": "Done"
+        }
+      ]
+    },
+    {
       "key": "MOB-579",
       "id": "10179",
       "summary": "Remove legacy analytics SDK (part 2)",
@@ -11121,13 +11121,13 @@
       ],
       "epicKey": null,
       "parentKey": null,
-      "created": "2026-10-14T09:34:15Z",
-      "updated": "2026-10-14T09:41:15Z",
+      "created": "2026-10-14T16:58:07Z",
+      "updated": "2026-10-14T17:05:07Z",
       "resolved": null,
       "dueDate": null,
       "changelog": [
         {
-          "at": "2026-10-14T09:41:15Z",
+          "at": "2026-10-14T17:05:07Z",
           "authorId": "u-13",
           "field": "assignee",
           "from": null,

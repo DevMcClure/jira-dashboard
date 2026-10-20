@@ -1,12 +1,13 @@
 import {
   ArrowRightLeft,
+  HeartPulse,
   Info,
+  LayoutDashboard,
   LayoutGrid,
   Ticket,
   Timer,
   Upload,
   User,
-  Users,
   type LucideIcon,
 } from "lucide-react"
 
@@ -18,9 +19,10 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Explore the Sprints",
     items: [
       { title: "Overview", url: "/", icon: LayoutGrid },
+      { title: "Details", url: "/details", icon: LayoutDashboard },
+      { title: "Health", url: "/health", icon: HeartPulse },
       { title: "Tickets", url: "/tickets", icon: Ticket },
       { title: "Sprints", url: "/sprints", icon: Timer },
-      { title: "Teams", url: "/teams", icon: Users },
       { title: "People", url: "/people", icon: User },
       { title: "Movements", url: "/movements", icon: ArrowRightLeft },
     ],
@@ -36,8 +38,8 @@ export const NAV_GROUPS: NavGroup[] = [
 
 const ALL_ITEMS = NAV_GROUPS.flatMap((g) => g.items)
 
-/** The nav item a pathname belongs to ("/tickets/PLAT-1" → Tickets). */
+/** The nav item a pathname belongs to ("/tickets/PLAT-1" → Tickets, "/teams/X" → Overview). */
 export function navItemFor(pathname: string): NavItem | undefined {
-  if (pathname === "/") return ALL_ITEMS[0]
+  if (pathname === "/" || pathname.startsWith("/teams/")) return ALL_ITEMS[0]
   return ALL_ITEMS.find((i) => i.url !== "/" && (pathname === i.url || pathname.startsWith(`${i.url}/`)))
 }

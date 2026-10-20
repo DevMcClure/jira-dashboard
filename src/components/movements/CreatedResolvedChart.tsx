@@ -1,4 +1,3 @@
-import { format } from "date-fns"
 import { useMemo } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 import { EmptyState } from "@/components/common/EmptyState"
@@ -11,8 +10,9 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { createdVsResolvedPerDay } from "@/lib/jira/metrics"
+import { createdVsResolvedPerDay, type Bucket } from "@/lib/jira/metrics"
 import type { DateRange, Issue } from "@/lib/jira/types"
+import { bucketLabel } from "./bucket-label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFirstLoad } from "@/hooks/useFirstLoad"
 
@@ -21,10 +21,10 @@ const config = {
   resolved: { label: "Resolved", color: "var(--chart-1)" },
 } satisfies ChartConfig
 
-export function CreatedResolvedChart({ issues, range }: { issues: Issue[]; range: DateRange }) {
+export function CreatedResolvedChart({ issues, range, bucket }: { issues: Issue[]; range: DateRange; bucket: Bucket }) {
   const data = useMemo(
-    () => createdVsResolvedPerDay(issues, range).map((r) => ({ ...r, day: format(r.date, "d MMM") })),
-    [issues, range],
+    () => createdVsResolvedPerDay(issues, range, bucket).map((r) => ({ ...r, day: bucketLabel(r.date, bucket) })),
+    [issues, range, bucket],
   )
   const loading = useFirstLoad()
   const totals = data.reduce((t, r) => ({ c: t.c + r.created, r: t.r + r.resolved }), { c: 0, r: 0 })
@@ -54,7 +54,7 @@ export function CreatedResolvedChart({ issues, range }: { issues: Issue[]; range
                 <Line
                   key={k}
                   dataKey={k}
-                  type="monotone"
+                  type={bucket === "hour" ? "linear" : "monotone"}
                   stroke={`var(--color-${k})`}
                   strokeWidth={2}
                   dot={false}

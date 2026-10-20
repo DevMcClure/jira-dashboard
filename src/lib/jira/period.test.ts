@@ -12,6 +12,13 @@ describe("periodRange", () => {
     expect(periodRange("today", now, ds.sprints, ds.issues)).toEqual({ start: d("2026-10-08T00:00:00Z"), end: now })
   })
 
+  it("yesterday is the whole previous day", () => {
+    expect(periodRange("yesterday", now, ds.sprints, ds.issues)).toEqual({
+      start: d("2026-10-07T00:00:00Z"),
+      end: d("2026-10-07T23:59:59.999Z"),
+    })
+  })
+
   it("rolling windows include today", () => {
     expect(periodRange("7d", now, ds.sprints, ds.issues).start).toEqual(d("2026-10-02T00:00:00Z"))
     expect(periodRange("14d", now, ds.sprints, ds.issues).start).toEqual(d("2026-09-25T00:00:00Z"))
@@ -35,6 +42,7 @@ describe("periodRange", () => {
 describe("bucketFor", () => {
   it("uses hours for a single day and days otherwise", () => {
     expect(bucketFor(periodRange("today", now, ds.sprints, ds.issues))).toBe("hour")
+    expect(bucketFor(periodRange("yesterday", now, ds.sprints, ds.issues))).toBe("hour")
     expect(bucketFor(periodRange("7d", now, ds.sprints, ds.issues))).toBe("day")
   })
 })

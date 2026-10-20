@@ -12,7 +12,7 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
 import { useTheme } from "@/hooks/useTheme"
 
-/** Static "Guest" user row (no auth in this POC). */
+/** Static "User" row (no auth in this POC). */
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { theme, toggleTheme } = useTheme()
@@ -28,10 +28,10 @@ export function NavUser() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="size-8 rounded-full">
-                <AvatarFallback className="rounded-full">G</AvatarFallback>
+                <AvatarFallback className="rounded-full">U</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">Guest</span>
+                <span className="truncate font-medium">User</span>
                 <span className="truncate text-xs text-muted-foreground">Local session</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />

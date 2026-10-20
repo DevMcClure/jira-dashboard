@@ -1,11 +1,12 @@
-import { differenceInCalendarDays, startOfDay, subDays } from "date-fns"
+import { differenceInCalendarDays, endOfDay, startOfDay, subDays } from "date-fns"
 import type { DateRange, Issue, Sprint } from "./types"
 
 /** The header's time-period choices. "now" is always the export's generatedAt. */
-export type Period = "today" | "7d" | "14d" | "sprint" | "all"
+export type Period = "today" | "yesterday" | "7d" | "14d" | "sprint" | "all"
 
 export const PERIODS: { value: Period; label: string }[] = [
   { value: "today", label: "Today" },
+  { value: "yesterday", label: "Yesterday" },
   { value: "7d", label: "Last 7 days" },
   { value: "14d", label: "Last 14 days" },
   { value: "sprint", label: "Current sprint" },
@@ -15,6 +16,7 @@ export const PERIODS: { value: Period; label: string }[] = [
 /** Phrase that completes "+3 started …", e.g. "today", "in the last 7 days". */
 export const PERIOD_PHRASE: Record<Period, string> = {
   today: "today",
+  yesterday: "yesterday",
   "7d": "in the last 7 days",
   "14d": "in the last 14 days",
   sprint: "this sprint",
@@ -22,7 +24,8 @@ export const PERIOD_PHRASE: Record<Period, string> = {
 }
 
 /**
- * Resolve a period to a concrete range ending at `now`.
+ * Resolve a period to a concrete range ending at `now` (except "yesterday",
+ * which is the whole previous calendar day).
  * - "sprint": from the earliest start of the active sprints in scope (falls back to 14 days)
  * - "all": from the earliest started sprint, or the oldest ticket if there are no sprints
  */
@@ -31,6 +34,10 @@ export function periodRange(period: Period, now: Date, sprints: Sprint[], issues
   switch (period) {
     case "today":
       return { start: startOfDay(now), end: now }
+    case "yesterday": {
+      const day = subDays(now, 1)
+      return { start: startOfDay(day), end: endOfDay(day) }
+    }
     case "7d":
       return daysBack(7)
     case "14d":

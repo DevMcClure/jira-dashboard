@@ -1,30 +1,69 @@
 import { LoaderCircle, UploadCloud } from "lucide-react"
-import { useRef, useState, type DragEvent } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 type Props = { onFile: (file: File) => void; busy?: boolean }
 
-/** Large dashed drop target with a Browse button; accepts one .json file. */
+const hasFiles = (e: DragEvent) => e.dataTransfer?.types.includes("Files") ?? false
+
+/**
+ * Large dashed drop target with a Browse button; accepts one .json file.
+ * While mounted, the whole window accepts the drop — otherwise a file released
+ * just outside the box makes the browser open it in the tab instead.
+ */
 export function DropZone({ onFile, busy }: Props) {
   const input = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
+  const onFileRef = useRef(onFile)
+  const busyRef = useRef(busy)
 
-  const onDrop = (e: DragEvent) => {
-    e.preventDefault()
-    setDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) onFile(file)
-  }
+  useEffect(() => {
+    onFileRef.current = onFile
+    busyRef.current = busy
+  })
+
+  useEffect(() => {
+    // dragenter/dragleave fire for every child crossed, so count depth.
+    let depth = 0
+    const onEnter = (e: DragEvent) => {
+      if (!hasFiles(e)) return
+      e.preventDefault()
+      depth++
+      setDragging(true)
+    }
+    const onOver = (e: DragEvent) => {
+      if (!hasFiles(e)) return
+      e.preventDefault()
+      if (e.dataTransfer) e.dataTransfer.dropEffect = busyRef.current ? "none" : "copy"
+    }
+    const onLeave = (e: DragEvent) => {
+      if (!hasFiles(e)) return
+      depth = Math.max(0, depth - 1)
+      if (depth === 0) setDragging(false)
+    }
+    const onDrop = (e: DragEvent) => {
+      if (!hasFiles(e)) return
+      e.preventDefault()
+      depth = 0
+      setDragging(false)
+      const file = e.dataTransfer?.files[0]
+      if (file && !busyRef.current) onFileRef.current(file)
+    }
+    window.addEventListener("dragenter", onEnter)
+    window.addEventListener("dragover", onOver)
+    window.addEventListener("dragleave", onLeave)
+    window.addEventListener("drop", onDrop)
+    return () => {
+      window.removeEventListener("dragenter", onEnter)
+      window.removeEventListener("dragover", onOver)
+      window.removeEventListener("dragleave", onLeave)
+      window.removeEventListener("drop", onDrop)
+    }
+  }, [])
 
   return (
     <div
-      onDragOver={(e) => {
-        e.preventDefault()
-        setDragging(true)
-      }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={onDrop}
       className={cn(
         "flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed px-6 py-14 text-center transition-colors",
         dragging ? "border-primary bg-muted/60" : "border-border bg-card/40",

@@ -32,6 +32,10 @@ The Import page shows an example of the expected format, and `src/lib/jira/schem
 
 Raw Trawler output (projects + tickets with Jira's own field names) is recognised automatically and converted in `src/lib/jira/trawler.ts`: each project becomes a team, and people are taken from assignee/reporter/creator. The Trawler runs with `sprint_open: true`, so each project's tickets are put in one active "current sprint". Story points (`storyPoints`, `story_points` or `"Story Points"`) and history (Jira's native `changelog.histories[].items[]`) are read when present and drive the movement, cycle-time and points charts. The export has no sprint dates, so burndown and velocity stay empty, and sprint health can't compare progress against time elapsed.
 
+## Export a report
+
+The **Export** page builds a Markdown report of the dashboard. Pick the teams, sprints, time period and sections (summary, teams, sprints, status breakdown, people, movements), check the live preview, then download the `.md` file or copy it. It starts from the header's current filters. The report is generated in `src/lib/jira/report.ts`.
+
 ## Built with
 
 Vite, React, TypeScript, Tailwind CSS, shadcn/ui, Recharts and TanStack Table.

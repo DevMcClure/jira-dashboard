@@ -1,5 +1,6 @@
 import {
   ArrowRightLeft,
+  FileDown,
   HeartPulse,
   Info,
   LayoutDashboard,
@@ -31,6 +32,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "About the Data",
     items: [
       { title: "Import", url: "/import", icon: Upload },
+      { title: "Export", url: "/export", icon: FileDown },
       { title: "About", url: "/about", icon: Info },
     ],
   },

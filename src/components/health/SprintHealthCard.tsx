@@ -50,7 +50,9 @@ export function SprintHealthCard({ sprint, teamName, health, scope, burndown, on
         <CardTitle>{sprint.name}</CardTitle>
         <CardDescription className="tabular-nums">
           {teamName && `${teamName} · `}
-          {sprint.startDate && format(sprint.startDate, "d MMM")} – {sprint.endDate && format(sprint.endDate, "d MMM")}
+          {sprint.startDate && sprint.endDate
+            ? `${format(sprint.startDate, "d MMM")} – ${format(sprint.endDate, "d MMM")}`
+            : "Dates unknown"}
         </CardDescription>
         <CardAction>
           <Badge variant="outline" className="gap-1.5 font-normal">

@@ -7,6 +7,14 @@
  */
 import { categoryForStatus, compareStatus, statusColorVar } from "./constants"
 import { exportSchema, type RawExport, type RawIssue } from "./schema"
+import {
+  isTrawlerLog,
+  isTrawlerShape,
+  normaliseTrawlerInput,
+  parseTrawlerLog,
+  trawlerExportSchema,
+  trawlerToContract,
+} from "./trawler"
 import type {
   ChangelogEntry,
   Issue,
@@ -37,14 +45,25 @@ const toDate = (s: string | null | undefined): Date | null => (s ? new Date(s) :
 const toStr = (v: string | number | null | undefined): string | null =>
   v === null || v === undefined ? null : String(v)
 
+const problemList = (issues: { path: PropertyKey[]; message: string }[]) =>
+  issues.map((i) => `${i.path.length ? i.path.join(".") : "(root)"}: ${i.message}`)
+
+/** Accepts the contract shape or raw Trawler JSON output (see `trawler.ts`). */
 export function parseExport(raw: unknown): JiraDataset {
-  const result = exportSchema.safeParse(raw)
-  if (!result.success) {
-    throw new JiraExportError(
-      result.error.issues.map((i) => `${i.path.length ? i.path.join(".") : "(root)"}: ${i.message}`),
-    )
+  if (isTrawlerShape(raw)) {
+    const trawler = trawlerExportSchema.safeParse(normaliseTrawlerInput(raw))
+    if (!trawler.success) throw new JiraExportError(problemList(trawler.error.issues))
+    raw = trawlerToContract(trawler.data)
   }
+  const result = exportSchema.safeParse(raw)
+  if (!result.success) throw new JiraExportError(problemList(result.error.issues))
   return buildDataset(result.data)
+}
+
+/** File contents: JSON (either shape) or a Trawler audit log. */
+export function parseExportText(text: string): JiraDataset {
+  if (isTrawlerLog(text)) return parseExport(parseTrawlerLog(text))
+  return parseExport(JSON.parse(text))
 }
 
 function buildDataset(data: RawExport): JiraDataset {
@@ -101,7 +120,7 @@ function buildDataset(data: RawExport): JiraDataset {
 }
 
 function toIssue(r: RawIssue): Issue {
-  const changelog: ChangelogEntry[] = r.changelog
+  const changelog: ChangelogEntry[] = (r.changelog ?? [])
     .map((c) => ({
       at: new Date(c.at),
       authorId: c.authorId ?? null,

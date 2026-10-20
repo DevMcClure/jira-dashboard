@@ -97,7 +97,7 @@ export function DropZone({ onFile, busy }: Props) {
       <input
         ref={input}
         type="file"
-        accept=".json,application/json"
+        accept=".json,.log,.txt,application/json,text/plain"
         className="sr-only"
         aria-label="Choose a JSON export"
         onChange={(e) => {

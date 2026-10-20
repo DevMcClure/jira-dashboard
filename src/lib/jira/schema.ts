@@ -50,7 +50,7 @@ export const issueSchema = z.looseObject({
   updated: optionalIsoDate,
   resolved: optionalIsoDate,
   dueDate: optionalIsoDate,
-  changelog: z.array(changelogEntrySchema),
+  changelog: z.array(changelogEntrySchema).nullable().optional(),
 })
 
 export const sprintSchema = z.looseObject({

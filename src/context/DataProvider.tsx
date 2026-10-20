@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import sample from "@/data/jira-export.json"
-import { JiraExportError, parseExport } from "@/lib/jira/adapter"
+import { JiraExportError, parseExport, parseExportText } from "@/lib/jira/adapter"
 import type { Period } from "@/lib/jira/period"
 import type { JiraDataset } from "@/lib/jira/types"
 import {
@@ -48,7 +48,7 @@ function initialState(): State {
   if (stored) {
     try {
       return {
-        dataset: parseExport(JSON.parse(stored.json)),
+        dataset: parseExportText(stored.json),
         source: { kind: "upload", fileName: stored.fileName, loadedAt: stored.loadedAt },
         rawJson: stored.json,
       }
@@ -76,7 +76,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     let dataset: JiraDataset
     try {
       text = await file.text()
-      dataset = parseExport(JSON.parse(text))
+      dataset = parseExportText(text)
     } catch (err) {
       const problems = problemsFrom(err)
       toast.error(`Couldn't load ${file.name}`, {

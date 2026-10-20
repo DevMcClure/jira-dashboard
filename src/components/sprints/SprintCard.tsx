@@ -59,8 +59,8 @@ export function SprintCard({ sprint, teamName, stats, onOpen }: Props) {
         </CardTitle>
         <CardDescription className="tabular-nums">
           {teamName && `${teamName} · `}
-          {fmt(sprint.startDate)} – {fmt(sprint.endDate)}
-          {sprint.state === "active" && ` · ${pluralize(health.daysLeft, "day")} left`}
+          {sprint.startDate || sprint.endDate ? `${fmt(sprint.startDate)} – ${fmt(sprint.endDate)}` : "Dates unknown"}
+          {sprint.state === "active" && sprint.endDate && ` · ${pluralize(health.daysLeft, "day")} left`}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-4">

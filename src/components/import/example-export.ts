@@ -34,6 +34,6 @@ export const EXAMPLE_EXPORT = `{
 
 export const REQUIRED_FIELDS = [
   "issues[] — the only required top-level section",
-  "issue.key, summary, status, statusCategory, created, changelog[]",
-  "changelog[].at and field (status changes drive every movement chart)",
+  "issue.key, summary, status, statusCategory, created",
+  "changelog[] is optional, but without it movement, cycle-time and burndown charts have no history",
 ]

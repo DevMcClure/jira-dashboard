@@ -1,28 +1,26 @@
-import { AssigneeChart } from "@/components/dashboard/AssigneeChart"
-import { BurndownChart } from "@/components/dashboard/BurndownChart"
-import { KpiRow } from "@/components/dashboard/KpiRow"
-import { RecentMovements } from "@/components/dashboard/RecentMovements"
-import { SprintHealthList } from "@/components/dashboard/SprintHealthList"
-import { StatusDonut } from "@/components/dashboard/StatusDonut"
+import { EmptyState } from "@/components/common/EmptyState"
 import { PageHeader } from "@/components/layout/PageHeader"
+import { TeamCard } from "@/components/teams/TeamCard"
+import { useData } from "@/hooks/useData"
+import { useFilteredIssues } from "@/hooks/useFilteredIssues"
 
-export default function OverviewPage() {
+export default function TeamsPage() {
+  const { dataset, filters } = useData()
+  const issues = useFilteredIssues()
+  const teams = filters.teamIds.length ? dataset.teams.filter((t) => filters.teamIds.includes(t.id)) : dataset.teams
+
   return (
     <>
-      <PageHeader
-        title="Overview"
-        description="Current totals, sprint progress and recent ticket movement across the selected teams and sprints."
-      />
-      <KpiRow />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <BurndownChart />
-        <StatusDonut />
-      </div>
-      <div className="grid items-start gap-4 lg:grid-cols-3">
-        <RecentMovements />
-        <SprintHealthList />
-      </div>
-      <AssigneeChart />
+      <PageHeader title="Teams" description="Remaining work, velocity and members for each team." />
+      {teams.length === 0 ? (
+        <EmptyState className="h-40">No teams in this export.</EmptyState>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          {teams.map((t) => (
+            <TeamCard key={t.id} team={t} issues={issues} />
+          ))}
+        </div>
+      )}
     </>
   )
 }

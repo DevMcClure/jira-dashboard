@@ -13,6 +13,7 @@ const ImportPage = lazy(() => import("@/pages/ImportPage"))
 const MovementsPage = lazy(() => import("@/pages/MovementsPage"))
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
 const OverviewPage = lazy(() => import("@/pages/OverviewPage"))
+const PiPage = lazy(() => import("@/pages/PiPage"))
 const PeoplePage = lazy(() => import("@/pages/PeoplePage"))
 const SprintsPage = lazy(() => import("@/pages/SprintsPage"))
 const TeamDetailPage = lazy(() => import("@/pages/TeamDetailPage"))
@@ -26,6 +27,7 @@ export default function App() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<OverviewPage />} />
+            <Route path="pi" element={<PiPage />} />
             <Route path="details" element={<DetailsPage />} />
             <Route path="health" element={<HealthPage />} />
             <Route path="teams" element={<Navigate to="/" replace />} />

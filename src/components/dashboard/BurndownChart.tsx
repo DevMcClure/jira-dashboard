@@ -21,8 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useData } from "@/hooks/useData"
-import { useFilteredIssues } from "@/hooks/useFilteredIssues"
-import { useScopedSprints } from "@/hooks/useScopedSprints"
+import { useHistoryIssues } from "@/hooks/useFilteredIssues"
+import { useHistorySprints } from "@/hooks/useScopedSprints"
 import { burndown, sprintHealth } from "@/lib/jira/metrics"
 import type { Sprint } from "@/lib/jira/types"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -46,9 +46,9 @@ function pickSprint(sprints: Sprint[], chosen: number | null): Sprint | undefine
 
 export function BurndownChart() {
   const { dataset, burndownSprintId, setBurndownSprintId } = useData()
-  const issues = useFilteredIssues()
+  const issues = useHistoryIssues()
   const now = dataset.meta.generatedAt
-  const scoped = useScopedSprints()
+  const scoped = useHistorySprints()
   const sprints = useMemo(() => scoped.filter((s) => s.state !== "future" && s.startDate && s.endDate), [scoped])
   const sprint = useMemo(() => pickSprint(sprints, burndownSprintId), [sprints, burndownSprintId])
 

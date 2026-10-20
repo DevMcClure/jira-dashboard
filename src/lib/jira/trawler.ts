@@ -15,6 +15,10 @@ import type { StatusCategory } from "./types"
  * project's current sprint. It doesn't export sprint details, so each project
  * gets one synthetic active sprint with unknown dates.
  *
+ * PIs: when the expanded Trawler adds a top-level `programIncrements` array (in
+ * the contract's shape), it is passed through and the synthetic sprints are put
+ * in the PI that contains `generatedAt`. Map its real shape here once known.
+ *
  * Story points and history are optional. History is Jira's native changelog
  * (`changelog.histories[].items[]`); field names like "Story Points" and person
  * references (username / user key / accountId) are mapped to the contract's.
@@ -130,6 +134,8 @@ export const trawlerExportSchema = z.looseObject({
   generatedAt: optionalString,
   projects: z.array(trawlerProjectSchema).nullable().optional(),
   tickets: z.array(trawlerTicketSchema).nullable().optional(),
+  /** Passed through as-is; validated by the contract schema. */
+  programIncrements: z.array(z.looseObject({ startDate: z.unknown(), endDate: z.unknown() })).nullable().optional(),
 })
 
 export type TrawlerExport = z.infer<typeof trawlerExportSchema>
@@ -360,6 +366,11 @@ export function trawlerToContract(data: TrawlerExport): unknown {
     completeDate: null,
   }))
   const sprintOf = new Map(sprints.map((s) => [s.teamId, s.id]))
+  const pis = data.programIncrements ?? []
+  const at = Date.parse(data.generatedAt ?? "")
+  const currentPi = pis.find(
+    (p) => typeof p.startDate === "string" && typeof p.endDate === "string" && at >= Date.parse(p.startDate) && at <= Date.parse(p.endDate),
+  )
 
   return {
     meta: {
@@ -369,7 +380,8 @@ export function trawlerToContract(data: TrawlerExport): unknown {
     },
     teams,
     people: [...people.values()],
-    sprints,
+    sprints: sprints.map((s) => ({ ...s, piId: currentPi?.id ?? null })),
+    ...(pis.length ? { programIncrements: pis } : {}),
     issues: issues.map((i) => ({ ...i, sprintIds: [sprintOf.get(i.teamId)!] })),
   }
 }

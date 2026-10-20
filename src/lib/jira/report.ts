@@ -9,20 +9,25 @@ import {
   countByStatus,
   countByStatusCategory,
   cycleTimeDays,
+  epicProgress,
+  piHealth,
   remainingPoints,
   sprintHealth,
+  sprintVelocity,
   timeInCurrentStatus,
   velocity,
   workloadByPerson,
   type HealthLevel,
 } from "./metrics"
 import { PERIODS, periodRange, type Period } from "./period"
+import { resolveScope, type Scope } from "./scope"
 import type { DateRange, Issue, JiraDataset, Sprint, Transition } from "./types"
 
-export type ReportSection = "summary" | "teams" | "sprints" | "status" | "people" | "movements"
+export type ReportSection = "summary" | "pi" | "teams" | "sprints" | "status" | "people" | "movements"
 
 export const REPORT_SECTIONS: { value: ReportSection; label: string; description: string }[] = [
   { value: "summary", label: "Summary", description: "Headline counts and activity in the period" },
+  { value: "pi", label: "Program increment", description: "PI health, points per sprint and epic progress" },
   { value: "teams", label: "Teams", description: "Per-team tickets, remaining work and velocity" },
   { value: "sprints", label: "Sprints", description: "Sprint health, progress and scope" },
   { value: "status", label: "Status breakdown", description: "Tickets in each workflow status" },
@@ -30,8 +35,9 @@ export const REPORT_SECTIONS: { value: ReportSection; label: string; description
   { value: "movements", label: "Movements", description: "Status moves, blocked tickets and recent activity" },
 ]
 
-/** Empty `teamIds` / `sprintIds` = all. */
+/** Empty `teamIds` / `sprintIds` = all (within the scope). Picked sprints replace the scope's. */
 export type ReportOptions = {
+  scope: Scope
   teamIds: string[]
   sprintIds: number[]
   period: Period
@@ -48,38 +54,34 @@ const HEALTH_LABEL: Record<HealthLevel, string> = {
 const RECENT_MOVES = 15
 const DAY_MS = 86_400_000
 
-/** Sprints a report covers: the selected ones, else the selected teams', else all. */
-export function reportSprints(dataset: JiraDataset, teamIds: string[], sprintIds: number[]): Sprint[] {
-  if (sprintIds.length) return dataset.sprints.filter((s) => sprintIds.includes(s.id))
-  if (teamIds.length) return dataset.sprints.filter((s) => s.teamId && teamIds.includes(s.teamId))
-  return dataset.sprints
+const byTeams = (sprints: Sprint[], teamIds: string[]) =>
+  teamIds.length ? sprints.filter((s) => s.teamId && teamIds.includes(s.teamId)) : sprints
+
+/** Sprints a user can pick for a report: the scope's PI (all sprints without PIs), for the selected teams. */
+export function reportSprints(dataset: JiraDataset, scope: Scope, teamIds: string[]): Sprint[] {
+  return byTeams(resolveScope(dataset, scope).historySprints, teamIds)
 }
 
-/** Everything the report is computed from, scoped to the options. */
+/** Everything the report is computed from, scoped to the options (mirrors the dashboard's hooks). */
 export function reportScope(dataset: JiraDataset, options: ReportOptions) {
   const { teamIds, sprintIds, period } = options
-  const issues = dataset.issues.filter(
-    (i) =>
-      (!teamIds.length || (i.teamId !== null && teamIds.includes(i.teamId))) &&
-      (!sprintIds.length || i.sprintIds.some((id) => sprintIds.includes(id))),
+  const resolved = resolveScope(dataset, options.scope)
+  const sprints = (
+    sprintIds.length ? dataset.sprints.filter((s) => sprintIds.includes(s.id)) : byTeams(resolved.sprints, teamIds)
+  ).sort((a, b) => (a.startDate?.getTime() ?? Infinity) - (b.startDate?.getTime() ?? Infinity))
+  const ticketSprintIds = new Set(sprints.map((s) => s.id))
+  // History views (velocity, PI progress) pick each sprint's tickets themselves.
+  const historyIssues = dataset.issues.filter((i) => !teamIds.length || (i.teamId !== null && teamIds.includes(i.teamId)))
+  const issues = historyIssues.filter(
+    (i) => (!sprintIds.length && dataset.sprints.length === 0) || i.sprintIds.some((id) => ticketSprintIds.has(id)),
   )
   const keys = new Set(issues.map((i) => i.key))
   const transitions = dataset.transitions.filter((t) => keys.has(t.issueKey))
-  const scopedSprints = reportSprints(dataset, teamIds, sprintIds)
   const now = dataset.meta.generatedAt
-  const range = periodRange(period, now, scopedSprints, issues)
-  // Explicitly picked sprints are always shown; otherwise only those overlapping the period.
-  const sprints = (sprintIds.length ? scopedSprints : scopedSprints.filter((s) => overlaps(s, range)))
-    .filter((s) => s.startDate)
-    .sort((a, b) => a.startDate!.getTime() - b.startDate!.getTime())
+  const range = periodRange(period, now, sprints, issues, resolved.pi)
   const teams = teamIds.length ? dataset.teams.filter((t) => teamIds.includes(t.id)) : dataset.teams
-  return { issues, transitions, sprints, teams, range, now }
-}
-
-function overlaps(sprint: Sprint, range: DateRange): boolean {
-  if (sprint.state === "future" || !sprint.startDate) return false
-  const end = sprint.completeDate ?? sprint.endDate ?? range.end
-  return sprint.startDate <= range.end && end >= range.start
+  const historySprints = byTeams(resolved.historySprints, teamIds)
+  return { issues, historyIssues, transitions, sprints, historySprints, teams, range, now, resolved }
 }
 
 export function buildReport(dataset: JiraDataset, options: ReportOptions): string {
@@ -87,17 +89,21 @@ export function buildReport(dataset: JiraDataset, options: ReportOptions): strin
   const periodLabel = PERIODS.find((p) => p.value === options.period)!.label
   const ctx = { dataset, ...scope, periodLabel }
   const want = new Set(options.sections)
+  const { resolved } = scope
 
   const teamNames = options.teamIds.length ? scope.teams.map((t) => t.name).join(", ") : "All teams"
   const sprintNames = options.sprintIds.length
     ? options.sprintIds.map((id) => dataset.sprintById.get(id)?.name ?? `#${id}`).join(", ")
-    : "All sprints"
+    : resolved.kind === "pi"
+      ? `All sprints in ${resolved.label}`
+      : "Current sprint"
 
   const out: string[] = [
-    `# Sprint report: ${teamNames}`,
+    `# ${resolved.kind === "pi" ? `${resolved.label} report` : "Sprint report"}: ${teamNames}`,
     "",
     `_Data exported ${formatDateTime(dataset.meta.generatedAt)}${dataset.meta.source ? ` from ${dataset.meta.source}` : ""}._`,
     "",
+    ...(resolved.pi ? [`- **PI:** ${resolved.pi.name} (${formatRange({ start: resolved.pi.startDate, end: resolved.pi.endDate })})`] : []),
     `- **Teams:** ${teamNames}`,
     `- **Sprints:** ${sprintNames}`,
     `- **Period:** ${periodLabel} (${formatRange(scope.range)})`,
@@ -105,6 +111,7 @@ export function buildReport(dataset: JiraDataset, options: ReportOptions): strin
   ]
 
   if (want.has("summary")) out.push(...summarySection(ctx))
+  if (want.has("pi")) out.push(...piSection(ctx))
   if (want.has("teams")) out.push(...teamsSection(ctx))
   if (want.has("sprints")) out.push(...sprintsSection(ctx))
   if (want.has("status")) out.push(...statusSection(ctx))
@@ -142,7 +149,55 @@ function summarySection({ issues, transitions, range, periodLabel }: Ctx): strin
   ]
 }
 
-function teamsSection({ dataset, teams, issues, transitions, range, periodLabel }: Ctx): string[] {
+function piSection({ dataset, resolved, historySprints, historyIssues, now }: Ctx): string[] {
+  const pi = resolved.pi
+  const out = ["## Program increment", ""]
+  if (!pi) return [...out, "_This export has no program increments._", ""]
+  const scoped = { ...pi, sprintIds: historySprints.map((s) => s.id) }
+  const health = piHealth(scoped, historyIssues, now)
+  out.push(
+    `**${pi.name}**: ${HEALTH_LABEL[health.level]}. ${health.pctDone}% of points done with ${health.pctElapsed}% of the PI gone (${health.donePoints} / ${health.totalPoints} pts, ${health.ticketCount} tickets${pi.state === "active" ? `, ${health.daysLeft} days left` : ""}).`,
+    "",
+  )
+  if (pi.objectives.length) out.push("**Objectives**", "", ...pi.objectives.map((o) => `- ${inline(o)}`), "")
+
+  const started = historySprints.filter((s) => s.state !== "future" && s.startDate)
+  if (started.length) {
+    out.push(
+      "### Points per sprint",
+      "",
+      table(
+        ["Sprint", "Team", "State", "Committed", "Completed"],
+        started.map((s) => {
+          const v = sprintVelocity(s, historyIssues)
+          return [s.name, (s.teamId && dataset.teamById.get(s.teamId)?.name) || "—", s.state, `${v.committed} pts`, `${v.completed} pts`]
+        }),
+      ),
+      "",
+    )
+  }
+
+  const ids = new Set(scoped.sprintIds)
+  const epics = epicProgress(historyIssues.filter((i) => i.sprintIds.some((id) => ids.has(id))))
+  out.push("### Epics", "")
+  if (!epics.length) return [...out, "_No tickets in this PI are linked to an epic._", ""]
+  out.push(
+    table(
+      ["Epic", "Team", "Done", "Tickets", "Points"],
+      epics.map((e) => [
+        `${dataset.byKey.get(e.epicKey)?.summary ?? e.epicKey} (${ticketRef(dataset, e.epicKey)})`,
+        e.teamIds.map((id) => dataset.teamById.get(id)?.name ?? id).join(", ") || "—",
+        `${e.pctDone}%`,
+        `${e.done} / ${e.total}`,
+        `${e.donePoints} / ${e.points}`,
+      ]),
+    ),
+    "",
+  )
+  return out
+}
+
+function teamsSection({ teams, issues, historyIssues, historySprints, transitions, range, periodLabel }: Ctx): string[] {
   const out = ["## Teams", ""]
   if (!teams.length) return [...out, "_No teams in scope._", ""]
   for (const team of teams) {
@@ -150,7 +205,7 @@ function teamsSection({ dataset, teams, issues, transitions, range, periodLabel 
     const keys = new Set(teamIssues.map((i) => i.key))
     const counts = countByStatusCategory(teamIssues)
     const activity = activitySummary(teamIssues, transitions.filter((t) => keys.has(t.issueKey)), range)
-    const vel = velocity(team, dataset.sprints, teamIssues)
+    const vel = velocity(team, historySprints, historyIssues.filter((i) => i.teamId === team.id))
     const avg = vel.length ? Math.round(vel.reduce((s, v) => s + v.completed, 0) / vel.length) : null
     out.push(
       `### ${team.name}${team.projectKey ? ` (${team.projectKey})` : ""}`,
@@ -177,7 +232,7 @@ function teamsSection({ dataset, teams, issues, transitions, range, periodLabel 
 
 function sprintsSection({ dataset, sprints, issues, now }: Ctx): string[] {
   const out = ["## Sprints", ""]
-  if (!sprints.length) return [...out, "_No sprints in this period._", ""]
+  if (!sprints.length) return [...out, "_No sprints in scope._", ""]
   out.push(
     table(
       ["Sprint", "Team", "State", "Dates", "Health", "Done", "Elapsed", "Points", "Days left"],
@@ -188,7 +243,7 @@ function sprintsSection({ dataset, sprints, issues, now }: Ctx): string[] {
           (s.teamId && dataset.teamById.get(s.teamId)?.name) || "—",
           s.state,
           s.startDate && s.endDate ? formatRange({ start: s.startDate, end: s.endDate }) : "—",
-          HEALTH_LABEL[h.level],
+          s.state === "future" ? "Planned" : HEALTH_LABEL[h.level],
           `${h.pctDone}%`,
           `${h.pctElapsed}%`,
           `${h.donePoints} / ${h.totalPoints}`,

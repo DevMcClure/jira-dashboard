@@ -4,8 +4,8 @@ import { EmptyState } from "@/components/common/EmptyState"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { SprintCard, type SprintStats } from "@/components/sprints/SprintCard"
 import { useData } from "@/hooks/useData"
-import { useFilteredIssues } from "@/hooks/useFilteredIssues"
-import { useScopedSprints } from "@/hooks/useScopedSprints"
+import { useHistoryIssues } from "@/hooks/useFilteredIssues"
+import { useHistorySprints } from "@/hooks/useScopedSprints"
 import { countByStatus, scopeChange, sprintHealth } from "@/lib/jira/metrics"
 import type { Sprint } from "@/lib/jira/types"
 
@@ -17,8 +17,8 @@ const SECTIONS: { state: Sprint["state"]; title: string }[] = [
 
 export default function SprintsPage() {
   const { dataset, filters, setFilters, setBurndownSprintId } = useData()
-  const issues = useFilteredIssues()
-  const sprints = useScopedSprints()
+  const issues = useHistoryIssues()
+  const sprints = useHistorySprints()
   const navigate = useNavigate()
   const now = dataset.meta.generatedAt
 

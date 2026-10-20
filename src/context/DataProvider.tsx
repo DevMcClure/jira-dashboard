@@ -3,6 +3,7 @@ import { toast } from "sonner"
 import sample from "@/data/jira-export.json"
 import { JiraExportError, parseExport, parseExportText } from "@/lib/jira/adapter"
 import type { Period } from "@/lib/jira/period"
+import { SPRINT_SCOPE, type Scope } from "@/lib/jira/scope"
 import type { JiraDataset } from "@/lib/jira/types"
 import {
   DataContext,
@@ -70,6 +71,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [burndownSprintId, setBurndownSprintId] = useState<number | null>(null)
   const [period, setPeriod] = useState<Period>("today")
+  const [scope, setScope] = useState<Scope>(SPRINT_SCOPE)
+
+  /** View state that only makes sense for the previous dataset. */
+  const resetView = useCallback(() => {
+    setFilters(EMPTY_FILTERS)
+    setBurndownSprintId(null)
+    setScope(SPRINT_SCOPE)
+    setPeriod((p) => (p === "pi" ? "today" : p))
+  }, [])
 
   const loadFromFile = useCallback(async (file: File): Promise<LoadResult> => {
     let text: string
@@ -87,22 +97,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const loadedAt = new Date().toISOString()
     setState({ dataset, source: { kind: "upload", fileName: file.name, loadedAt }, rawJson: text })
-    setFilters(EMPTY_FILTERS)
-    setBurndownSprintId(null)
+    resetView()
     const remembered = writeStored({ fileName: file.name, loadedAt, json: text })
     toast.success(`Loaded ${dataset.issues.length} tickets from ${file.name}`, {
       description: remembered ? undefined : "File is too large to remember after a refresh.",
     })
     return { ok: true, dataset }
-  }, [])
+  }, [resetView])
 
   const resetToSample = useCallback(() => {
     writeStored(null)
     setState(sampleState())
-    setFilters(EMPTY_FILTERS)
-    setBurndownSprintId(null)
+    resetView()
     toast.success("Reset to sample data")
-  }, [])
+  }, [resetView])
 
   const value = useMemo(
     () => ({
@@ -115,8 +123,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setBurndownSprintId,
       period,
       setPeriod,
+      scope,
+      setScope,
     }),
-    [state, loadFromFile, resetToSample, filters, burndownSprintId, period],
+    [state, loadFromFile, resetToSample, filters, burndownSprintId, period, scope],
   )
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

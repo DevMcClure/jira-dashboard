@@ -101,6 +101,36 @@ const GENERATED_AT = new Date("2026-10-19T17:00:00Z") // Monday, end of the work
 /** Active sprints started Mon 12 Oct → ~60% elapsed at GENERATED_AT. */
 const ACTIVE_START = new Date("2026-10-12T09:00:00Z")
 
+/**
+ * Two PIs of 5 two-week sprints, shared by every team. Sprint index 8 (the 4th
+ * of PI 26.4) is active, index 9 is future, everything before is closed.
+ */
+const SPRINTS_PER_PI = 5
+const ACTIVE_INDEX = 8
+const SPRINT_COUNT = 10
+
+type PiDef = { id: string; name: string; objectives: string[] }
+const PIS: PiDef[] = [
+  {
+    id: "PI-26.3",
+    name: "PI 26.3",
+    objectives: [
+      "Launch usage-based billing to all paying tenants",
+      "Onboarding redesign in beta for new sign-ups",
+      "Rich push notifications on iOS and Android",
+    ],
+  },
+  {
+    id: "PI-26.4",
+    name: "PI 26.4",
+    objectives: [
+      "Enterprise readiness: SSO, SCIM and audit logs",
+      "Web performance: p75 LCP under 2.5s",
+      "Mobile 4.2 with offline mode and widgets",
+    ],
+  },
+]
+
 type PersonDef = { id: string; displayName: string }
 type TeamDef = {
   id: string
@@ -111,7 +141,8 @@ type TeamDef = {
   sprintNumberStart: number
   memberIds: string[]
   labels: string[]
-  epics: string[]
+  /** [key, name] per PI, oldest PI first. */
+  epics: [string, string][][]
   summaries: Record<"Story" | "Bug" | "Task" | "Spike", string[]>
 }
 
@@ -139,10 +170,13 @@ const TEAMS: TeamDef[] = [
     projectKey: "PLAT",
     firstKey: 1201,
     sprintBase: 101,
-    sprintNumberStart: 41,
+    sprintNumberStart: 35,
     memberIds: ["u-01", "u-02", "u-03", "u-04", "u-05"],
     labels: ["billing", "auth", "api", "infra", "webhooks", "observability"],
-    epics: ["PLAT-1100", "PLAT-1105", "PLAT-1142"],
+    epics: [
+      [["PLAT-1020", "Usage-based billing"], ["PLAT-1041", "Webhooks v2"], ["PLAT-1077", "Secrets rotation"]],
+      [["PLAT-1100", "Enterprise SSO & SCIM"], ["PLAT-1105", "Rate limits v2"], ["PLAT-1142", "Audit logging"]],
+    ],
     summaries: {
       Story: [
         "Retry failed webhook deliveries with exponential backoff",
@@ -216,10 +250,13 @@ const TEAMS: TeamDef[] = [
     projectKey: "WEB",
     firstKey: 841,
     sprintBase: 201,
-    sprintNumberStart: 27,
+    sprintNumberStart: 21,
     memberIds: ["u-06", "u-07", "u-08", "u-09", "u-03", "u-14"],
     labels: ["dashboard", "onboarding", "a11y", "frontend", "search", "perf"],
-    epics: ["WEB-700", "WEB-722", "WEB-790"],
+    epics: [
+      [["WEB-610", "Onboarding redesign"], ["WEB-633", "Saved views"], ["WEB-668", "Design system tokens"]],
+      [["WEB-700", "Core Web Vitals"], ["WEB-722", "Accessibility AA"], ["WEB-790", "Global search"]],
+    ],
     summaries: {
       Story: [
         "Redesign onboarding checklist",
@@ -293,10 +330,13 @@ const TEAMS: TeamDef[] = [
     projectKey: "MOB",
     firstKey: 521,
     sprintBase: 301,
-    sprintNumberStart: 18,
+    sprintNumberStart: 12,
     memberIds: ["u-10", "u-11", "u-12", "u-13"],
     labels: ["ios", "android", "push", "offline", "release", "perf"],
-    epics: ["MOB-400", "MOB-431", "MOB-466"],
+    epics: [
+      [["MOB-322", "Rich push notifications"], ["MOB-345", "Deep links"], ["MOB-371", "Crash-free sessions 99.5%"]],
+      [["MOB-400", "Offline mode"], ["MOB-431", "Home screen widgets"], ["MOB-466", "Release 4.2"]],
+    ],
     summaries: {
       Story: [
         "Rich push notifications with images",
@@ -380,10 +420,12 @@ type RawSprint = {
   startDate: string
   endDate: string
   completeDate: string | null
+  piId: string
 }
 type RawChange = { at: string; authorId: string | null; field: string; from: string | null; to: string | null }
 type IssueType = "Story" | "Bug" | "Task" | "Spike"
-type RawIssue = {
+type RawIssue = Omit<RawIssueBase, "type"> & { type: IssueType | "Epic" }
+type RawIssueBase = {
   key: string
   id: string
   summary: string
@@ -416,20 +458,39 @@ const CATEGORY: Record<string, RawIssue["statusCategory"]> = {
   Done: "done",
 }
 
+/** One goal per sprint, oldest first. */
 const SPRINT_GOALS: Record<string, string[]> = {
   "TEAM-PLAT": [
+    "Metering pipeline foundations",
+    "Usage-based pricing in the API",
+    "Webhooks v2 delivery guarantees",
+    "Billing migration for existing tenants",
+    "Secrets rotation and hardening",
+    "SAML SSO for enterprise tenants",
     "Ship the new billing webhooks",
     "Harden auth and rotate secrets",
     "Rate limits v2 and usage metering",
     "Invoices and dunning polish",
   ],
   "TEAM-WEB": [
+    "Onboarding research and wireframes",
+    "Onboarding checklist and empty states",
+    "Design tokens across the app",
+    "Saved views foundations",
+    "Onboarding redesign GA prep",
+    "Performance budget and monitoring",
     "Onboarding redesign beta",
     "Dashboard saved views",
     "Accessibility and performance pass",
     "Search everywhere",
   ],
   "TEAM-MOB": [
+    "Push notification service",
+    "Rich push on iOS",
+    "Rich push on Android",
+    "Deep links and universal links",
+    "Crash-rate burn-down",
+    "Offline storage spike and plan",
     "Rich push notifications",
     "Offline mode foundations",
     "Release 4.2 stabilisation",
@@ -444,9 +505,9 @@ const SPRINT_GOALS: Record<string, string[]> = {
 type SprintPlan = RawSprint & { start: Date; end: Date; limit: Date }
 
 function buildSprints(team: TeamDef): SprintPlan[] {
-  const states: SprintState[] = ["closed", "closed", "active", "future"]
-  return states.map((state, i) => {
-    const start = new Date(ACTIVE_START.getTime() + (i - 2) * 14 * DAY)
+  return Array.from({ length: SPRINT_COUNT }, (_, i) => {
+    const state: SprintState = i < ACTIVE_INDEX ? "closed" : i === ACTIVE_INDEX ? "active" : "future"
+    const start = new Date(ACTIVE_START.getTime() + (i - ACTIVE_INDEX) * 14 * DAY)
     const end = new Date(start.getTime() + 11 * DAY + 8 * HOUR) // Friday 17:00
     const complete = state === "closed" ? new Date(end.getTime() - 30 * 60_000) : null
     return {
@@ -458,6 +519,7 @@ function buildSprints(team: TeamDef): SprintPlan[] {
       startDate: iso(start),
       endDate: iso(end),
       completeDate: complete ? iso(complete) : null,
+      piId: PIS[Math.floor(i / SPRINTS_PER_PI)].id,
       start,
       end,
       limit: state === "active" ? GENERATED_AT : (complete ?? end),
@@ -551,8 +613,55 @@ function descriptionFor(type: IssueType, summary: string): string | null {
 
 type Draft = Omit<RawIssue, "key" | "id"> & { createdAt: Date }
 
+/** The PI's sprints, first to last. */
+function piSprints(plans: SprintPlan[], piIndex: number): SprintPlan[] {
+  return plans.slice(piIndex * SPRINTS_PER_PI, (piIndex + 1) * SPRINTS_PER_PI)
+}
+
+/** Epics: in progress from their PI's start, done at its end if the PI is over. No sprints. */
+function generateEpics(team: TeamDef, plans: SprintPlan[]): RawIssue[] {
+  return team.epics.flatMap((epics, piIndex) => {
+    const sprints = piSprints(plans, piIndex)
+    const piStart = sprints[0].start
+    const piEnd = sprints.at(-1)!.end
+    const finished = piEnd < GENERATED_AT
+    return epics.map(([key, name]): RawIssue => {
+      const created = workTimeBefore(piStart, between(7, 14))
+      const owner = team.memberIds[0]
+      const changelog: RawChange[] = [
+        { at: iso(addWorkingHours(piStart, between(0.5, 4))), authorId: owner, field: "status", from: "To Do", to: "In Progress" },
+        ...(finished
+          ? [{ at: iso(atHour(piEnd, 16)), authorId: owner, field: "status", from: "In Progress", to: "Done" }]
+          : []),
+      ]
+      return {
+        key,
+        id: key.replace(/\D/g, ""),
+        summary: name,
+        description: `PI ${PIS[piIndex].name.split(" ")[1]} epic: ${name}.`,
+        type: "Epic",
+        status: finished ? "Done" : "In Progress",
+        statusCategory: finished ? "done" : "in_progress",
+        priority: "High",
+        assigneeId: owner,
+        reporterId: owner,
+        teamId: team.id,
+        sprintIds: [],
+        storyPoints: null,
+        labels: [],
+        epicKey: null,
+        parentKey: null,
+        created: iso(created),
+        updated: changelog.at(-1)!.at,
+        resolved: finished ? changelog.at(-1)!.at : null,
+        dueDate: iso(atHour(piEnd, 17)),
+        changelog,
+      }
+    })
+  })
+}
+
 function generateTeamIssues(team: TeamDef, sprints: SprintPlan[]): Draft[] {
-  const [s1, s2, active, future] = sprints
   const pools = Object.fromEntries(
     Object.entries(team.summaries).map(([k, v]) => [k, [...v]]),
   ) as TeamDef["summaries"]
@@ -574,7 +683,8 @@ function generateTeamIssues(team: TeamDef, sprints: SprintPlan[]): Draft[] {
     const createdAt = opts.midSprint
       ? addWorkingHours(sprint.start, between(2, Math.max(3, workingHoursBetween(sprint.start, sprint.limit) * 0.7)))
       : sprint.state === "future"
-        ? workTimeBefore(GENERATED_AT, between(1, 12))
+        ? // Leave room for the assignment that follows creation (≤ 90 min).
+          new Date(Math.min(workTimeBefore(GENERATED_AT, between(1, 12)).getTime(), GENERATED_AT.getTime() - 2 * HOUR))
         : workTimeBefore(sprint.start, between(1, 21))
 
     const finalTarget = opts.carryInto ? opts.carryTarget! : opts.target
@@ -663,7 +773,7 @@ function generateTeamIssues(team: TeamDef, sprints: SprintPlan[]): Draft[] {
       sprintIds,
       storyPoints,
       labels: Array.from(new Set([pick(team.labels), ...(chance(0.4) ? [pick(team.labels)] : [])])),
-      epicKey: type === "Spike" || chance(0.25) ? null : pick(team.epics),
+      epicKey: type === "Spike" || chance(0.25) ? null : pick(team.epics[Math.floor(sprints.indexOf(sprint) / SPRINTS_PER_PI)])[0],
       parentKey: null,
       created: iso(createdAt),
       updated: changelog.at(-1)?.at ?? iso(createdAt),
@@ -673,21 +783,22 @@ function generateTeamIssues(team: TeamDef, sprints: SprintPlan[]): Draft[] {
     })
   }
 
-  // Closed sprint 1: ~85% done, the rest carried into sprint 2 and finished there.
-  for (let i = 0; i < 16; i++) {
-    const carry = chance(0.15)
-    make(s1, carry ? { target: "Done", carryInto: s2, carryTarget: "Done" } : { target: "Done", midSprint: chance(0.05) })
-  }
-  // Closed sprint 2: ~85% done, the rest carried into the active sprint.
-  for (let i = 0; i < 17; i++) {
-    const carry = chance(0.15)
-    if (carry) {
-      const t = weighted(ACTIVE_STATUS_MIX.filter(([s]) => s !== "To Do"))
-      make(s2, { target: "Done", carryInto: active, carryTarget: t })
-    } else {
-      make(s2, { target: "Done", midSprint: chance(0.05) })
+  const active = sprints[ACTIVE_INDEX]
+  const future = sprints[ACTIVE_INDEX + 1]
+
+  // Closed sprints: ~85% done, the rest carried into the next sprint (finished
+  // there, or left in any started status when the next one is the active sprint).
+  // The previous PI is a little lighter to keep the file small.
+  sprints.slice(0, ACTIVE_INDEX).forEach((sprint, k) => {
+    const next = sprints[k + 1]
+    const count = k < SPRINTS_PER_PI ? int(12, 14) : int(16, 17)
+    for (let i = 0; i < count; i++) {
+      if (!chance(0.15)) make(sprint, { target: "Done", midSprint: chance(0.05) })
+      else if (next === active)
+        make(sprint, { target: "Done", carryInto: active, carryTarget: weighted(ACTIVE_STATUS_MIX.filter(([s]) => s !== "To Do")) })
+      else make(sprint, { target: "Done", carryInto: next, carryTarget: "Done" })
     }
-  }
+  })
   // Active sprint: a mix of every status.
   for (let i = 0; i < 22; i++) {
     make(active, { target: weighted(ACTIVE_STATUS_MIX), midSprint: chance(0.07) })
@@ -706,15 +817,23 @@ function main() {
   const sprints: RawSprint[] = []
   const issues: RawIssue[] = []
   let nextId = 10_001
+  let plans: SprintPlan[] = []
 
   for (const team of TEAMS) {
-    const plans = buildSprints(team)
+    plans = buildSprints(team)
     sprints.push(...plans.map(({ start: _s, end: _e, limit: _l, ...s }) => s))
+    issues.push(...generateEpics(team, plans))
     const drafts = generateTeamIssues(team, plans).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
     drafts.forEach(({ createdAt: _c, ...d }, i) => {
       issues.push({ key: `${team.projectKey}-${team.firstKey + i}`, id: String(nextId++), ...d })
     })
   }
+
+  // Every team shares the same sprint calendar, so any team's plans give the PI dates.
+  const programIncrements = PIS.map((pi, i) => {
+    const s = piSprints(plans, i)
+    return { id: pi.id, name: pi.name, startDate: iso(s[0].start), endDate: iso(s.at(-1)!.end), objectives: pi.objectives }
+  })
 
   const output = {
     meta: {
@@ -731,6 +850,7 @@ function main() {
       email: `${p.displayName.toLowerCase().normalize("NFD").replace(/[^a-z ]/g, "").replace(/ /g, ".")}@example.com`,
       avatarUrl: null,
     })),
+    programIncrements,
     sprints,
     issues,
   }
@@ -751,7 +871,8 @@ function printSummary(issues: RawIssue[], sprints: RawSprint[], outPath: string)
   console.log("Unassigned:", issues.filter((i) => !i.assigneeId).length)
   console.log("Carry-overs:", issues.filter((i) => i.sprintIds.length > 1).length)
   console.log("\nPer sprint (issues · statuses):")
-  for (const s of sprints) {
+  const byDate = [...sprints].sort((a, b) => a.startDate.localeCompare(b.startDate) || a.teamId.localeCompare(b.teamId))
+  for (const s of byDate) {
     const inSprint = issues.filter((i) => i.sprintIds.at(-1) === s.id || i.sprintIds.includes(s.id))
     console.log(`  ${s.name.padEnd(16)} ${s.state.padEnd(7)} ${String(inSprint.length).padStart(3)} ·`, count(inSprint.map((i) => i.status)))
   }

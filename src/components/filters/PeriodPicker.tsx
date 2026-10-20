@@ -5,7 +5,9 @@ import { PERIODS, type Period } from "@/lib/jira/period"
 
 /** Header time-period control. Defaults to Today; drives every activity view. */
 export function PeriodPicker() {
-  const { period, setPeriod } = useData()
+  const { dataset, period, setPeriod } = useData()
+  // "This PI" only means something when the export has PIs.
+  const periods = dataset.programIncrements.length ? PERIODS : PERIODS.filter((p) => p.value !== "pi")
   return (
     <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
       <SelectTrigger size="sm" className="h-8 gap-1.5" aria-label="Time period">
@@ -13,7 +15,7 @@ export function PeriodPicker() {
         <SelectValue />
       </SelectTrigger>
       <SelectContent align="end">
-        {PERIODS.map((p) => (
+        {periods.map((p) => (
           <SelectItem key={p.value} value={p.value}>
             {p.label}
           </SelectItem>

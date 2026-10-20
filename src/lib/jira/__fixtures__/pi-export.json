@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "source": "jira-trawler",
+    "version": "1.0",
+    "generatedAt": "2026-10-08T12:00:00Z",
+    "jiraBaseUrl": "https://example.atlassian.net"
+  },
+  "programIncrements": [
+    { "id": "PI-B", "name": "PI B", "startDate": "2026-09-28T00:00:00Z", "endDate": "2026-10-23T23:59:59Z", "objectives": ["Ship it"] },
+    { "id": "PI-A", "name": "PI A", "startDate": "2026-08-31T00:00:00Z", "endDate": "2026-09-25T23:59:59Z" }
+  ],
+  "teams": [{ "id": "TEAM-TST", "name": "Test", "projectKey": "TST", "memberIds": ["u-1"] }],
+  "people": [{ "id": "u-1", "displayName": "Alice Adams" }],
+  "sprints": [
+    { "id": 10, "name": "TST Sprint 0", "teamId": "TEAM-TST", "state": "closed", "piId": "PI-A", "startDate": "2026-09-14T09:00:00Z", "endDate": "2026-09-25T17:00:00Z", "completeDate": "2026-09-25T16:00:00Z" },
+    { "id": 11, "name": "TST Sprint 1", "teamId": "TEAM-TST", "state": "closed", "startDate": "2026-09-28T09:00:00Z", "endDate": "2026-10-02T17:00:00Z", "completeDate": "2026-10-02T16:00:00Z" },
+    { "id": 12, "name": "TST Sprint 2", "teamId": "TEAM-TST", "state": "active", "piId": "PI-B", "startDate": "2026-10-05T09:00:00Z", "endDate": "2026-10-16T17:00:00Z" },
+    { "id": 13, "name": "TST Sprint 3", "teamId": "TEAM-TST", "state": "future", "piId": "PI-B", "startDate": "2026-10-19T09:00:00Z", "endDate": "2026-10-23T17:00:00Z" },
+    { "id": 14, "name": "TST Someday", "teamId": "TEAM-TST", "state": "future", "piId": "NOPE" }
+  ],
+  "issues": [
+    {
+      "key": "TST-E1", "summary": "Epic one", "type": "Epic", "status": "In Progress", "statusCategory": "in_progress",
+      "teamId": "TEAM-TST", "sprintIds": [], "created": "2026-09-20T10:00:00Z",
+      "changelog": [{ "at": "2026-09-28T10:00:00Z", "authorId": "u-1", "field": "status", "from": "To Do", "to": "In Progress" }]
+    },
+    {
+      "key": "TST-1", "summary": "Done in PI A", "type": "Story", "status": "Done", "statusCategory": "done", "storyPoints": 5,
+      "teamId": "TEAM-TST", "sprintIds": [10], "created": "2026-09-14T10:00:00Z", "resolved": "2026-09-20T10:00:00Z",
+      "changelog": [{ "at": "2026-09-20T10:00:00Z", "authorId": "u-1", "field": "status", "from": "To Do", "to": "Done" }]
+    },
+    {
+      "key": "TST-2", "summary": "Done in sprint 1", "type": "Story", "status": "Done", "statusCategory": "done", "storyPoints": 3,
+      "assigneeId": "u-1", "teamId": "TEAM-TST", "sprintIds": [11], "epicKey": "TST-E1", "created": "2026-09-28T10:00:00Z", "resolved": "2026-10-01T10:00:00Z",
+      "changelog": [
+        { "at": "2026-09-29T10:00:00Z", "authorId": "u-1", "field": "status", "from": "To Do", "to": "In Progress" },
+        { "at": "2026-10-01T10:00:00Z", "authorId": "u-1", "field": "status", "from": "In Progress", "to": "Done" }
+      ]
+    },
+    {
+      "key": "TST-3", "summary": "Carried into sprint 2", "type": "Story", "status": "In Progress", "statusCategory": "in_progress", "storyPoints": 2,
+      "assigneeId": "u-1", "teamId": "TEAM-TST", "sprintIds": [11, 12], "epicKey": "TST-E1", "created": "2026-09-28T10:00:00Z",
+      "changelog": [{ "at": "2026-10-06T10:00:00Z", "authorId": "u-1", "field": "status", "from": "To Do", "to": "In Progress" }]
+    },
+    {
+      "key": "TST-4", "summary": "Added mid-sprint", "type": "Task", "status": "To Do", "statusCategory": "todo", "storyPoints": 8,
+      "teamId": "TEAM-TST", "sprintIds": [12], "created": "2026-10-07T10:00:00Z"
+    },
+    {
+      "key": "TST-5", "summary": "Planned for sprint 3", "type": "Story", "status": "To Do", "statusCategory": "todo",
+      "teamId": "TEAM-TST", "sprintIds": [13], "epicKey": "TST-E2", "created": "2026-10-08T09:00:00Z"
+    }
+  ]
+}

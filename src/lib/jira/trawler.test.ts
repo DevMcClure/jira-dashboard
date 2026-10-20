@@ -96,6 +96,7 @@ describe("Trawler audit log", () => {
         startDate: null,
         endDate: null,
         completeDate: null,
+        piId: null,
       },
     ])
     expect(ds.issues.every((i) => i.sprintIds[0] === 1)).toBe(true)

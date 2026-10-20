@@ -2,6 +2,7 @@ import { format } from "date-fns"
 import { CalendarDays, Copy, Download, Timer, Users } from "lucide-react"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
+import { MarkdownView } from "@/components/export/MarkdownView"
 import { FilterPopover, type FilterOption } from "@/components/filters/FilterPopover"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
@@ -10,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useData } from "@/hooks/useData"
 import { PERIODS, type Period } from "@/lib/jira/period"
 import { buildReport, REPORT_SECTIONS, reportSprints, type ReportSection } from "@/lib/jira/report"
@@ -157,9 +159,24 @@ export default function ExportPage() {
           </CardHeader>
           <CardContent>
             {sections.length ? (
-              <ScrollArea className="h-[calc(100svh-16rem)] min-h-96 rounded-lg border bg-muted/40">
-                <pre className="p-4 font-mono text-xs leading-relaxed whitespace-pre">{markdown}</pre>
-              </ScrollArea>
+              <Tabs defaultValue="rendered">
+                <TabsList>
+                  <TabsTrigger value="rendered">Preview</TabsTrigger>
+                  <TabsTrigger value="source">Markdown</TabsTrigger>
+                </TabsList>
+                <TabsContent value="rendered">
+                  <ScrollArea className="h-[calc(100svh-18rem)] min-h-96 rounded-lg border">
+                    <div className="p-6">
+                      <MarkdownView markdown={markdown} />
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+                <TabsContent value="source">
+                  <ScrollArea className="h-[calc(100svh-18rem)] min-h-96 rounded-lg border bg-muted/40">
+                    <pre className="p-4 font-mono text-xs leading-relaxed whitespace-pre">{markdown}</pre>
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
             ) : (
               <p className="text-sm text-muted-foreground">Pick at least one section to include.</p>
             )}

@@ -59,6 +59,8 @@ export default function PiPage() {
   }
 
   const level = HEALTH_LEVELS[health.level]
+  // Teams share the calendar, so distinct start dates = sprints per team.
+  const sprintsPerTeam = new Set(sprints.map((s) => s.startDate?.getTime())).size
   const open = (s: Sprint) => {
     setBurndownSprintId(s.id)
     setFilters({ ...filters, sprintIds: [s.id] })
@@ -69,10 +71,7 @@ export default function PiPage() {
     <>
       <PageHeader
         title={pi.name}
-        description={`${format(pi.startDate, DATE_FMT)} – ${format(pi.endDate, DATE_FMT)} · ${pluralize(
-          new Set(sprints.map((s) => s.startDate?.getTime())).size,
-          "sprint",
-        )}${filters.sprintIds.length ? " · sprint filter ignored here" : ""}`}
+        description={`${format(pi.startDate, DATE_FMT)} – ${format(pi.endDate, DATE_FMT)} · ${pluralize(sprintsPerTeam, "sprint")} per team${filters.sprintIds.length ? " · sprint filter ignored here" : ""}`}
         actions={
           <Badge variant="outline" className="gap-1.5 font-normal">
             <StatusDot colorVar={level.colorVar} />
@@ -80,7 +79,7 @@ export default function PiPage() {
           </Badge>
         }
       />
-      <PiSummary pi={pi} health={health} />
+      <PiSummary pi={pi} health={health} sprintsPerTeam={sprintsPerTeam} />
       <PiBurnupChart pi={{ ...pi, sprintIds: sprints.map((s) => s.id) }} sprints={sprints} issues={issues} now={now} />
       <PiTimeline teams={teams} sprints={sprints} issues={issues} onOpen={open} />
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">

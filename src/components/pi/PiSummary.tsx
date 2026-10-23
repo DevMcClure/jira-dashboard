@@ -4,7 +4,12 @@ import { pluralize } from "@/lib/format"
 import type { piHealth } from "@/lib/jira/metrics"
 import type { ProgramIncrement } from "@/lib/jira/types"
 
-type Props = { pi: ProgramIncrement; health: ReturnType<typeof piHealth> }
+type Props = {
+  pi: ProgramIncrement
+  health: ReturnType<typeof piHealth>
+  /** Sprints in the PI per team (teams share the calendar), not the total across teams. */
+  sprintsPerTeam: number
+}
 
 function Tile({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
@@ -19,14 +24,14 @@ function Tile({ label, value, detail }: { label: string; value: string; detail: 
 }
 
 /** Headline PI numbers plus its objectives. */
-export function PiSummary({ pi, health }: Props) {
+export function PiSummary({ pi, health, sprintsPerTeam }: Props) {
   const closed = pi.state === "closed"
   return (
     <div className="grid gap-4 xl:grid-cols-[1fr_22rem]">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Tile label="Done" value={`${health.pctDone}%`} detail={`of points · ${health.pctElapsed}% of time gone`} />
         <Tile label="Points" value={`${health.donePoints} / ${health.totalPoints}`} detail="done / in scope" />
-        <Tile label="Tickets" value={String(health.ticketCount)} detail={`across ${pluralize(pi.sprintIds.length, "sprint")}`} />
+        <Tile label="Tickets" value={String(health.ticketCount)} detail={`across ${pluralize(sprintsPerTeam, "sprint")}`} />
         <Tile
           label={closed ? "Finished" : "Days left"}
           value={closed ? "✓" : String(health.daysLeft)}

@@ -195,7 +195,7 @@
   "sprints": [
     {
       "id": 101,
-      "name": "PLAT Sprint 35",
+      "name": "PLAT 26.3.1",
       "teamId": "TEAM-PLAT",
       "state": "closed",
       "goal": "Metering pipeline foundations",
@@ -206,7 +206,7 @@
     },
     {
       "id": 102,
-      "name": "PLAT Sprint 36",
+      "name": "PLAT 26.3.2",
       "teamId": "TEAM-PLAT",
       "state": "closed",
       "goal": "Usage-based pricing in the API",
@@ -217,7 +217,7 @@
     },
     {
       "id": 103,
-      "name": "PLAT Sprint 37",
+      "name": "PLAT 26.3.3",
       "teamId": "TEAM-PLAT",
       "state": "closed",
       "goal": "Webhooks v2 delivery guarantees",
@@ -228,7 +228,7 @@
     },
     {
       "id": 104,
-      "name": "PLAT Sprint 38",
+      "name": "PLAT 26.3.4",
       "teamId": "TEAM-PLAT",
       "state": "closed",
       "goal": "Billing migration for existing tenants",
@@ -239,7 +239,7 @@
     },
     {
       "id": 105,
-      "name": "PLAT Sprint 39",
+      "name": "PLAT 26.3.5",
       "teamId": "TEAM-PLAT",
       "state": "closed",
       "goal": "Secrets rotation and hardening",
@@ -250,7 +250,7 @@
     },
     {
       "id": 106,
-      "name": "PLAT Sprint 40",
+      "name": "PLAT 26.4.1",
       "teamId": "TEAM-PLAT",
       "state": "closed",
       "goal": "SAML SSO for enterprise tenants",
@@ -261,7 +261,7 @@
     },
     {
       "id": 107,
-      "name": "PLAT Sprint 41",
+      "name": "PLAT 26.4.2",
       "teamId": "TEAM-PLAT",
       "state": "closed",
       "goal": "Ship the new billing webhooks",
@@ -272,7 +272,7 @@
     },
     {
       "id": 108,
-      "name": "PLAT Sprint 42",
+      "name": "PLAT 26.4.3",
       "teamId": "TEAM-PLAT",
       "state": "closed",
       "goal": "Harden auth and rotate secrets",
@@ -283,7 +283,7 @@
     },
     {
       "id": 109,
-      "name": "PLAT Sprint 43",
+      "name": "PLAT 26.4.4",
       "teamId": "TEAM-PLAT",
       "state": "active",
       "goal": "Rate limits v2 and usage metering",
@@ -294,7 +294,7 @@
     },
     {
       "id": 110,
-      "name": "PLAT Sprint 44",
+      "name": "PLAT 26.4.5",
       "teamId": "TEAM-PLAT",
       "state": "future",
       "goal": "Invoices and dunning polish",
@@ -305,7 +305,7 @@
     },
     {
       "id": 201,
-      "name": "WEB Sprint 21",
+      "name": "WEB 26.3.1",
       "teamId": "TEAM-WEB",
       "state": "closed",
       "goal": "Onboarding research and wireframes",
@@ -316,7 +316,7 @@
     },
     {
       "id": 202,
-      "name": "WEB Sprint 22",
+      "name": "WEB 26.3.2",
       "teamId": "TEAM-WEB",
       "state": "closed",
       "goal": "Onboarding checklist and empty states",
@@ -327,7 +327,7 @@
     },
     {
       "id": 203,
-      "name": "WEB Sprint 23",
+      "name": "WEB 26.3.3",
       "teamId": "TEAM-WEB",
       "state": "closed",
       "goal": "Design tokens across the app",
@@ -338,7 +338,7 @@
     },
     {
       "id": 204,
-      "name": "WEB Sprint 24",
+      "name": "WEB 26.3.4",
       "teamId": "TEAM-WEB",
       "state": "closed",
       "goal": "Saved views foundations",
@@ -349,7 +349,7 @@
     },
     {
       "id": 205,
-      "name": "WEB Sprint 25",
+      "name": "WEB 26.3.5",
       "teamId": "TEAM-WEB",
       "state": "closed",
       "goal": "Onboarding redesign GA prep",
@@ -360,7 +360,7 @@
     },
     {
       "id": 206,
-      "name": "WEB Sprint 26",
+      "name": "WEB 26.4.1",
       "teamId": "TEAM-WEB",
       "state": "closed",
       "goal": "Performance budget and monitoring",
@@ -371,7 +371,7 @@
     },
     {
       "id": 207,
-      "name": "WEB Sprint 27",
+      "name": "WEB 26.4.2",
       "teamId": "TEAM-WEB",
       "state": "closed",
       "goal": "Onboarding redesign beta",
@@ -382,7 +382,7 @@
     },
     {
       "id": 208,
-      "name": "WEB Sprint 28",
+      "name": "WEB 26.4.3",
       "teamId": "TEAM-WEB",
       "state": "closed",
       "goal": "Dashboard saved views",
@@ -393,7 +393,7 @@
     },
     {
       "id": 209,
-      "name": "WEB Sprint 29",
+      "name": "WEB 26.4.4",
       "teamId": "TEAM-WEB",
       "state": "active",
       "goal": "Accessibility and performance pass",
@@ -404,7 +404,7 @@
     },
     {
       "id": 210,
-      "name": "WEB Sprint 30",
+      "name": "WEB 26.4.5",
       "teamId": "TEAM-WEB",
       "state": "future",
       "goal": "Search everywhere",
@@ -415,7 +415,7 @@
     },
     {
       "id": 301,
-      "name": "MOB Sprint 12",
+      "name": "MOB 26.3.1",
       "teamId": "TEAM-MOB",
       "state": "closed",
       "goal": "Push notification service",
@@ -426,7 +426,7 @@
     },
     {
       "id": 302,
-      "name": "MOB Sprint 13",
+      "name": "MOB 26.3.2",
       "teamId": "TEAM-MOB",
       "state": "closed",
       "goal": "Rich push on iOS",
@@ -437,7 +437,7 @@
     },
     {
       "id": 303,
-      "name": "MOB Sprint 14",
+      "name": "MOB 26.3.3",
       "teamId": "TEAM-MOB",
       "state": "closed",
       "goal": "Rich push on Android",
@@ -448,7 +448,7 @@
     },
     {
       "id": 304,
-      "name": "MOB Sprint 15",
+      "name": "MOB 26.3.4",
       "teamId": "TEAM-MOB",
       "state": "closed",
       "goal": "Deep links and universal links",
@@ -459,7 +459,7 @@
     },
     {
       "id": 305,
-      "name": "MOB Sprint 16",
+      "name": "MOB 26.3.5",
       "teamId": "TEAM-MOB",
       "state": "closed",
       "goal": "Crash-rate burn-down",
@@ -470,7 +470,7 @@
     },
     {
       "id": 306,
-      "name": "MOB Sprint 17",
+      "name": "MOB 26.4.1",
       "teamId": "TEAM-MOB",
       "state": "closed",
       "goal": "Offline storage spike and plan",
@@ -481,7 +481,7 @@
     },
     {
       "id": 307,
-      "name": "MOB Sprint 18",
+      "name": "MOB 26.4.2",
       "teamId": "TEAM-MOB",
       "state": "closed",
       "goal": "Rich push notifications",
@@ -492,7 +492,7 @@
     },
     {
       "id": 308,
-      "name": "MOB Sprint 19",
+      "name": "MOB 26.4.3",
       "teamId": "TEAM-MOB",
       "state": "closed",
       "goal": "Offline mode foundations",
@@ -503,7 +503,7 @@
     },
     {
       "id": 309,
-      "name": "MOB Sprint 20",
+      "name": "MOB 26.4.4",
       "teamId": "TEAM-MOB",
       "state": "active",
       "goal": "Release 4.2 stabilisation",
@@ -514,7 +514,7 @@
     },
     {
       "id": 310,
-      "name": "MOB Sprint 21",
+      "name": "MOB 26.4.5",
       "teamId": "TEAM-MOB",
       "state": "future",
       "goal": "Widgets and deep links",

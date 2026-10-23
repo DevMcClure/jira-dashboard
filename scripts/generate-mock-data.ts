@@ -138,7 +138,6 @@ type TeamDef = {
   projectKey: string
   firstKey: number
   sprintBase: number
-  sprintNumberStart: number
   memberIds: string[]
   labels: string[]
   /** [key, name] per PI, oldest PI first. */
@@ -170,7 +169,6 @@ const TEAMS: TeamDef[] = [
     projectKey: "PLAT",
     firstKey: 1201,
     sprintBase: 101,
-    sprintNumberStart: 35,
     memberIds: ["u-01", "u-02", "u-03", "u-04", "u-05"],
     labels: ["billing", "auth", "api", "infra", "webhooks", "observability"],
     epics: [
@@ -250,7 +248,6 @@ const TEAMS: TeamDef[] = [
     projectKey: "WEB",
     firstKey: 841,
     sprintBase: 201,
-    sprintNumberStart: 21,
     memberIds: ["u-06", "u-07", "u-08", "u-09", "u-03", "u-14"],
     labels: ["dashboard", "onboarding", "a11y", "frontend", "search", "perf"],
     epics: [
@@ -330,7 +327,6 @@ const TEAMS: TeamDef[] = [
     projectKey: "MOB",
     firstKey: 521,
     sprintBase: 301,
-    sprintNumberStart: 12,
     memberIds: ["u-10", "u-11", "u-12", "u-13"],
     labels: ["ios", "android", "push", "offline", "release", "perf"],
     epics: [
@@ -512,7 +508,8 @@ function buildSprints(team: TeamDef): SprintPlan[] {
     const complete = state === "closed" ? new Date(end.getTime() - 30 * 60_000) : null
     return {
       id: team.sprintBase + i,
-      name: `${team.projectKey} Sprint ${team.sprintNumberStart + i}`,
+      // "PLAT 26.4.4" = PI 26.4, sprint 4 of 5.
+      name: `${team.projectKey} ${PIS[Math.floor(i / SPRINTS_PER_PI)].name.replace(/^PI /, "")}.${(i % SPRINTS_PER_PI) + 1}`,
       teamId: team.id,
       state,
       goal: SPRINT_GOALS[team.id][i],

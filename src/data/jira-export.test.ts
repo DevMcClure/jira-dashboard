@@ -63,6 +63,13 @@ describe("bundled mock export", () => {
     }
     const current = ds.sprints.filter((s) => s.piId === "PI-26.4" && s.teamId === "TEAM-PLAT").map((s) => s.state)
     expect(current).toEqual(["closed", "closed", "closed", "active", "future"])
+    for (const team of ds.teams) {
+      for (const pi of ds.programIncrements) {
+        const names = ds.sprints.filter((s) => s.piId === pi.id && s.teamId === team.id).map((s) => s.name)
+        const prefix = `${team.projectKey} ${pi.name.replace(/^PI /, "")}`
+        expect(names).toEqual([1, 2, 3, 4, 5].map((n) => `${prefix}.${n}`))
+      }
+    }
   })
 
   it("has epics without sprints that stories point at", () => {

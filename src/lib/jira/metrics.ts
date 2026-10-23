@@ -12,7 +12,7 @@ import {
   startOfHour,
 } from "date-fns"
 import { categoryForStatus, compareStatus, statusColorVar } from "./constants"
-import type { DateRange, Issue, Sprint, StatusCategory, Team, Transition } from "./types"
+import type { DateRange, Issue, ProgramIncrement, Sprint, StatusCategory, Team, Transition } from "./types"
 
 const DAY_MS = 86_400_000
 
@@ -199,23 +199,21 @@ export function sprintHealth(sprint: Sprint, issues: Issue[], now: Date) {
     closed ? 100 : duration > 0 ? clamp(((now.getTime() - start!.getTime()) / duration) * 100, 0, 100) : 0
   const daysLeft = closed || !end ? 0 : Math.max(0, Math.ceil((end.getTime() - now.getTime()) / DAY_MS))
 
-  const gap = pctElapsed - pctDone
-  const level: HealthLevel = closed
-    ? "completed"
-    : gap > 30
-      ? "off_track"
-      : gap > 15
-        ? "at_risk"
-        : "on_track"
-
   return {
     pctDone: Math.round(pctDone),
     pctElapsed: Math.round(pctElapsed),
     daysLeft,
-    level,
+    level: healthLevel(pctDone, pctElapsed, closed),
     donePoints,
     totalPoints: total,
   }
+}
+
+/** At risk if done trails elapsed by >15pts, off track if >30pts. */
+export function healthLevel(pctDone: number, pctElapsed: number, closed: boolean): HealthLevel {
+  if (closed) return "completed"
+  const gap = pctElapsed - pctDone
+  return gap > 30 ? "off_track" : gap > 15 ? "at_risk" : "on_track"
 }
 
 /** Completed (and committed) points per closed sprint of a team, oldest first. */
@@ -223,17 +221,121 @@ export function velocity(team: Team, sprints: Sprint[], issues: Issue[]) {
   return sprints
     .filter((s) => s.teamId === team.id && s.state === "closed" && s.startDate)
     .sort((a, b) => a.startDate!.getTime() - b.startDate!.getTime())
-    .map((s) => {
-      const end = s.completeDate ?? s.endDate ?? s.startDate!
-      const scoped = issues.filter(inSprint(s))
-      const committed = scoped
-        .filter((i) => i.created <= s.startDate! && categoryAt(i, s.startDate!) !== "done")
-        .reduce((sum, i) => sum + pointsAt(i, s.startDate!), 0)
-      const completed = scoped
-        .filter((i) => categoryAt(i, end) === "done")
-        .reduce((sum, i) => sum + pointsAt(i, end), 0)
-      return { sprintId: s.id, sprintName: s.name, committed, completed }
-    })
+    .map((s) => sprintVelocity(s, issues))
+}
+
+/** Points committed at a sprint's start, and done by its end (or now, if still running). */
+export function sprintVelocity(sprint: Sprint, issues: Issue[]) {
+  const start = sprint.startDate
+  if (!start) return { sprintId: sprint.id, sprintName: sprint.name, committed: 0, completed: 0 }
+  const end = sprint.completeDate ?? sprint.endDate ?? start
+  const scoped = issues.filter(inSprint(sprint))
+  const committed = scoped
+    .filter((i) => i.created <= start && categoryAt(i, start) !== "done")
+    .reduce((sum, i) => sum + pointsAt(i, start), 0)
+  const completed = scoped
+    .filter((i) => categoryAt(i, end) === "done")
+    .reduce((sum, i) => sum + pointsAt(i, end), 0)
+  return { sprintId: sprint.id, sprintName: sprint.name, committed, completed }
+}
+
+// ---------------------------------------------------------------------------
+// Program increments
+// ---------------------------------------------------------------------------
+
+const inPi = (pi: ProgramIncrement) => (i: Issue) => i.sprintIds.some((id) => pi.sprintIds.includes(id))
+
+export type BurnupPoint = { date: Date; scope: number; done: number | null }
+
+/**
+ * Per-day total scope vs done points across a PI's sprints, replaying
+ * changelogs. Scope keeps counting future days (it's known); done is null
+ * after `now`.
+ */
+export function piBurnup(pi: ProgramIncrement, issues: Issue[], now: Date): BurnupPoint[] {
+  const scoped = issues.filter(inPi(pi))
+  const cap = minDate(pi.endDate, now)
+  return days({ start: pi.startDate, end: pi.endDate }).map((date) => {
+    const isFuture = startOfDay(date) > cap
+    const t = minDate(endOfDay(date), cap)
+    let scope = 0
+    let done = 0
+    for (const i of scoped) {
+      const cat = categoryAt(i, t)
+      if (cat === null) continue
+      const p = pointsAt(i, t)
+      scope += p
+      if (cat === "done") done += p
+    }
+    return { date, scope, done: isFuture ? null : done }
+  })
+}
+
+/** PI progress: % of points done vs % of the PI elapsed, with the sprint health thresholds. */
+export function piHealth(pi: ProgramIncrement, issues: Issue[], now: Date) {
+  const scoped = issues.filter(inPi(pi))
+  const closed = pi.state === "closed"
+  const totalPoints = scoped.reduce((s, i) => s + points(i), 0)
+  const done = scoped.filter((i) => i.statusCategory === "done")
+  const donePoints = done.reduce((s, i) => s + points(i), 0)
+  const pctDone =
+    totalPoints > 0 ? (donePoints / totalPoints) * 100 : scoped.length ? (done.length / scoped.length) * 100 : 0
+  const duration = pi.endDate.getTime() - pi.startDate.getTime()
+  const pctElapsed = closed ? 100 : duration > 0 ? clamp(((now.getTime() - pi.startDate.getTime()) / duration) * 100, 0, 100) : 0
+  const daysLeft = closed ? 0 : Math.max(0, Math.ceil((pi.endDate.getTime() - now.getTime()) / DAY_MS))
+  return {
+    pctDone: Math.round(pctDone),
+    pctElapsed: Math.round(pctElapsed),
+    daysLeft,
+    level: healthLevel(pctDone, pctElapsed, closed),
+    donePoints,
+    totalPoints,
+    ticketCount: scoped.length,
+  }
+}
+
+export type EpicProgress = {
+  epicKey: string
+  teamIds: string[]
+  total: number
+  done: number
+  points: number
+  donePoints: number
+  /** By points, falling back to ticket counts when nothing is estimated. */
+  pctDone: number
+}
+
+/** Progress per epic (issues without an epic are skipped), least done first. */
+export function epicProgress(issues: Issue[]): EpicProgress[] {
+  const map = new Map<string, EpicProgress & { teams: Set<string> }>()
+  for (const i of issues) {
+    if (!i.epicKey) continue
+    const e = map.get(i.epicKey) ?? {
+      epicKey: i.epicKey,
+      teamIds: [],
+      teams: new Set<string>(),
+      total: 0,
+      done: 0,
+      points: 0,
+      donePoints: 0,
+      pctDone: 0,
+    }
+    e.total++
+    e.points += points(i)
+    if (i.statusCategory === "done") {
+      e.done++
+      e.donePoints += points(i)
+    }
+    if (i.teamId) e.teams.add(i.teamId)
+    map.set(i.epicKey, e)
+  }
+  return [...map.values()]
+    .map(({ teams, ...e }) => ({
+      ...e,
+      teamIds: [...teams],
+      pctDone: Math.round(e.points > 0 ? (e.donePoints / e.points) * 100 : (e.done / e.total) * 100),
+    }))
+    .sort((a, b) => a.pctDone - b.pctDone || b.points - a.points || a.epicKey.localeCompare(b.epicKey))
 }
 
 // ---------------------------------------------------------------------------

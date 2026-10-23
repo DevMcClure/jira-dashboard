@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest"
+import piFixture from "./__fixtures__/pi-export.json"
 import fixture from "./__fixtures__/small-export.json"
 import { parseExport } from "./adapter"
 import { buildReport, cell, REPORT_SECTIONS, reportScope, type ReportOptions } from "./report"
+import { SPRINT_SCOPE } from "./scope"
 
 const ds = parseExport(fixture)
 const ALL: ReportOptions = {
+  scope: SPRINT_SCOPE,
   teamIds: [],
   sprintIds: [],
   period: "all",
@@ -38,7 +41,7 @@ describe("buildReport", () => {
 
   it("has a title, scope lines and every section", () => {
     expect(md).toMatch(/^# Sprint report: All teams\n/)
-    expect(md).toContain("- **Sprints:** All sprints")
+    expect(md).toContain("- **Sprints:** Current sprint")
     expect(md).toContain("- **Period:** All time (5 Oct 2026 – 8 Oct 2026)")
     for (const h of ["## Summary", "## Teams", "### Test (TST)", "## Sprints", "## Status breakdown", "## People", "## Movements (All time)"]) {
       expect(md).toContain(h)
@@ -73,6 +76,40 @@ describe("buildReport", () => {
     expect(empty).toContain("_No teams in scope._")
     expect(empty).toContain("_No tickets in scope._")
     expect(empty).toContain("_No status moves in this period._")
+  })
+})
+
+describe("buildReport with PIs", () => {
+  const pds = parseExport(piFixture)
+  const opts: ReportOptions = { ...ALL, period: "pi" }
+
+  it("current sprint scope covers the active sprint and names its PI", () => {
+    const md = buildReport(pds, opts)
+    expect(md).toMatch(/^# Sprint report: All teams\n/)
+    expect(md).toContain("- **PI:** PI B (28 Sep 2026 – 23 Oct 2026)")
+    expect(md).toContain("- **Period:** This PI (28 Sep 2026 – 8 Oct 2026)")
+    expect(md).toContain(`| Tickets | 2 |`) // TST-3 and TST-4 are in sprint 2
+  })
+
+  it("a PI scope covers every sprint in it", () => {
+    const md = buildReport(pds, { ...opts, scope: { kind: "pi", piId: "PI-B" } })
+    expect(md).toMatch(/^# PI B report: All teams\n/)
+    expect(md).toContain("- **Sprints:** All sprints in PI B")
+    expect(md).toContain(`| Tickets | 4 |`)
+    expect(md).toMatch(/\| TST Sprint 3 \| Test \| future \| .* \| Planned \|/)
+  })
+
+  it("has a PI section with health, points per sprint and epics", () => {
+    const md = buildReport(pds, { ...opts, sections: ["pi"] })
+    expect(md).toContain("## Program increment")
+    expect(md).toContain("**PI B**: At risk. 23% of points done with 40% of the PI gone (3 / 13 pts, 4 tickets, 16 days left).")
+    expect(md).toContain("- Ship it")
+    expect(md).toContain("| TST Sprint 1 | Test | closed | 0 pts | 3 pts |")
+    expect(md).toContain("| Epic one ([TST-E1](https://example.atlassian.net/browse/TST-E1)) | Test | 60% | 1 / 2 | 3 / 5 |")
+  })
+
+  it("says so when there are no PIs", () => {
+    expect(buildReport(ds, { ...ALL, sections: ["pi"] })).toContain("_This export has no program increments._")
   })
 })
 

@@ -1,8 +1,8 @@
 import { differenceInCalendarDays, endOfDay, startOfDay, subDays } from "date-fns"
-import type { DateRange, Issue, Sprint } from "./types"
+import type { DateRange, Issue, ProgramIncrement, Sprint } from "./types"
 
 /** The header's time-period choices. "now" is always the export's generatedAt. */
-export type Period = "today" | "yesterday" | "7d" | "14d" | "sprint" | "all"
+export type Period = "today" | "yesterday" | "7d" | "14d" | "sprint" | "pi" | "all"
 
 export const PERIODS: { value: Period; label: string }[] = [
   { value: "today", label: "Today" },
@@ -10,6 +10,7 @@ export const PERIODS: { value: Period; label: string }[] = [
   { value: "7d", label: "Last 7 days" },
   { value: "14d", label: "Last 14 days" },
   { value: "sprint", label: "Current sprint" },
+  { value: "pi", label: "This PI" },
   { value: "all", label: "All time" },
 ]
 
@@ -20,6 +21,7 @@ export const PERIOD_PHRASE: Record<Period, string> = {
   "7d": "in the last 7 days",
   "14d": "in the last 14 days",
   sprint: "this sprint",
+  pi: "this PI",
   all: "in total",
 }
 
@@ -27,9 +29,16 @@ export const PERIOD_PHRASE: Record<Period, string> = {
  * Resolve a period to a concrete range ending at `now` (except "yesterday",
  * which is the whole previous calendar day).
  * - "sprint": from the earliest start of the active sprints in scope (falls back to 14 days)
+ * - "pi": from the start of `pi` to its end or `now`, whichever is first (falls back to "all")
  * - "all": from the earliest started sprint, or the oldest ticket if there are no sprints
  */
-export function periodRange(period: Period, now: Date, sprints: Sprint[], issues: Issue[]): DateRange {
+export function periodRange(
+  period: Period,
+  now: Date,
+  sprints: Sprint[],
+  issues: Issue[],
+  pi: ProgramIncrement | null = null,
+): DateRange {
   const daysBack = (n: number) => ({ start: startOfDay(subDays(now, n - 1)), end: now })
   switch (period) {
     case "today":
@@ -46,6 +55,9 @@ export function periodRange(period: Period, now: Date, sprints: Sprint[], issues
       const starts = sprints.filter((s) => s.state === "active" && s.startDate).map((s) => s.startDate!.getTime())
       return starts.length ? { start: startOfDay(new Date(Math.min(...starts))), end: now } : daysBack(14)
     }
+    case "pi":
+      if (pi) return { start: startOfDay(pi.startDate), end: pi.endDate < now ? pi.endDate : now }
+      return periodRange("all", now, sprints, issues)
     case "all": {
       const starts = sprints.filter((s) => s.state !== "future" && s.startDate).map((s) => s.startDate!.getTime())
       const first = starts.length ? Math.min(...starts) : Math.min(now.getTime(), ...issues.map((i) => i.created.getTime()))

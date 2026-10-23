@@ -37,6 +37,19 @@ export type Sprint = {
   startDate: Date | null
   endDate: Date | null
   completeDate: Date | null
+  piId: string | null
+}
+
+/** A program increment: ~10 weeks / 5 sprints, with the same dates for every team. */
+export type ProgramIncrement = {
+  id: string
+  name: string
+  startDate: Date
+  endDate: Date
+  state: SprintState
+  objectives: string[]
+  /** Every team's sprints in this PI, sorted by start. */
+  sprintIds: number[]
 }
 
 /** Known fields: "status" | "assignee" | "sprint" | "storyPoints" | "priority". */
@@ -95,11 +108,14 @@ export type JiraDataset = {
   teams: Team[]
   people: Person[]
   sprints: Sprint[]
+  /** Sorted by start; empty when the export has no PIs. */
+  programIncrements: ProgramIncrement[]
   issues: Issue[]
   byKey: Map<string, Issue>
   personById: Map<string, Person>
   sprintById: Map<number, Sprint>
   teamById: Map<string, Team>
+  piById: Map<string, ProgramIncrement>
   /** Flattened status changes across all issues, sorted by time. */
   transitions: Transition[]
   /** Every status seen in the data, in workflow order (known first, then unknown A–Z). */

@@ -21,6 +21,7 @@ import type {
   JiraDataset,
   Meta,
   Person,
+  ProgramIncrement,
   Sprint,
   StatusCategory,
   StatusInfo,
@@ -95,6 +96,7 @@ function buildDataset(data: RawExport): JiraDataset {
         startDate: toDate(s.startDate),
         endDate: toDate(s.endDate),
         completeDate: toDate(s.completeDate),
+        piId: s.piId ?? null,
       }),
     )
     .sort((a, b) => (a.startDate?.getTime() ?? Infinity) - (b.startDate?.getTime() ?? Infinity))
@@ -103,17 +105,20 @@ function buildDataset(data: RawExport): JiraDataset {
 
   const transitions = buildTransitions(issues)
   const meta = toMeta(data, issues, teams, sprints)
+  const programIncrements = toProgramIncrements(data, sprints, meta.generatedAt)
 
   return {
     meta,
     teams,
     people,
     sprints,
+    programIncrements,
     issues,
     byKey: new Map(issues.map((i) => [i.key, i])),
     personById: new Map(people.map((p) => [p.id, p])),
     sprintById: new Map(sprints.map((s) => [s.id, s])),
     teamById: new Map(teams.map((t) => [t.id, t])),
+    piById: new Map(programIncrements.map((p) => [p.id, p])),
     transitions,
     statuses: collectStatuses(issues),
   }
@@ -233,4 +238,40 @@ function toMeta(data: RawExport, issues: Issue[], teams: Team[], sprints: Sprint
       sprintIds: m?.query?.sprintIds ?? sprints.map((s) => s.id),
     },
   }
+}
+
+/**
+ * PIs sorted by start. Sprints without a known `piId` are assigned (mutated) to
+ * the PI whose dates contain their start; a PI without a state gets one from
+ * its dates vs `now`.
+ */
+function toProgramIncrements(data: RawExport, sprints: Sprint[], now: Date): ProgramIncrement[] {
+  const pis = (data.programIncrements ?? [])
+    .map(
+      (p): ProgramIncrement => {
+        const startDate = new Date(p.startDate)
+        const endDate = new Date(p.endDate)
+        return {
+          id: p.id,
+          name: p.name,
+          startDate,
+          endDate,
+          state: p.state ?? (now < startDate ? "future" : now > endDate ? "closed" : "active"),
+          objectives: p.objectives ?? [],
+          sprintIds: [],
+        }
+      },
+    )
+    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+
+  const byId = new Map(pis.map((p) => [p.id, p]))
+  for (const s of sprints) {
+    if (s.piId && !byId.has(s.piId)) s.piId = null
+    if (!s.piId && s.startDate) {
+      const start = s.startDate
+      s.piId = pis.find((p) => start >= p.startDate && start <= p.endDate)?.id ?? null
+    }
+    if (s.piId) byId.get(s.piId)!.sprintIds.push(s.id)
+  }
+  return pis
 }

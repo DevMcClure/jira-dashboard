@@ -1,6 +1,7 @@
 import { Timer, User, Users } from "lucide-react"
 import { useMemo } from "react"
 import { useData } from "@/hooks/useData"
+import { useScope } from "@/hooks/useScope"
 import { FilterPopover, type FilterOption } from "./FilterPopover"
 
 export const UNASSIGNED = "__unassigned__"
@@ -8,9 +9,11 @@ export const UNASSIGNED = "__unassigned__"
 /** Header filter bar: Sprints, Teams, Assignees (empty selection = All). */
 export function GlobalFilters() {
   const { dataset, filters, setFilters } = useData()
+  const { historySprints } = useScope()
 
   const options = useMemo(() => {
-    const sprints: FilterOption[] = dataset.sprints.map((s) => ({
+    // Sprints of the PI in view (all sprints when the export has no PIs).
+    const sprints: FilterOption[] = historySprints.map((s) => ({
       value: String(s.id),
       label: s.name,
       group: (s.teamId && dataset.teamById.get(s.teamId)?.name) || "Other",
@@ -25,7 +28,7 @@ export function GlobalFilters() {
       ...(assigneeIds.has(null) ? [{ value: UNASSIGNED, label: "Unassigned" }] : []),
     ]
     return { sprints, teams, assignees }
-  }, [dataset])
+  }, [dataset, historySprints])
 
   return (
     <div className="flex items-center gap-2">

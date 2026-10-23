@@ -1,5 +1,5 @@
 import { format } from "date-fns"
-import { CalendarDays, Copy, Download, Timer, Users } from "lucide-react"
+import { CalendarDays, Copy, Download, Layers, Timer, Users } from "lucide-react"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { MarkdownView } from "@/components/export/MarkdownView"
@@ -10,22 +10,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useData } from "@/hooks/useData"
 import { PERIODS, type Period } from "@/lib/jira/period"
 import { buildReport, REPORT_SECTIONS, reportSprints, type ReportSection } from "@/lib/jira/report"
+import { SPRINT_SCOPE, type Scope } from "@/lib/jira/scope"
+
+const SPRINT = "__sprint__"
 
 export default function ExportPage() {
-  const { dataset, filters, period: headerPeriod } = useData()
+  const { dataset, filters, period: headerPeriod, scope: headerScope } = useData()
   // Start from whatever the header is showing; changes here don't touch the dashboard.
+  const [scope, setScope] = useState<Scope>(headerScope)
   const [teamIds, setTeamIds] = useState(filters.teamIds)
   const [sprintIds, setSprintIds] = useState(filters.sprintIds)
   const [period, setPeriod] = useState<Period>(headerPeriod)
-  const [sections, setSections] = useState<ReportSection[]>(REPORT_SECTIONS.map((s) => s.value))
+  const pis = dataset.programIncrements
+  // The PI section only makes sense when the export has PIs.
+  const sectionChoices = pis.length ? REPORT_SECTIONS : REPORT_SECTIONS.filter((s) => s.value !== "pi")
+  const periods = pis.length ? PERIODS : PERIODS.filter((p) => p.value !== "pi")
+  const [sections, setSections] = useState<ReportSection[]>(sectionChoices.map((s) => s.value))
 
   const teamOptions: FilterOption[] = dataset.teams.map((t) => ({ value: t.id, label: t.name }))
-  const sprintOptions: FilterOption[] = reportSprints(dataset, teamIds, []).map((s) => ({
+  const sprintOptions: FilterOption[] = reportSprints(dataset, scope, teamIds).map((s) => ({
     value: String(s.id),
     label: s.name,
     group: (s.teamId && dataset.teamById.get(s.teamId)?.name) || "Other",
@@ -34,16 +42,22 @@ export default function ExportPage() {
   const onTeams = (next: string[]) => {
     setTeamIds(next)
     // Drop picked sprints that no longer belong to a selected team.
-    const allowed = new Set(reportSprints(dataset, next, []).map((s) => s.id))
+    const allowed = new Set(reportSprints(dataset, scope, next).map((s) => s.id))
     setSprintIds((ids) => ids.filter((id) => allowed.has(id)))
   }
 
+  const onScope = (v: string) => {
+    setScope(v === SPRINT ? SPRINT_SCOPE : { kind: "pi", piId: v })
+    // Picked sprints belong to the previous scope's PI.
+    setSprintIds([])
+  }
+
   const toggleSection = (value: ReportSection, on: boolean) =>
-    setSections((prev) => REPORT_SECTIONS.map((s) => s.value).filter((v) => (v === value ? on : prev.includes(v))))
+    setSections((prev) => sectionChoices.map((s) => s.value).filter((v) => (v === value ? on : prev.includes(v))))
 
   const markdown = useMemo(
-    () => buildReport(dataset, { teamIds, sprintIds, period, sections }),
-    [dataset, teamIds, sprintIds, period, sections],
+    () => buildReport(dataset, { scope, teamIds, sprintIds, period, sections }),
+    [dataset, scope, teamIds, sprintIds, period, sections],
   )
 
   const fileName = `sprint-report-${format(dataset.meta.generatedAt, "yyyy-MM-dd")}.md`
@@ -95,6 +109,24 @@ export default function ExportPage() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Scope</p>
+              {pis.length > 0 && (
+                <Select value={scope.kind === "pi" ? scope.piId : SPRINT} onValueChange={onScope}>
+                  <SelectTrigger size="sm" className="h-8 w-full gap-1.5" aria-label="Report scope">
+                    <Layers className="size-3.5" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={SPRINT}>Current sprint</SelectItem>
+                    <SelectSeparator />
+                    {[...pis].reverse().map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        Whole {p.name}
+                        {p.state === "active" && <span className="text-muted-foreground">· current</span>}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <div className="flex flex-wrap gap-2">
                 <FilterPopover
                   title="Teams"
@@ -123,7 +155,7 @@ export default function ExportPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {PERIODS.map((p) => (
+                  {periods.map((p) => (
                     <SelectItem key={p.value} value={p.value}>
                       {p.label}
                     </SelectItem>
@@ -134,7 +166,7 @@ export default function ExportPage() {
 
             <div className="space-y-3">
               <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Sections</p>
-              {REPORT_SECTIONS.map((s) => (
+              {sectionChoices.map((s) => (
                 <div key={s.value} className="flex items-start gap-3">
                   <Checkbox
                     id={`section-${s.value}`}

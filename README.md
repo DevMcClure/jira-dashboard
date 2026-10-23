@@ -32,9 +32,15 @@ The Import page shows an example of the expected format, and `src/lib/jira/schem
 
 Raw Trawler output (projects + tickets with Jira's own field names) is recognised automatically and converted in `src/lib/jira/trawler.ts`: each project becomes a team, and people are taken from assignee/reporter/creator. The Trawler runs with `sprint_open: true`, so each project's tickets are put in one active "current sprint". Story points (`storyPoints`, `story_points` or `"Story Points"`) and history (Jira's native `changelog.histories[].items[]`) are read when present and drive the movement, cycle-time and points charts. The export has no sprint dates, so burndown and velocity stay empty, and sprint health can't compare progress against time elapsed.
 
+## Program increments (PI)
+
+A PI is 10 weeks: 5 two-week sprints, with the same dates for every team. The header's **scope** picker switches between the **current sprint** (the default) and a **whole PI**. Every page follows the scope. The **PI** page shows the PI's burnup, a sprint-by-sprint calendar for each team, per-team progress and epic progress.
+
+For this to work, the export needs a top-level `programIncrements` list (id, name, start/end dates, optional objectives) and a `piId` on each sprint. A sprint without a `piId` is placed in a PI by its dates. Epics (issues of type `Epic`, linked from stories through `epicKey`) stand in for PI features. See `docs/02-DATA_CONTRACT.md`. Exports without PIs, like today's Trawler output, work as before and the scope picker stays hidden. When the expanded Trawler can pull a whole PI, map its output in `src/lib/jira/trawler.ts`.
+
 ## Export a report
 
-The **Export** page builds a Markdown report of the dashboard. Pick the teams, sprints, time period and sections (summary, teams, sprints, status breakdown, people, movements), check the live preview, then download the `.md` file or copy it. It starts from the header's current filters. The report is generated in `src/lib/jira/report.ts`.
+The **Export** page builds a Markdown report of the dashboard. Pick the scope (current sprint or a whole PI), teams, sprints, time period and sections (summary, program increment, teams, sprints, status breakdown, people, movements), check the live preview, then download the `.md` file or copy it. It starts from the header's current filters. The report is generated in `src/lib/jira/report.ts`.
 
 ## Built with
 

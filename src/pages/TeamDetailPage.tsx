@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TeamScopeContext } from "@/context/team-scope"
 import { useData } from "@/hooks/useData"
-import { useFilteredIssues } from "@/hooks/useFilteredIssues"
+import { useFilteredIssues, useHistoryIssues } from "@/hooks/useFilteredIssues"
+import { useHistorySprints } from "@/hooks/useScopedSprints"
 import { velocity, workloadByPerson } from "@/lib/jira/metrics"
 import type { Team } from "@/lib/jira/types"
 
@@ -59,14 +60,15 @@ export default function TeamDetailPage() {
 
 /** Velocity and members, rendered inside the team scope. */
 function TeamExtras({ team }: { team: Team }) {
-  const { dataset } = useData()
   const issues = useFilteredIssues()
+  const historyIssues = useHistoryIssues()
+  const historySprints = useHistorySprints()
   const { vel, workload } = useMemo(
     () => ({
-      vel: velocity(team, dataset.sprints, issues),
+      vel: velocity(team, historySprints, historyIssues),
       workload: new Map(workloadByPerson(issues).map((w) => [w.personId, w])),
     }),
-    [team, dataset, issues],
+    [team, historySprints, historyIssues, issues],
   )
 
   return (

@@ -1,6 +1,6 @@
 import { format } from "date-fns"
 import { useMemo } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { EmptyState } from "@/components/common/EmptyState"
 import { StatusDot } from "@/components/common/StatusDot"
 import { HEALTH_LEVELS } from "@/components/health/health-levels"
@@ -9,9 +9,10 @@ import { PageHeader } from "@/components/layout/PageHeader"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useData } from "@/hooks/useData"
-import { useFilteredIssues } from "@/hooks/useFilteredIssues"
-import { useScopedSprints } from "@/hooks/useScopedSprints"
-import { burndown, scopeChange, sprintHealth, type HealthLevel } from "@/lib/jira/metrics"
+import { useHistoryIssues } from "@/hooks/useFilteredIssues"
+import { useScope } from "@/hooks/useScope"
+import { useHistorySprints } from "@/hooks/useScopedSprints"
+import { burndown, piHealth, scopeChange, sprintHealth, type HealthLevel } from "@/lib/jira/metrics"
 import type { Sprint } from "@/lib/jira/types"
 
 const HEAD = "h-9 text-xs font-medium tracking-wide text-muted-foreground uppercase"
@@ -19,10 +20,17 @@ const ORDER: HealthLevel[] = ["off_track", "at_risk", "on_track", "completed"]
 
 export default function HealthPage() {
   const { dataset, setBurndownSprintId } = useData()
-  const issues = useFilteredIssues()
-  const sprints = useScopedSprints()
+  const issues = useHistoryIssues()
+  const sprints = useHistorySprints()
   const navigate = useNavigate()
+  const scope = useScope()
   const now = dataset.meta.generatedAt
+  // In PI scope, the PI's own health heads the page.
+  const pi = scope.kind === "pi" ? scope.pi : null
+  const piRow = useMemo(
+    () => (pi ? piHealth({ ...pi, sprintIds: sprints.map((s) => s.id) }, issues, now) : null),
+    [pi, sprints, issues, now],
+  )
 
   const rows = useMemo(
     () =>
@@ -54,6 +62,25 @@ export default function HealthPage() {
   return (
     <>
       <PageHeader title="Health" description="Is each sprint on track? Points done compared with time elapsed." />
+
+      {pi && piRow && (
+        <Card className="gap-3">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <StatusDot colorVar={HEALTH_LEVELS[piRow.level].colorVar} />
+              {pi.name}: {HEALTH_LEVELS[piRow.level].label}
+            </CardTitle>
+            <CardDescription className="tabular-nums">
+              {piRow.pctDone}% of points done with {piRow.pctElapsed}% of the PI gone · {piRow.donePoints} /{" "}
+              {piRow.totalPoints} pts
+              {pi.state === "active" && ` · ${piRow.daysLeft} days left`} ·{" "}
+              <Link to="/pi" className="underline underline-offset-4 hover:text-foreground">
+                PI details
+              </Link>
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {ORDER.map((l) => (

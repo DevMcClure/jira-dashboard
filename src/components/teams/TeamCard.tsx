@@ -3,7 +3,8 @@ import { useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { AvatarStack } from "@/components/common/AvatarStack"
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useData } from "@/hooks/useData"
+import { useHistoryIssues } from "@/hooks/useFilteredIssues"
+import { useHistorySprints } from "@/hooks/useScopedSprints"
 import { pluralize } from "@/lib/format"
 import {
   activitySummary,
@@ -36,14 +37,15 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 
 /** Overview card for one team. Click to open the team's detail page. */
 export function TeamCard({ team, issues, transitions, range, periodLabel }: Props) {
-  const { dataset } = useData()
+  const historyIssues = useHistoryIssues()
+  const historySprints = useHistorySprints()
   const navigate = useNavigate()
   const open = () => navigate(`/teams/${team.id}`)
 
   const { counts, remaining, vel, avgVelocity, workload, activity } = useMemo(() => {
     const teamIssues = issues.filter((i) => i.teamId === team.id)
     const keys = new Set(teamIssues.map((i) => i.key))
-    const vel = velocity(team, dataset.sprints, teamIssues)
+    const vel = velocity(team, historySprints, historyIssues.filter((i) => i.teamId === team.id))
     return {
       counts: countByStatusCategory(teamIssues),
       remaining: remainingPoints(teamIssues),
@@ -56,7 +58,7 @@ export function TeamCard({ team, issues, transitions, range, periodLabel }: Prop
         range,
       ),
     }
-  }, [team, issues, transitions, range, dataset])
+  }, [team, issues, transitions, range, historySprints, historyIssues])
 
   return (
     <Card

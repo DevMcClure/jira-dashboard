@@ -62,6 +62,18 @@ export const sprintSchema = z.looseObject({
   startDate: optionalIsoDate,
   endDate: optionalIsoDate,
   completeDate: optionalIsoDate,
+  /** Program increment this sprint belongs to; inferred from dates when missing. */
+  piId: optionalString,
+})
+
+/** A program increment (PI): ~10 weeks / 5 sprints, shared by every team. */
+export const programIncrementSchema = z.looseObject({
+  id: z.string().min(1),
+  name: z.string(),
+  startDate: isoDate,
+  endDate: isoDate,
+  state: sprintStateSchema.nullable().optional(),
+  objectives: z.array(z.string()).nullable().optional(),
 })
 
 export const personSchema = z.looseObject({
@@ -97,6 +109,7 @@ export const exportSchema = z.looseObject({
   teams: z.array(teamSchema).nullable().optional(),
   people: z.array(personSchema).nullable().optional(),
   sprints: z.array(sprintSchema).nullable().optional(),
+  programIncrements: z.array(programIncrementSchema).nullable().optional(),
   issues: z.array(issueSchema),
 })
 

@@ -2,6 +2,7 @@ import { Fragment } from "react"
 import { Link, useLocation, useMatch } from "react-router-dom"
 import { GlobalFilters } from "@/components/filters/GlobalFilters"
 import { PeriodPicker } from "@/components/filters/PeriodPicker"
+import { ScopePicker } from "@/components/filters/ScopePicker"
 import { ThemeToggle } from "@/components/theme/ThemeToggle"
 import {
   Breadcrumb,
@@ -49,6 +50,7 @@ export function SiteHeader() {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="ml-auto flex items-center gap-2">
+        <ScopePicker />
         <PeriodPicker />
         <GlobalFilters />
         <ThemeToggle />

@@ -1,5 +1,6 @@
 import { createContext } from "react"
 import type { Period } from "@/lib/jira/period"
+import type { Scope } from "@/lib/jira/scope"
 import type { JiraDataset } from "@/lib/jira/types"
 
 /** Empty array = no filter ("All"). `null` in assigneeIds = Unassigned. */
@@ -29,6 +30,9 @@ export type DataContextValue = {
   /** Sprint shown in the Overview burndown; null = pick automatically. */
   burndownSprintId: number | null
   setBurndownSprintId: (id: number | null) => void
+  /** Current sprint, or one whole PI. Defaults to the current sprint. */
+  scope: Scope
+  setScope: (scope: Scope) => void
   /** Time period for activity (deltas, movements, charts). Defaults to "today". */
   period: Period
   setPeriod: (period: Period) => void

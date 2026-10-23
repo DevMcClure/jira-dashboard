@@ -9,7 +9,7 @@ export const EXAMPLE_EXPORT = `{
   "teams":   [{ "id": "TEAM-PLAT", "name": "Platform", "projectKey": "PLAT", "memberIds": ["u-01"] }],
   "people":  [{ "id": "u-01", "displayName": "Priya Shah" }],
   "sprints": [{
-    "id": 101, "name": "PLAT Sprint 41", "teamId": "TEAM-PLAT", "state": "active",
+    "id": 101, "name": "PLAT 26.4.2", "teamId": "TEAM-PLAT", "state": "active",
     "startDate": "2026-10-12T09:00:00Z", "endDate": "2026-10-23T17:00:00Z", "completeDate": null
   }],
   "issues": [{

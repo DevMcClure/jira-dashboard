@@ -7,8 +7,8 @@ import { HEALTH_LEVELS } from "@/components/health/health-levels"
 import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useData } from "@/hooks/useData"
-import { useFilteredIssues } from "@/hooks/useFilteredIssues"
-import { useScopedSprints } from "@/hooks/useScopedSprints"
+import { useHistoryIssues } from "@/hooks/useFilteredIssues"
+import { useHistorySprints } from "@/hooks/useScopedSprints"
 import { pluralize } from "@/lib/format"
 import { sprintHealth } from "@/lib/jira/metrics"
 import { cn } from "@/lib/utils"
@@ -16,8 +16,8 @@ import { cn } from "@/lib/utils"
 /** Reference "SERVICE STATUS"-style list: dot + sprint name + one-line status. */
 export function SprintHealthList() {
   const { dataset, burndownSprintId, setBurndownSprintId } = useData()
-  const issues = useFilteredIssues()
-  const sprints = useScopedSprints()
+  const issues = useHistoryIssues()
+  const sprints = useHistorySprints()
   const now = dataset.meta.generatedAt
 
   const rows = useMemo(

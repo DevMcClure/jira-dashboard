@@ -47,9 +47,26 @@ export type ProgramIncrement = {
   startDate: Date
   endDate: Date
   state: SprintState
-  objectives: string[]
+  objectives: Objective[]
   /** Every team's sprints in this PI, sorted by start. */
   sprintIds: number[]
+}
+
+/** A PI objective; progress rolls up from its epics' stories and any directly linked issues. */
+export type Objective = {
+  id: string
+  piId: string
+  /** null = ART level (the whole train). */
+  teamId: string | null
+  title: string
+  description: string | null
+  ownerId: string | null
+  committed: boolean
+  /** 0–10, or null when not set. Actual is only known once the PI is assessed. */
+  plannedBusinessValue: number | null
+  actualBusinessValue: number | null
+  epicKeys: string[]
+  issueKeys: string[]
 }
 
 /** Known fields: "status" | "assignee" | "sprint" | "storyPoints" | "priority". */
@@ -116,6 +133,8 @@ export type JiraDataset = {
   sprintById: Map<number, Sprint>
   teamById: Map<string, Team>
   piById: Map<string, ProgramIncrement>
+  /** Every PI's objectives by id. */
+  objectiveById: Map<string, Objective>
   /** Flattened status changes across all issues, sorted by time. */
   transitions: Transition[]
   /** Every status seen in the data, in workflow order (known first, then unknown A–Z). */

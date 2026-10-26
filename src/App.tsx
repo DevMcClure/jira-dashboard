@@ -3,21 +3,15 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import SavedReportRoute from "@/pages/SavedReportRoute"
+import SharedLinkEntry from "@/pages/SharedLinkEntry"
+import SharedReportRoute from "@/pages/SharedReportRoute"
+import { exploreRoutes } from "@/routes/explore-routes"
 
-// Route-level code splitting: charts/tables load with the page that needs them.
 const AboutPage = lazy(() => import("@/pages/AboutPage"))
-const DetailsPage = lazy(() => import("@/pages/DetailsPage"))
 const ExportPage = lazy(() => import("@/pages/ExportPage"))
-const HealthPage = lazy(() => import("@/pages/HealthPage"))
 const ImportPage = lazy(() => import("@/pages/ImportPage"))
-const MovementsPage = lazy(() => import("@/pages/MovementsPage"))
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
-const OverviewPage = lazy(() => import("@/pages/OverviewPage"))
-const PiPage = lazy(() => import("@/pages/PiPage"))
-const PeoplePage = lazy(() => import("@/pages/PeoplePage"))
-const SprintsPage = lazy(() => import("@/pages/SprintsPage"))
-const TeamDetailPage = lazy(() => import("@/pages/TeamDetailPage"))
-const TicketsPage = lazy(() => import("@/pages/TicketsPage"))
 
 export default function App() {
   return (
@@ -26,22 +20,17 @@ export default function App() {
       <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
         <Routes>
           <Route element={<AppLayout />}>
-            <Route index element={<OverviewPage />} />
-            <Route path="pi" element={<PiPage />} />
-            <Route path="details" element={<DetailsPage />} />
-            <Route path="health" element={<HealthPage />} />
+            {exploreRoutes()}
             <Route path="teams" element={<Navigate to="/" replace />} />
-            <Route path="teams/:teamId" element={<TeamDetailPage />} />
-            <Route path="tickets" element={<TicketsPage />} />
-            <Route path="tickets/:key" element={<TicketsPage />} />
-            <Route path="sprints" element={<SprintsPage />} />
-            <Route path="people" element={<PeoplePage />} />
-            <Route path="movements" element={<MovementsPage />} />
             <Route path="import" element={<ImportPage />} />
             <Route path="export" element={<ExportPage />} />
             <Route path="about" element={<AboutPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
+          {/* Report mode (docs/decisions/0018): saved reports, and shared links (/r?c=… → /r/<code>/…). */}
+          <Route path="reports/:id/*" element={<SavedReportRoute />} />
+          <Route path="r" element={<SharedLinkEntry />} />
+          <Route path="r/:code/*" element={<SharedReportRoute />} />
         </Routes>
       </BrowserRouter>
       <Toaster richColors={false} position="bottom-right" />

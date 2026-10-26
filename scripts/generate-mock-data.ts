@@ -1,5 +1,6 @@
 /**
- * Deterministic mock Jira Trawler export → src/data/jira-export.json
+ * Deterministic mock Jira Trawler export → public/sample/jira-export.json
+ * (served as a static file and fetched at runtime, not bundled)
  *
  *   npm run mock:data
  *
@@ -109,24 +110,31 @@ const SPRINTS_PER_PI = 5
 const ACTIVE_INDEX = 8
 const SPRINT_COUNT = 10
 
-type PiDef = { id: string; name: string; objectives: string[] }
+/**
+ * A PI objective before generation. `epics` are indexes into the owning team's
+ * epics for that PI; ART-level objectives name epics as `[teamId, index]`.
+ * Actual business value is generated for closed PIs only.
+ */
+type ObjectiveDef = { title: string; epics: number[]; planned: number; committed?: boolean }
+type ArtObjectiveDef = { title: string; epics: [string, number][]; planned: number }
+type PiDef = { id: string; name: string; art: ArtObjectiveDef[] }
 const PIS: PiDef[] = [
   {
     id: "PI-26.3",
     name: "PI 26.3",
-    objectives: [
-      "Launch usage-based billing to all paying tenants",
-      "Onboarding redesign in beta for new sign-ups",
-      "Rich push notifications on iOS and Android",
+    art: [
+      { title: "Launch usage-based billing to all paying tenants", epics: [["TEAM-PLAT", 0], ["TEAM-WEB", 3]], planned: 10 },
+      { title: "Onboarding redesign in beta for new sign-ups", epics: [["TEAM-WEB", 0], ["TEAM-MOB", 3]], planned: 8 },
+      { title: "Rich push notifications on iOS and Android", epics: [["TEAM-MOB", 0], ["TEAM-PLAT", 1]], planned: 7 },
     ],
   },
   {
     id: "PI-26.4",
     name: "PI 26.4",
-    objectives: [
-      "Enterprise readiness: SSO, SCIM and audit logs",
-      "Web performance: p75 LCP under 2.5s",
-      "Mobile 4.2 with offline mode and widgets",
+    art: [
+      { title: "Enterprise readiness: SSO, SCIM and audit logs", epics: [["TEAM-PLAT", 0], ["TEAM-PLAT", 2], ["TEAM-WEB", 3]], planned: 10 },
+      { title: "Web performance: p75 LCP under 2.5s", epics: [["TEAM-WEB", 0], ["TEAM-WEB", 1]], planned: 8 },
+      { title: "Mobile 4.2 with offline mode and widgets", epics: [["TEAM-MOB", 0], ["TEAM-MOB", 1], ["TEAM-MOB", 2]], planned: 9 },
     ],
   },
 ]
@@ -142,6 +150,8 @@ type TeamDef = {
   labels: string[]
   /** [key, name] per PI, oldest PI first. */
   epics: [string, string][][]
+  /** Team objectives per PI, oldest PI first. */
+  objectives: ObjectiveDef[][]
   summaries: Record<"Story" | "Bug" | "Task" | "Spike", string[]>
 }
 
@@ -172,8 +182,21 @@ const TEAMS: TeamDef[] = [
     memberIds: ["u-01", "u-02", "u-03", "u-04", "u-05"],
     labels: ["billing", "auth", "api", "infra", "webhooks", "observability"],
     epics: [
-      [["PLAT-1020", "Usage-based billing"], ["PLAT-1041", "Webhooks v2"], ["PLAT-1077", "Secrets rotation"]],
-      [["PLAT-1100", "Enterprise SSO & SCIM"], ["PLAT-1105", "Rate limits v2"], ["PLAT-1142", "Audit logging"]],
+      [["PLAT-1020", "Usage-based billing"], ["PLAT-1041", "Webhooks v2"], ["PLAT-1077", "Secrets rotation"], ["PLAT-1088", "Partner API"]],
+      [["PLAT-1100", "Enterprise SSO & SCIM"], ["PLAT-1105", "Rate limits v2"], ["PLAT-1142", "Audit logging"], ["PLAT-1160", "Tenant data export"]],
+    ],
+    objectives: [
+      [
+        { title: "Usage-based billing live for all paying tenants", epics: [0], planned: 10 },
+        { title: "99.9% webhook delivery success", epics: [1], planned: 8 },
+        { title: "Automatic rotation for all service secrets", epics: [2], planned: 5 },
+        { title: "Partner API in private beta", epics: [3], planned: 3, committed: false },
+      ],
+      [
+        { title: "SSO and SCIM for the top 20 enterprise tenants", epics: [0], planned: 10 },
+        { title: "Per-tenant quotas with rate limits v2", epics: [1], planned: 8 },
+        { title: "Audit logs and GDPR data export", epics: [2, 3], planned: 6 },
+      ],
     ],
     summaries: {
       Story: [
@@ -251,8 +274,22 @@ const TEAMS: TeamDef[] = [
     memberIds: ["u-06", "u-07", "u-08", "u-09", "u-03", "u-14"],
     labels: ["dashboard", "onboarding", "a11y", "frontend", "search", "perf"],
     epics: [
-      [["WEB-610", "Onboarding redesign"], ["WEB-633", "Saved views"], ["WEB-668", "Design system tokens"]],
-      [["WEB-700", "Core Web Vitals"], ["WEB-722", "Accessibility AA"], ["WEB-790", "Global search"]],
+      [["WEB-610", "Onboarding redesign"], ["WEB-633", "Saved views"], ["WEB-668", "Design system tokens"], ["WEB-681", "Billing settings"]],
+      [["WEB-700", "Core Web Vitals"], ["WEB-722", "Accessibility AA"], ["WEB-790", "Global search"], ["WEB-805", "Dashboard sharing"]],
+    ],
+    objectives: [
+      [
+        { title: "Onboarding redesign in beta for new sign-ups", epics: [0], planned: 9 },
+        { title: "Saved views on the main dashboard", epics: [1], planned: 6 },
+        { title: "Design tokens adopted across the app", epics: [2], planned: 4 },
+        { title: "Self-serve billing settings", epics: [3], planned: 3, committed: false },
+      ],
+      [
+        { title: "p75 LCP under 2.5s on key pages", epics: [0], planned: 9 },
+        { title: "WCAG 2.2 AA on core journeys", epics: [1], planned: 8 },
+        { title: "Global search across projects", epics: [2], planned: 6 },
+        { title: "Shareable dashboards", epics: [3], planned: 3, committed: false },
+      ],
     ],
     summaries: {
       Story: [
@@ -330,8 +367,21 @@ const TEAMS: TeamDef[] = [
     memberIds: ["u-10", "u-11", "u-12", "u-13"],
     labels: ["ios", "android", "push", "offline", "release", "perf"],
     epics: [
-      [["MOB-322", "Rich push notifications"], ["MOB-345", "Deep links"], ["MOB-371", "Crash-free sessions 99.5%"]],
-      [["MOB-400", "Offline mode"], ["MOB-431", "Home screen widgets"], ["MOB-466", "Release 4.2"]],
+      [["MOB-322", "Rich push notifications"], ["MOB-345", "Deep links"], ["MOB-371", "Crash-free sessions 99.5%"], ["MOB-388", "In-app onboarding"]],
+      [["MOB-400", "Offline mode"], ["MOB-431", "Home screen widgets"], ["MOB-466", "Release 4.2"], ["MOB-480", "Accessibility pass"]],
+    ],
+    objectives: [
+      [
+        { title: "Rich push notifications on iOS and Android", epics: [0], planned: 9 },
+        { title: "Deep links from email and web", epics: [1], planned: 5 },
+        { title: "Crash-free sessions at 99.5%", epics: [2], planned: 7 },
+        { title: "Guided in-app onboarding", epics: [3], planned: 2, committed: false },
+      ],
+      [
+        { title: "Offline mode for core screens", epics: [0], planned: 9 },
+        { title: "Home screen widgets", epics: [1], planned: 6, committed: false },
+        { title: "Ship release 4.2 with an accessibility pass", epics: [2, 3], planned: 8 },
+      ],
     ],
     summaries: {
       Story: [
@@ -769,7 +819,15 @@ function generateTeamIssues(team: TeamDef, sprints: SprintPlan[]): Draft[] {
       teamId: team.id,
       sprintIds,
       storyPoints,
-      labels: Array.from(new Set([pick(team.labels), ...(chance(0.4) ? [pick(team.labels)] : [])])),
+      labels: Array.from(
+        new Set([
+          pick(team.labels),
+          ...(chance(0.4) ? [pick(team.labels)] : []),
+          // Flow distribution: some Tasks are tech debt and some Spikes reduce a risk.
+          ...(type === "Task" && chance(0.4) ? ["tech-debt"] : []),
+          ...(type === "Spike" && chance(0.4) ? ["risk"] : []),
+        ]),
+      ),
       epicKey: type === "Spike" || chance(0.25) ? null : pick(team.epics[Math.floor(sprints.indexOf(sprint) / SPRINTS_PER_PI)])[0],
       parentKey: null,
       created: iso(createdAt),
@@ -829,7 +887,14 @@ function main() {
   // Every team shares the same sprint calendar, so any team's plans give the PI dates.
   const programIncrements = PIS.map((pi, i) => {
     const s = piSprints(plans, i)
-    return { id: pi.id, name: pi.name, startDate: iso(s[0].start), endDate: iso(s.at(-1)!.end), objectives: pi.objectives }
+    const end = s.at(-1)!.end
+    return {
+      id: pi.id,
+      name: pi.name,
+      startDate: iso(s[0].start),
+      endDate: iso(end),
+      objectives: buildObjectives(pi, i, end < GENERATED_AT),
+    }
   })
 
   const output = {
@@ -853,9 +918,49 @@ function main() {
   }
 
   const here = dirname(fileURLToPath(import.meta.url))
-  const outPath = resolve(here, "../src/data/jira-export.json")
+  const outPath = resolve(here, "../public/sample/jira-export.json")
   writeFileSync(outPath, JSON.stringify(output, null, 2) + "\n")
   printSummary(output.issues, sprints, outPath)
+}
+
+/**
+ * Team objectives, then ART-level ones. Closed PIs get an actual business value:
+ * ~60–100% of planned when committed, 0–planned when uncommitted (a stretch).
+ */
+function buildObjectives(pi: PiDef, piIndex: number, assessed: boolean) {
+  const short = pi.name.replace(/^PI /, "")
+  const epicKey = (teamId: string, index: number) => TEAMS.find((t) => t.id === teamId)!.epics[piIndex][index][0]
+  const actual = (planned: number, committed: boolean) =>
+    !assessed ? null : committed ? Math.max(1, Math.round(planned * between(0.6, 1))) : int(0, planned)
+
+  const team = TEAMS.flatMap((t) =>
+    t.objectives[piIndex].map((o, n) => {
+      const committed = o.committed ?? true
+      return {
+        id: `OBJ-${short}-${t.projectKey}-${n + 1}`,
+        teamId: t.id,
+        title: o.title,
+        description: `${t.name} objective for ${pi.name}.`,
+        ownerId: t.memberIds[0],
+        committed,
+        plannedBusinessValue: o.planned,
+        actualBusinessValue: actual(o.planned, committed),
+        epicKeys: o.epics.map((e) => epicKey(t.id, e)),
+      }
+    }),
+  )
+  const art = pi.art.map((o, n) => ({
+    id: `OBJ-${short}-ART-${n + 1}`,
+    teamId: null,
+    title: o.title,
+    description: `Train-level objective for ${pi.name}, delivered across teams.`,
+    ownerId: "u-01",
+    committed: true,
+    plannedBusinessValue: o.planned,
+    actualBusinessValue: actual(o.planned, true),
+    epicKeys: o.epics.map(([teamId, e]) => epicKey(teamId, e)),
+  }))
+  return [...team, ...art]
 }
 
 function printSummary(issues: RawIssue[], sprints: RawSprint[], outPath: string) {

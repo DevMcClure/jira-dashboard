@@ -28,8 +28,8 @@ export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   plugins: [react(), tailwindcss(), spaFallback()],
   build: {
-    // The sample export (~290 KB JSON) is bundled into the entry chunk on purpose
-    // so the POC works offline with zero setup; pages themselves are lazy-loaded.
+    // The sample export is fetched from public/sample/ at runtime, not bundled.
+    // The entry chunk is still ~550 KB (React, Radix, Recharts), hence the raised limit.
     chunkSizeWarningLimit: 800,
   },
   resolve: {

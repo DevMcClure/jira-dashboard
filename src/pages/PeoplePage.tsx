@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/layout/PageHeader"
 import { WorkloadBar } from "@/components/people/WorkloadBar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { useFilteredIssues } from "@/hooks/useFilteredIssues"
 import { CATEGORY_COLOR_VAR } from "@/lib/jira/constants"
@@ -18,6 +19,7 @@ export default function PeoplePage() {
   const { dataset, filters, setFilters } = useData()
   const issues = useFilteredIssues()
   const navigate = useNavigate()
+  const to = useAppPath()
   const rows = useMemo(() => workloadByPerson(issues), [issues])
   const max = Math.max(0, ...rows.map((r) => r.total))
   const teamsOf = (id: string | null) =>
@@ -30,7 +32,7 @@ export default function PeoplePage() {
 
   const open = (personId: string | null) => {
     setFilters({ ...filters, assigneeIds: [personId] })
-    navigate("/tickets")
+    navigate(to("/tickets"))
   }
 
   return (

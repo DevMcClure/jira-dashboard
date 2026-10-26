@@ -26,7 +26,7 @@ One-time setup: in the repo on GitHub, go to **Settings → Pages** and set **So
 ## Use real data
 
 - **Quick:** open the **Import** page and drop in a Trawler JSON file, or the Trawler's audit `.log` (its `PROJECT` / `TICKET` lines are read directly).
-- **As the default:** replace `src/data/jira-export.json`. ⚠️ Anything bundled is published on GitHub Pages, so don't commit real company data. Use the Import page for that (files stay in your browser).
+- **As the default:** replace `public/sample/jira-export.json` (or regenerate it with `pnpm run mock:data`). ⚠️ Anything bundled is published on GitHub Pages, so don't commit real company data. Use the Import page for that (files stay in your browser).
 
 The Import page shows an example of the expected format, and `src/lib/jira/schema.ts` defines it exactly. If the real export looks different, only `src/lib/jira/adapter.ts` (and `schema.ts`) need to change.
 
@@ -38,9 +38,32 @@ A PI is 10 weeks: 5 two-week sprints, with the same dates for every team. The he
 
 For this to work, the export needs a top-level `programIncrements` list (id, name, start/end dates, optional objectives) and a `piId` on each sprint. A sprint without a `piId` is placed in a PI by its dates. Epics (issues of type `Epic`, linked from stories through `epicKey`) stand in for PI features. See `docs/02-DATA_CONTRACT.md`. Exports without PIs, like today's Trawler output, work as before and the scope picker stays hidden. When the expanded Trawler can pull a whole PI, map its output in `src/lib/jira/trawler.ts`.
 
+## Objectives
+
+The **Objectives** page shows the PI's objectives. For each one you see business value, progress rolled up from its epics' tickets, health against the time gone, and a forecast for the end of the PI. For a closed PI it also shows **predictability** (actual ÷ planned business value of committed objectives). Objectives come from the export's `programIncrements[].objectives`; older exports with plain-string objectives still load.
+
+## Flow metrics
+
+The **Flow** page shows the six SAFe flow metrics, counted in items and time rather than story points. It leads with the two primary targets, **flow time** and **flow load**:
+- **Flow time** is shown from created (the default) or from work started; there's a switch.
+- Weekly flow time is lined up against throughput.
+- An aging chart shows which open items are drifting.
+
+After that come a **WIP vs throughput** view for finding the right amount of work in progress, and a per-team table (team level only). Velocity, efficiency, distribution (now vs finished, plus the size of finished items) and predictability follow as supporting metrics. A history meter and sample-size notes show how far to trust the numbers, and **"How these are measured"** lists every definition. It defaults to working hours (Mon–Fri 09:00–18:00 London), with a switch to calendar time. Which statuses count as active or waiting, and how Jira types map to flow types, is set in `src/lib/jira/flowConfig.ts`. Based on SAFe and the DX guide at https://getdx.com/blog/flow-metrics/.
+
 ## Export a report
 
-The **Export** page builds a Markdown report of the dashboard. Pick the scope (current sprint or a whole PI), teams, sprints, time period and sections (summary, program increment, teams, sprints, status breakdown, people, movements), check the live preview, then download the `.md` file or copy it. It starts from the header's current filters. The report is generated in `src/lib/jira/report.ts`.
+The **Export** page builds a Markdown report of the dashboard. Pick the scope (current sprint or a whole PI), teams, sprints, time period (a preset or a custom range of days) and sections (summary, program increment, objectives, flow, teams, sprints, status breakdown, people, movements), check the live preview, then download the `.md` file or copy it. It starts from the header's current filters. The report is generated in `src/lib/jira/report.ts`.
+
+## Reports
+
+**Save as report** (in the header, or on the Export page) saves the current filters, scope and period as a named report, either **live** (re-applied to the newest data) or **frozen** (pinned dates). Reports appear under **My Reports** in the sidebar. Opening one shows the dashboard set up that way, with the filters locked and only the chosen pages. **Copy link** gives a `/r?c=…` link that carries the whole report, so it opens in any browser without saving anything. **Explore from here** copies the report's filters into your own view to keep exploring. Reports are kept in this browser for now; a backend will store them later without changing the screens.
+
+## Project docs
+
+- `docs/PROJECT_CONTEXT.md`: the app's current state, for planning.
+- `docs/plan-frontend.md`: the current iteration plan (objectives, flow metrics, report mode).
+- `docs/decisions/`: one short record per decision.
 
 ## Built with
 

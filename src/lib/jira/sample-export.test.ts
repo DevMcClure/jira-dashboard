@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { parseExport } from "@/lib/jira/adapter"
-import { sprintHealth } from "@/lib/jira/metrics"
-import raw from "./jira-export.json"
+import raw from "../../../public/sample/jira-export.json"
+import { parseExport } from "./adapter"
+import { flowItems } from "./flow"
+import { FLOW_TYPES, flowTypeOf } from "./flowConfig"
+import { objectiveHealth, piPredictability, sprintHealth } from "./metrics"
 
 /** Guards the consistency rules from docs/02-DATA_CONTRACT.md → "Mock data generator". */
 describe("bundled mock export", () => {
@@ -74,12 +76,45 @@ describe("bundled mock export", () => {
 
   it("has epics without sprints that stories point at", () => {
     const epics = ds.issues.filter((i) => i.type === "Epic")
-    expect(epics).toHaveLength(18)
+    expect(epics).toHaveLength(24) // 4 per team per PI
     expect(epics.every((e) => e.sprintIds.length === 0)).toBe(true)
     const keys = new Set(epics.map((e) => e.key))
     const linked = ds.issues.filter((i) => i.epicKey)
     expect(linked.length).toBeGreaterThan(0)
     expect(linked.every((i) => keys.has(i.epicKey!))).toBe(true)
+  })
+
+  it("has 3–4 objectives per team per PI plus ART-level ones, each linked to real epics", () => {
+    const epicKeys = new Set(ds.issues.filter((i) => i.type === "Epic").map((i) => i.key))
+    for (const pi of ds.programIncrements) {
+      for (const team of ds.teams) {
+        const count = pi.objectives.filter((o) => o.teamId === team.id).length
+        expect(count, `${pi.name} ${team.name}`).toBeGreaterThanOrEqual(3)
+        expect(count, `${pi.name} ${team.name}`).toBeLessThanOrEqual(4)
+      }
+      expect(pi.objectives.some((o) => o.teamId === null)).toBe(true)
+      for (const o of pi.objectives) {
+        expect(o.epicKeys.length, o.id).toBeGreaterThan(0)
+        for (const k of o.epicKeys) expect(epicKeys.has(k), `${o.id} → ${k}`).toBe(true)
+        // Every objective has tickets to roll up.
+        expect(objectiveHealth(o, pi, ds.issues, ds.meta.generatedAt).level, o.id).not.toBe("no_data")
+      }
+    }
+    const all = ds.programIncrements.flatMap((p) => p.objectives)
+    const uncommitted = all.filter((o) => !o.committed).length / all.length
+    expect(uncommitted).toBeGreaterThan(0.1)
+    expect(uncommitted).toBeLessThan(0.35)
+  })
+
+  it("has a predictability % for the closed PI only", () => {
+    const [closed, current] = ds.programIncrements
+    expect(piPredictability(closed.objectives)?.pct).toBeGreaterThan(50)
+    expect(piPredictability(current.objectives)).toBeNull()
+  })
+
+  it("has every flow type among its flow items", () => {
+    const types = new Set(flowItems(ds.issues).map((i) => flowTypeOf(i)))
+    expect([...FLOW_TYPES].filter((t) => !types.has(t))).toEqual([])
   })
 
   it("has one active sprint per team at roughly 60% elapsed", () => {

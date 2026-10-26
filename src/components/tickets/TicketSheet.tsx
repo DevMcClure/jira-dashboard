@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { useData } from "@/hooks/useData"
 import { formatDuration } from "@/lib/format"
 import { cycleTimeDays, ticketAgeDays, timeInCurrentStatus } from "@/lib/jira/metrics"
+import { FlowBlock } from "./FlowBlock"
 import { PriorityIcon, TypeIcon } from "./IssueIcons"
 import { Timeline } from "./Timeline"
 
@@ -135,6 +136,13 @@ function TicketDetail({ issueKey }: { issueKey: string }) {
           ) : (
             <p className="text-sm text-muted-foreground">No description.</p>
           )}
+        </section>
+
+        <Separator />
+
+        <section className="space-y-3">
+          <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Flow</h3>
+          <FlowBlock issue={issue} />
         </section>
 
         <Separator />

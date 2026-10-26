@@ -1,7 +1,7 @@
 import { format } from "date-fns"
 import { Fragment } from "react"
 import { ChevronsUpDown, Layers, RotateCcw, Upload } from "lucide-react"
-import { Link, useLocation, useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,13 +23,30 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
+import { MyReportsNav } from "@/components/reports/MyReportsNav"
+import { useAppPath, useInnerPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
+import { useReportMode } from "@/hooks/useReportMode"
+import { pageForPath } from "@/lib/reports/report-config"
 import { NAV_GROUPS, navItemFor } from "./nav"
 import { NavUser } from "./NavUser"
 
 export function AppSidebar() {
-  const { pathname } = useLocation()
+  const pathname = useInnerPath()
   const active = navItemFor(pathname)
+  const to = useAppPath()
+  const report = useReportMode()
+  // In a report, only its pages show (and "About the Data" is hidden).
+  const groups = report
+    ? NAV_GROUPS.slice(0, 1).map((g) => ({
+        ...g,
+        label: "This report",
+        items: g.items.filter((i) => {
+          const page = pageForPath(i.url)
+          return page !== null && report.config.pages.includes(page)
+        }),
+      }))
+    : NAV_GROUPS
 
   return (
     <Sidebar collapsible="icon">
@@ -38,7 +55,7 @@ export function AppSidebar() {
         <DataSourceLine />
       </SidebarHeader>
       <SidebarContent>
-        {NAV_GROUPS.map((group, i) => (
+        {groups.map((group, i) => (
           <Fragment key={group.label}>
             {i > 0 && <SidebarSeparator className="mx-4 data-[orientation=horizontal]:w-auto" />}
             <SidebarGroup>
@@ -47,7 +64,7 @@ export function AppSidebar() {
                 {group.items.map((item) => (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild isActive={active?.url === item.url} tooltip={item.title}>
-                      <Link to={item.url}>
+                      <Link to={to(item.url)}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
@@ -58,6 +75,8 @@ export function AppSidebar() {
             </SidebarGroup>
           </Fragment>
         ))}
+        <SidebarSeparator className="mx-4 data-[orientation=horizontal]:w-auto" />
+        <MyReportsNav />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

@@ -10,6 +10,7 @@ import { VelocityChart } from "@/components/teams/VelocityChart"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TeamScopeContext } from "@/context/team-scope"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { useFilteredIssues, useHistoryIssues } from "@/hooks/useFilteredIssues"
 import { useHistorySprints } from "@/hooks/useScopedSprints"
@@ -21,10 +22,11 @@ export default function TeamDetailPage() {
   const { teamId } = useParams()
   const { dataset } = useData()
   const team = teamId ? dataset.teamById.get(teamId) : undefined
+  const to = useAppPath()
 
   const back = (
     <Button variant="outline" size="sm" asChild>
-      <Link to="/">
+      <Link to={to("/")}>
         <ArrowLeft />
         All teams
       </Link>

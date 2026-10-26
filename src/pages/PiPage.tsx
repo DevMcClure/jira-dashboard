@@ -11,6 +11,7 @@ import { PiSummary } from "@/components/pi/PiSummary"
 import { PiTeamCard } from "@/components/pi/PiTeamCard"
 import { PiTimeline } from "@/components/pi/PiTimeline"
 import { Badge } from "@/components/ui/badge"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { useEffectiveFilters } from "@/hooks/useEffectiveFilters"
 import { useHistoryIssues } from "@/hooks/useFilteredIssues"
@@ -28,6 +29,7 @@ export default function PiPage() {
   const { teamIds } = useEffectiveFilters()
   const issues = useHistoryIssues()
   const navigate = useNavigate()
+  const to = useAppPath()
   const now = dataset.meta.generatedAt
 
   // The PI's sprints for the selected teams; ignores picked sprints so the whole calendar shows.
@@ -64,7 +66,7 @@ export default function PiPage() {
   const open = (s: Sprint) => {
     setBurndownSprintId(s.id)
     setFilters({ ...filters, sprintIds: [s.id] })
-    navigate("/tickets")
+    navigate(to("/tickets"))
   }
 
   return (

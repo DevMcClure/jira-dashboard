@@ -3,6 +3,7 @@
  * reference date (normally `meta.generatedAt`, never the real clock).
  */
 import {
+  differenceInBusinessDays,
   differenceInDays,
   eachDayOfInterval,
   eachHourOfInterval,
@@ -10,9 +11,10 @@ import {
   endOfHour,
   startOfDay,
   startOfHour,
+  subBusinessDays,
 } from "date-fns"
 import { categoryForStatus, compareStatus, statusColorVar } from "./constants"
-import type { DateRange, Issue, ProgramIncrement, Sprint, StatusCategory, Team, Transition } from "./types"
+import type { DateRange, Issue, Objective, ProgramIncrement, Sprint, StatusCategory, Team, Transition } from "./types"
 
 const DAY_MS = 86_400_000
 
@@ -280,8 +282,7 @@ export function piHealth(pi: ProgramIncrement, issues: Issue[], now: Date) {
   const donePoints = done.reduce((s, i) => s + points(i), 0)
   const pctDone =
     totalPoints > 0 ? (donePoints / totalPoints) * 100 : scoped.length ? (done.length / scoped.length) * 100 : 0
-  const duration = pi.endDate.getTime() - pi.startDate.getTime()
-  const pctElapsed = closed ? 100 : duration > 0 ? clamp(((now.getTime() - pi.startDate.getTime()) / duration) * 100, 0, 100) : 0
+  const pctElapsed = piElapsedPct(pi, now)
   const daysLeft = closed ? 0 : Math.max(0, Math.ceil((pi.endDate.getTime() - now.getTime()) / DAY_MS))
   return {
     pctDone: Math.round(pctDone),
@@ -292,6 +293,125 @@ export function piHealth(pi: ProgramIncrement, issues: Issue[], now: Date) {
     totalPoints,
     ticketCount: scoped.length,
   }
+}
+
+/** % of the PI's time gone at `now` (100 once closed). */
+export function piElapsedPct(pi: ProgramIncrement, now: Date): number {
+  if (pi.state === "closed") return 100
+  const duration = pi.endDate.getTime() - pi.startDate.getTime()
+  return duration > 0 ? clamp(((now.getTime() - pi.startDate.getTime()) / duration) * 100, 0, 100) : 0
+}
+
+// ---------------------------------------------------------------------------
+// PI objectives
+// ---------------------------------------------------------------------------
+
+/** Sprint health levels plus "no tickets linked", which objectives can have. */
+export type ObjectiveHealthLevel = HealthLevel | "no_data"
+
+/**
+ * An objective's tickets: stories of its epics plus directly linked issues,
+ * excluding the Epic issues themselves, and only those in the PI's sprints.
+ * `issues` is already filtered (teams, assignees, picked sprints).
+ */
+export function objectiveIssues(objective: Objective, pi: ProgramIncrement, issues: Issue[]): Issue[] {
+  const epics = new Set(objective.epicKeys)
+  const keys = new Set(objective.issueKeys)
+  const sprints = new Set(pi.sprintIds)
+  return issues.filter(
+    (i) =>
+      i.type !== "Epic" &&
+      ((i.epicKey !== null && epics.has(i.epicKey)) || keys.has(i.key)) &&
+      i.sprintIds.some((id) => sprints.has(id)),
+  )
+}
+
+export type ObjectiveProgress = {
+  pctDone: number
+  donePoints: number
+  totalPoints: number
+  done: number
+  total: number
+  /** False when nothing is estimated, so pctDone is by ticket count. */
+  byPoints: boolean
+}
+
+/** Done vs total at time `t` (replaying changelogs), or as of the export when `t` is omitted. Unrounded %. */
+function progressOf(scoped: Issue[], t?: Date) {
+  let total = 0
+  let done = 0
+  let totalPoints = 0
+  let donePoints = 0
+  for (const i of scoped) {
+    const cat = t ? categoryAt(i, t) : i.statusCategory
+    if (cat === null) continue
+    const p = t ? pointsAt(i, t) : points(i)
+    total++
+    totalPoints += p
+    if (cat === "done") {
+      done++
+      donePoints += p
+    }
+  }
+  const byPoints = totalPoints > 0
+  const pct = byPoints ? (donePoints / totalPoints) * 100 : total ? (done / total) * 100 : 0
+  return { pct, done, total, donePoints, totalPoints, byPoints }
+}
+
+/** Points done ÷ points in scope for the objective's tickets (ticket counts when nothing is estimated). */
+export function objectiveProgress(objective: Objective, pi: ProgramIncrement, issues: Issue[], at?: Date): ObjectiveProgress {
+  const { pct, ...rest } = progressOf(objectiveIssues(objective, pi, issues), at)
+  return { pctDone: Math.round(pct), ...rest }
+}
+
+/** Progress vs % of the PI gone, with the sprint thresholds; "no_data" when no tickets are linked. */
+export function objectiveHealth(objective: Objective, pi: ProgramIncrement, issues: Issue[], now: Date) {
+  const scoped = objectiveIssues(objective, pi, issues)
+  const pctElapsed = piElapsedPct(pi, now)
+  const { pct } = progressOf(scoped)
+  const level: ObjectiveHealthLevel = scoped.length
+    ? healthLevel(pct, pctElapsed, pi.state === "closed")
+    : "no_data"
+  return { level, pctDone: Math.round(pct), pctElapsed: Math.round(pctElapsed) }
+}
+
+const FORECAST_WINDOW_DAYS = 10
+
+/**
+ * Projected % done at the PI's end: today's % plus the average daily gain over
+ * the last 10 working days (or since the PI started, if sooner) times the
+ * working days left, capped at 100. A closed PI returns its final %; a future
+ * PI or an objective without tickets returns null. Working days skip weekends only.
+ */
+export function objectiveForecast(objective: Objective, pi: ProgramIncrement, issues: Issue[], now: Date): number | null {
+  const scoped = objectiveIssues(objective, pi, issues)
+  if (!scoped.length || pi.state === "future") return null
+  const current = progressOf(scoped).pct
+  if (pi.state === "closed") return Math.round(current)
+
+  const windowStart = subBusinessDays(now, FORECAST_WINDOW_DAYS)
+  const from = windowStart < pi.startDate ? pi.startDate : windowStart
+  const days = Math.max(1, differenceInBusinessDays(now, from))
+  const rate = (current - progressOf(scoped, from).pct) / days
+  const left = Math.max(0, differenceInBusinessDays(pi.endDate, now))
+  return Math.round(clamp(current + Math.max(0, rate) * left, 0, 100))
+}
+
+/**
+ * PI predictability: Σ actual BV ÷ Σ planned BV of committed objectives, as a
+ * %. Uncommitted objectives add their actual BV only, so it can exceed 100%.
+ * Null when no committed objective has both values (e.g. the PI isn't assessed yet).
+ */
+export function piPredictability(objectives: Objective[]): { pct: number; planned: number; actual: number } | null {
+  const committed = objectives.filter(
+    (o) => o.committed && o.plannedBusinessValue !== null && o.actualBusinessValue !== null,
+  )
+  const planned = committed.reduce((s, o) => s + o.plannedBusinessValue!, 0)
+  if (!committed.length || planned === 0) return null
+  const actual =
+    committed.reduce((s, o) => s + o.actualBusinessValue!, 0) +
+    objectives.filter((o) => !o.committed).reduce((s, o) => s + (o.actualBusinessValue ?? 0), 0)
+  return { pct: Math.round((actual / planned) * 100), planned, actual }
 }
 
 export type EpicProgress = {

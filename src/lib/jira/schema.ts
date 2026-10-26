@@ -66,6 +66,24 @@ export const sprintSchema = z.looseObject({
   piId: optionalString,
 })
 
+/** Business value is meant to be 1–10; anything else is read as "not set" by the adapter. */
+const businessValue = z.number().nullable().optional()
+
+/** A PI objective. `teamId` null/missing = ART level. Progress rolls up from `epicKeys` / `issueKeys`. */
+export const objectiveSchema = z.looseObject({
+  id: z.string().min(1),
+  title: z.string(),
+  piId: optionalString,
+  teamId: optionalString,
+  description: optionalString,
+  ownerId: optionalString,
+  committed: z.boolean().nullable().optional(),
+  plannedBusinessValue: businessValue,
+  actualBusinessValue: businessValue,
+  epicKeys: z.array(z.string()).nullable().optional(),
+  issueKeys: z.array(z.string()).nullable().optional(),
+})
+
 /** A program increment (PI): ~10 weeks / 5 sprints, shared by every team. */
 export const programIncrementSchema = z.looseObject({
   id: z.string().min(1),
@@ -73,7 +91,8 @@ export const programIncrementSchema = z.looseObject({
   startDate: isoDate,
   endDate: isoDate,
   state: sprintStateSchema.nullable().optional(),
-  objectives: z.array(z.string()).nullable().optional(),
+  /** Plain strings (older exports) or full objectives. */
+  objectives: z.array(z.union([z.string(), objectiveSchema])).nullable().optional(),
 })
 
 export const personSchema = z.looseObject({
@@ -115,4 +134,5 @@ export const exportSchema = z.looseObject({
 
 export type RawExport = z.infer<typeof exportSchema>
 export type RawIssue = z.infer<typeof issueSchema>
+export type RawObjective = z.infer<typeof objectiveSchema>
 export type RawChangelogEntry = z.infer<typeof changelogEntrySchema>

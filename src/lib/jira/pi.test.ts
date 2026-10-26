@@ -17,8 +17,10 @@ describe("parseExport: program increments", () => {
       ["PI-A", "closed"],
       ["PI-B", "active"],
     ])
-    expect(piB.objectives).toEqual(["Ship it"])
-    expect(piA.objectives).toEqual([])
+    // Plain-string objectives (older exports) become ART-level committed objectives.
+    expect(piB.objectives[0]).toMatchObject({ id: "PI-B#1", title: "Ship it", teamId: null, committed: true, epicKeys: [] })
+    expect(piB.objectives.map((o) => o.id)).toEqual(["PI-B#1", "OBJ-B1", "OBJ-B2", "OBJ-B3"])
+    expect(piA.objectives.map((o) => o.id)).toEqual(["OBJ-A1", "OBJ-A2"])
   })
 
   it("assigns sprints by piId, inferring it from dates when missing", () => {

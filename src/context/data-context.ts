@@ -1,7 +1,8 @@
 import { createContext } from "react"
-import type { Period } from "@/lib/jira/period"
+import type { DataOrigin } from "@/lib/data/data-source"
+import type { DayRange, Period } from "@/lib/jira/period"
 import type { Scope } from "@/lib/jira/scope"
-import type { JiraDataset } from "@/lib/jira/types"
+import type { DateRange, JiraDataset } from "@/lib/jira/types"
 
 /** Empty array = no filter ("All"). `null` in assigneeIds = Unassigned. */
 export type Filters = {
@@ -12,15 +13,12 @@ export type Filters = {
 
 export const EMPTY_FILTERS: Filters = { sprintIds: [], teamIds: [], assigneeIds: [] }
 
-export type DataSource =
-  | { kind: "sample" }
-  | { kind: "upload"; fileName: string; loadedAt: string }
-
 export type LoadResult = { ok: true; dataset: JiraDataset } | { ok: false; problems: string[] }
 
 export type DataContextValue = {
   dataset: JiraDataset
-  source: DataSource
+  /** Sample or uploaded file. */
+  source: DataOrigin
   /** The raw JSON text currently loaded (for "Download current data"). */
   rawJson: string
   loadFromFile: (file: File) => Promise<LoadResult>
@@ -36,6 +34,11 @@ export type DataContextValue = {
   /** Time period for activity (deltas, movements, charts). Defaults to "today". */
   period: Period
   setPeriod: (period: Period) => void
+  /** The dates picked for the "custom" period; null until a range is chosen. */
+  customDates: DayRange | null
+  setCustomDates: (dates: DayRange | null) => void
+  /** Fixed dates that replace the period's range (frozen reports only); null normally. */
+  fixedRange: DateRange | null
 }
 
 export const DataContext = createContext<DataContextValue | null>(null)

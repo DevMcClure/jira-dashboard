@@ -32,6 +32,7 @@ type Props = {
   emptyLabel?: string
   className?: string
   align?: "start" | "end"
+  disabled?: boolean
 }
 
 /** Compact multi-select: Popover + Command, showing "All" or a count badge. */
@@ -44,6 +45,7 @@ export function FilterPopover({
   emptyLabel = "All",
   className,
   align = "end",
+  disabled = false,
 }: Props) {
   const selectedSet = new Set(selected)
   const groups = groupBy(options)
@@ -54,7 +56,7 @@ export function FilterPopover({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className={cn("h-8 gap-1.5 border-dashed", className)}>
+        <Button variant="outline" size="sm" className={cn("h-8 gap-1.5 border-dashed", className)} disabled={disabled}>
           {Icon && <Icon className="size-3.5" />}
           {title}
           {selected.length > 0 ? (

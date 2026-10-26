@@ -1,64 +1,15 @@
-import { useCallback, useMemo, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
-import sample from "@/data/jira-export.json"
-import { JiraExportError, parseExport, parseExportText } from "@/lib/jira/adapter"
-import type { Period } from "@/lib/jira/period"
+import { AppLoading } from "@/components/common/AppLoading"
+import type { DataSource, LoadedData } from "@/lib/data/data-source"
+import { createStaticDataSource } from "@/lib/data/static-data-source"
+import { JiraExportError } from "@/lib/jira/adapter"
+import type { DayRange, Period } from "@/lib/jira/period"
 import { SPRINT_SCOPE, type Scope } from "@/lib/jira/scope"
-import type { JiraDataset } from "@/lib/jira/types"
-import {
-  DataContext,
-  EMPTY_FILTERS,
-  type DataSource,
-  type Filters,
-  type LoadResult,
-} from "./data-context"
+import { DataContext, EMPTY_FILTERS, type Filters, type LoadResult } from "./data-context"
 
-const STORAGE_KEY = "jira-dashboard:upload"
-
-type Stored = { fileName: string; loadedAt: string; json: string }
-type State = { dataset: JiraDataset; source: DataSource; rawJson: string }
-
-const sampleJson = JSON.stringify(sample, null, 2)
-
-function sampleState(): State {
-  return { dataset: parseExport(sample), source: { kind: "sample" }, rawJson: sampleJson }
-}
-
-function readStored(): Stored | null {
-  try {
-    const s = localStorage.getItem(STORAGE_KEY)
-    return s ? (JSON.parse(s) as Stored) : null
-  } catch {
-    return null
-  }
-}
-
-function writeStored(value: Stored | null): boolean {
-  try {
-    if (value) localStorage.setItem(STORAGE_KEY, JSON.stringify(value))
-    else localStorage.removeItem(STORAGE_KEY)
-    return true
-  } catch {
-    return false
-  }
-}
-
-/** Restore the last uploaded file, falling back to the bundled sample. */
-function initialState(): State {
-  const stored = readStored()
-  if (stored) {
-    try {
-      return {
-        dataset: parseExportText(stored.json),
-        source: { kind: "upload", fileName: stored.fileName, loadedAt: stored.loadedAt },
-        rawJson: stored.json,
-      }
-    } catch {
-      writeStored(null)
-    }
-  }
-  return sampleState()
-}
+/** The sample export, served from public/sample/ (under Vite's base, e.g. /jira-dashboard/ on Pages). */
+const defaultSource = createStaticDataSource({ sampleUrl: `${import.meta.env.BASE_URL}sample/jira-export.json` })
 
 function problemsFrom(err: unknown): string[] {
   if (err instanceof JiraExportError) return err.problems
@@ -66,68 +17,120 @@ function problemsFrom(err: unknown): string[] {
   return [err instanceof Error ? err.message : String(err)]
 }
 
-export function DataProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<State>(initialState)
+const summarise = (problems: string[]) =>
+  problems.slice(0, 3).join(" · ") + (problems.length > 3 ? ` (+${problems.length - 3} more)` : "")
+
+type Props = {
+  children: ReactNode
+  /** Where data comes from; defaults to the static sample + uploads. */
+  dataSource?: DataSource
+}
+
+export function DataProvider({ children, dataSource = defaultSource }: Props) {
+  const [data, setData] = useState<LoadedData | null>(null)
+  /** Set when the first load failed and there's nothing to show yet. */
+  const [bootError, setBootError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [burndownSprintId, setBurndownSprintId] = useState<number | null>(null)
   const [period, setPeriod] = useState<Period>("today")
   const [scope, setScope] = useState<Scope>(SPRINT_SCOPE)
+  const [customDates, setCustomDates] = useState<DayRange | null>(null)
 
   /** View state that only makes sense for the previous dataset. */
   const resetView = useCallback(() => {
     setFilters(EMPTY_FILTERS)
     setBurndownSprintId(null)
     setScope(SPRINT_SCOPE)
-    setPeriod((p) => (p === "pi" ? "today" : p))
+    // "This PI" and picked dates belong to the previous dataset.
+    setPeriod((p) => (p === "pi" || p === "custom" ? "today" : p))
+    setCustomDates(null)
   }, [])
 
-  const loadFromFile = useCallback(async (file: File): Promise<LoadResult> => {
-    let text: string
-    let dataset: JiraDataset
-    try {
-      text = await file.text()
-      dataset = parseExportText(text)
-    } catch (err) {
-      const problems = problemsFrom(err)
-      toast.error(`Couldn't load ${file.name}`, {
-        description: problems.slice(0, 3).join(" · ") + (problems.length > 3 ? ` (+${problems.length - 3} more)` : ""),
-      })
-      return { ok: false, problems }
+  useEffect(() => {
+    let cancelled = false
+    dataSource.load().then(
+      (loaded) => !cancelled && setData(loaded),
+      (err) => !cancelled && setBootError(summarise(problemsFrom(err))),
+    )
+    return () => {
+      cancelled = true
     }
+  }, [dataSource])
 
-    const loadedAt = new Date().toISOString()
-    setState({ dataset, source: { kind: "upload", fileName: file.name, loadedAt }, rawJson: text })
-    resetView()
-    const remembered = writeStored({ fileName: file.name, loadedAt, json: text })
-    toast.success(`Loaded ${dataset.issues.length} tickets from ${file.name}`, {
-      description: remembered ? undefined : "File is too large to remember after a refresh.",
-    })
-    return { ok: true, dataset }
-  }, [resetView])
+  const retryBoot = useCallback(() => {
+    setBootError(null)
+    dataSource.load().then(setData, (err) => setBootError(summarise(problemsFrom(err))))
+  }, [dataSource])
 
-  const resetToSample = useCallback(() => {
-    writeStored(null)
-    setState(sampleState())
-    resetView()
-    toast.success("Reset to sample data")
-  }, [resetView])
-
-  const value = useMemo(
-    () => ({
-      ...state,
-      loadFromFile,
-      resetToSample,
-      filters,
-      setFilters,
-      burndownSprintId,
-      setBurndownSprintId,
-      period,
-      setPeriod,
-      scope,
-      setScope,
-    }),
-    [state, loadFromFile, resetToSample, filters, burndownSprintId, period, scope],
+  const loadFromFile = useCallback(
+    async (file: File): Promise<LoadResult> => {
+      try {
+        const { data: loaded, remembered } = await dataSource.loadFile(file)
+        setData(loaded)
+        setBootError(null)
+        resetView()
+        toast.success(`Loaded ${loaded.dataset.issues.length} tickets from ${file.name}`, {
+          description: remembered ? undefined : "File is too large to remember after a refresh.",
+        })
+        return { ok: true, dataset: loaded.dataset }
+      } catch (err) {
+        const problems = problemsFrom(err)
+        toast.error(`Couldn't load ${file.name}`, { description: summarise(problems) })
+        return { ok: false, problems }
+      }
+    },
+    [dataSource, resetView],
   )
 
+  const resetToSample = useCallback(() => {
+    dataSource.reset().then(
+      (loaded) => {
+        setData(loaded)
+        resetView()
+        toast.success("Reset to sample data")
+      },
+      (err) => toast.error("Couldn't load the sample data", { description: summarise(problemsFrom(err)) }),
+    )
+  }, [dataSource, resetView])
+
+  const value = useMemo(
+    () =>
+      data && {
+        dataset: data.dataset,
+        source: data.origin,
+        rawJson: data.rawJson,
+        loadFromFile,
+        resetToSample,
+        filters,
+        setFilters,
+        burndownSprintId,
+        setBurndownSprintId,
+        period,
+        setPeriod,
+        customDates,
+        setCustomDates,
+        scope,
+        setScope,
+        fixedRange: null,
+      },
+    [data, loadFromFile, resetToSample, filters, burndownSprintId, period, customDates, scope],
+  )
+
+  if (!value) {
+    return bootError ? (
+      <AppLoading
+        state="error"
+        message={bootError}
+        onRetry={retryBoot}
+        onFile={async (file) => {
+          // No toaster is mounted yet, so show a failed file's problems here instead.
+          const result = await loadFromFile(file)
+          if (!result.ok) setBootError(`${file.name}: ${summarise(result.problems)}`)
+        }}
+      />
+    ) : (
+      <AppLoading state="loading" />
+    )
+  }
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }

@@ -1,5 +1,5 @@
 import { format } from "date-fns"
-import { useMemo } from "react"
+import { useId, useMemo } from "react"
 import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -22,11 +22,30 @@ const config = {
 
 const DAY_FMT = "d MMM"
 
-type Props = { pi: ProgramIncrement; sprints: Sprint[]; issues: Issue[]; now: Date }
+type Props = {
+  pi: ProgramIncrement
+  sprints: Sprint[]
+  issues: Issue[]
+  now: Date
+  title?: string
+  description?: string
+  /** Render without the surrounding card (e.g. inside a sheet). */
+  bare?: boolean
+}
 
 /** Points done vs total scope, day by day across the PI, with sprint boundaries. */
-export function PiBurnupChart({ pi, sprints, issues, now }: Props) {
+export function PiBurnupChart({
+  pi,
+  sprints,
+  issues,
+  now,
+  title = "PI burnup",
+  description = "Story points done against total scope. Dotted lines mark sprint starts.",
+  bare = false,
+}: Props) {
   const loading = useFirstLoad()
+  // Unique per chart so two burnups on one page don't share a gradient.
+  const fillId = `burnup-fill-${useId().replace(/[^\w-]/g, "")}`
   const data = useMemo(
     () => piBurnup(pi, issues, now).map((p) => ({ day: format(p.date, DAY_FMT), scope: p.scope, done: p.done })),
     [pi, issues, now],
@@ -38,63 +57,64 @@ export function PiBurnupChart({ pi, sprints, issues, now }: Props) {
     (d): d is string => !!d && d !== data[0]?.day,
   )
 
+  const chart = loading ? (
+    <Skeleton className="h-72 w-full" />
+  ) : (
+    <ChartContainer config={config} className="aspect-auto h-72 w-full">
+      <ComposedChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+        <defs>
+          <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-done)" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="var(--color-done)" stopOpacity={0.02} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} />
+        <YAxis tickLine={false} axisLine={false} width={40} allowDecimals={false} />
+        <ChartTooltip cursor={{ strokeWidth: 1 }} content={<ChartTooltipContent indicator="line" formatter={tooltipRow} />} />
+        {boundaries.map((d) => (
+          <ReferenceLine key={d} x={d} stroke="var(--border)" strokeDasharray="2 4" />
+        ))}
+        {showToday && (
+          <ReferenceLine
+            x={today}
+            stroke="var(--muted-foreground)"
+            strokeOpacity={0.6}
+            label={{ value: "Today", position: "insideTopLeft", fill: "var(--muted-foreground)", fontSize: 11 }}
+          />
+        )}
+        <Area
+          dataKey="done"
+          type="linear"
+          stroke="var(--color-done)"
+          strokeWidth={2}
+          fill={`url(#${fillId})`}
+          connectNulls={false}
+          dot={false}
+          activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--card)" }}
+        />
+        <Line
+          dataKey="scope"
+          type="stepAfter"
+          stroke="var(--color-scope)"
+          strokeWidth={1.5}
+          strokeDasharray="4 4"
+          dot={false}
+          activeDot={false}
+        />
+        <ChartLegend content={<ChartLegendContent />} />
+      </ComposedChart>
+    </ChartContainer>
+  )
+
+  if (bare) return chart
   return (
     <Card>
       <CardHeader>
-        <CardTitle>PI burnup</CardTitle>
-        <CardDescription>Story points done against total scope. Dotted lines mark sprint starts.</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>
-        {loading ? (
-          <Skeleton className="h-72 w-full" />
-        ) : (
-          <ChartContainer config={config} className="aspect-auto h-72 w-full">
-            <ComposedChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-              <defs>
-                <linearGradient id="burnup-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-done)" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="var(--color-done)" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid vertical={false} />
-              <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} />
-              <YAxis tickLine={false} axisLine={false} width={40} allowDecimals={false} />
-              <ChartTooltip cursor={{ strokeWidth: 1 }} content={<ChartTooltipContent indicator="line" formatter={tooltipRow} />} />
-              {boundaries.map((d) => (
-                <ReferenceLine key={d} x={d} stroke="var(--border)" strokeDasharray="2 4" />
-              ))}
-              {showToday && (
-                <ReferenceLine
-                  x={today}
-                  stroke="var(--muted-foreground)"
-                  strokeOpacity={0.6}
-                  label={{ value: "Today", position: "insideTopLeft", fill: "var(--muted-foreground)", fontSize: 11 }}
-                />
-              )}
-              <Area
-                dataKey="done"
-                type="linear"
-                stroke="var(--color-done)"
-                strokeWidth={2}
-                fill="url(#burnup-fill)"
-                connectNulls={false}
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--card)" }}
-              />
-              <Line
-                dataKey="scope"
-                type="stepAfter"
-                stroke="var(--color-scope)"
-                strokeWidth={1.5}
-                strokeDasharray="4 4"
-                dot={false}
-                activeDot={false}
-              />
-              <ChartLegend content={<ChartLegendContent />} />
-            </ComposedChart>
-          </ChartContainer>
-        )}
-      </CardContent>
+      <CardContent>{chart}</CardContent>
     </Card>
   )
 }

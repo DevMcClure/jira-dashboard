@@ -7,12 +7,14 @@ import { ticketColumns } from "./columns"
 import { TablePagination } from "./TablePagination"
 import { searchKeyOrSummary, ticketFeatures, type TicketRow } from "./table-setup"
 import { TicketsToolbar } from "./TicketsToolbar"
+import { useAppPath } from "@/hooks/useAppPath"
 
 type Props = { rows: TicketRow[]; activeKey?: string }
 
 /** TanStack data table: search, facets, sorting, column visibility, pagination. */
 export function TicketsTable({ rows, activeKey }: Props) {
   const navigate = useNavigate()
+  const to = useAppPath()
   const table = useTable({
     features: ticketFeatures,
     columns: ticketColumns,
@@ -30,7 +32,7 @@ export function TicketsTable({ rows, activeKey }: Props) {
 
   const pageRows = table.getRowModel().rows
   const columnCount = table.getVisibleLeafColumns().length
-  const open = (key: string) => navigate(`/tickets/${key}`)
+  const open = (key: string) => navigate(to(`/tickets/${key}`))
 
   return (
     <div className="flex flex-col gap-4">

@@ -6,6 +6,7 @@ import { StatusDot } from "@/components/common/StatusDot"
 import { HEALTH_LEVELS } from "@/components/health/health-levels"
 import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { useHistoryIssues } from "@/hooks/useFilteredIssues"
 import { useHistorySprints } from "@/hooks/useScopedSprints"
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils"
 /** Reference "SERVICE STATUS"-style list: dot + sprint name + one-line status. */
 export function SprintHealthList() {
   const { dataset, burndownSprintId, setBurndownSprintId } = useData()
+  const to = useAppPath()
   const issues = useHistoryIssues()
   const sprints = useHistorySprints()
   const now = dataset.meta.generatedAt
@@ -44,7 +46,7 @@ export function SprintHealthList() {
         </CardTitle>
         <CardAction>
           <Button variant="ghost" size="sm" className="-my-1.5 h-7" asChild>
-            <Link to="/health">
+            <Link to={to("/health")}>
               View all <ArrowRight />
             </Link>
           </Button>

@@ -10,24 +10,46 @@ import {
   countByStatusCategory,
   cycleTimeDays,
   epicProgress,
+  objectiveForecast,
+  objectiveHealth,
+  objectiveProgress,
   piHealth,
+  piPredictability,
   remainingPoints,
   sprintHealth,
   sprintVelocity,
   timeInCurrentStatus,
   velocity,
   workloadByPerson,
-  type HealthLevel,
+  type ObjectiveHealthLevel,
 } from "./metrics"
-import { PERIODS, periodRange, type Period } from "./period"
+import {
+  flowDistribution,
+  flowEfficiency,
+  flowItems,
+  flowLoad,
+  flowPredictability,
+  flowTime,
+  flowVelocity,
+  HISTORY_LEVEL_LABEL,
+  historyCoverage,
+  sampleQuality,
+  sizeMix,
+  teamFlow,
+  type Percentiles,
+} from "./flow"
+import { FLOW_TYPES } from "./flowConfig"
+import { periodLabel as labelForPeriod, periodRange, type DayRange, type Period } from "./period"
 import { resolveScope, type Scope } from "./scope"
-import type { DateRange, Issue, JiraDataset, Sprint, Transition } from "./types"
+import type { DateRange, Issue, JiraDataset, Objective, Sprint, Transition } from "./types"
 
-export type ReportSection = "summary" | "pi" | "teams" | "sprints" | "status" | "people" | "movements"
+export type ReportSection = "summary" | "pi" | "objectives" | "flow" | "teams" | "sprints" | "status" | "people" | "movements"
 
 export const REPORT_SECTIONS: { value: ReportSection; label: string; description: string }[] = [
   { value: "summary", label: "Summary", description: "Headline counts and activity in the period" },
   { value: "pi", label: "Program increment", description: "PI health, points per sprint and epic progress" },
+  { value: "objectives", label: "Objectives", description: "PI objectives: business value, progress, health and forecast" },
+  { value: "flow", label: "Flow", description: "The six flow metrics, in items and working time" },
   { value: "teams", label: "Teams", description: "Per-team tickets, remaining work and velocity" },
   { value: "sprints", label: "Sprints", description: "Sprint health, progress and scope" },
   { value: "status", label: "Status breakdown", description: "Tickets in each workflow status" },
@@ -41,14 +63,17 @@ export type ReportOptions = {
   teamIds: string[]
   sprintIds: number[]
   period: Period
+  /** The picked days when `period` is "custom". */
+  customDates?: DayRange | null
   sections: ReportSection[]
 }
 
-const HEALTH_LABEL: Record<HealthLevel, string> = {
+const HEALTH_LABEL: Record<ObjectiveHealthLevel, string> = {
   on_track: "On track",
   at_risk: "At risk",
   off_track: "Off track",
   completed: "Completed",
+  no_data: "No tickets",
 }
 
 const RECENT_MOVES = 15
@@ -78,15 +103,15 @@ export function reportScope(dataset: JiraDataset, options: ReportOptions) {
   const keys = new Set(issues.map((i) => i.key))
   const transitions = dataset.transitions.filter((t) => keys.has(t.issueKey))
   const now = dataset.meta.generatedAt
-  const range = periodRange(period, now, sprints, issues, resolved.pi)
+  const range = periodRange(period, now, sprints, issues, resolved.pi, options.customDates ?? null)
   const teams = teamIds.length ? dataset.teams.filter((t) => teamIds.includes(t.id)) : dataset.teams
   const historySprints = byTeams(resolved.historySprints, teamIds)
-  return { issues, historyIssues, transitions, sprints, historySprints, teams, range, now, resolved }
+  return { issues, historyIssues, transitions, sprints, historySprints, teams, range, now, resolved, pickedSprintIds: sprintIds }
 }
 
 export function buildReport(dataset: JiraDataset, options: ReportOptions): string {
   const scope = reportScope(dataset, options)
-  const periodLabel = PERIODS.find((p) => p.value === options.period)!.label
+  const periodLabel = labelForPeriod(options.period, scope.range)
   const ctx = { dataset, ...scope, periodLabel }
   const want = new Set(options.sections)
   const { resolved } = scope
@@ -112,6 +137,8 @@ export function buildReport(dataset: JiraDataset, options: ReportOptions): strin
 
   if (want.has("summary")) out.push(...summarySection(ctx))
   if (want.has("pi")) out.push(...piSection(ctx))
+  if (want.has("objectives")) out.push(...objectivesSection(ctx))
+  if (want.has("flow")) out.push(...flowSection(ctx))
   if (want.has("teams")) out.push(...teamsSection(ctx))
   if (want.has("sprints")) out.push(...sprintsSection(ctx))
   if (want.has("status")) out.push(...statusSection(ctx))
@@ -159,7 +186,7 @@ function piSection({ dataset, resolved, historySprints, historyIssues, now }: Ct
     `**${pi.name}**: ${HEALTH_LABEL[health.level]}. ${health.pctDone}% of points done with ${health.pctElapsed}% of the PI gone (${health.donePoints} / ${health.totalPoints} pts, ${health.ticketCount} tickets${pi.state === "active" ? `, ${health.daysLeft} days left` : ""}).`,
     "",
   )
-  if (pi.objectives.length) out.push("**Objectives**", "", ...pi.objectives.map((o) => `- ${inline(o)}`), "")
+  if (pi.objectives.length) out.push("**Objectives**", "", ...pi.objectives.map((o) => `- ${inline(o.title)}`), "")
 
   const started = historySprints.filter((s) => s.state !== "future" && s.startDate)
   if (started.length) {
@@ -194,6 +221,140 @@ function piSection({ dataset, resolved, historySprints, historyIssues, now }: Ct
     ),
     "",
   )
+  return out
+}
+
+/** Same rules as the Objectives page: picked sprints narrow the tickets; a team filter hides other teams' objectives. */
+function objectivesSection({ resolved, historyIssues, teams, now, pickedSprintIds }: Ctx): string[] {
+  const pi = resolved.pi
+  const out = [`## Objectives${pi ? ` (${pi.name})` : ""}`, ""]
+  if (!pi) return [...out, "_This export has no program increments._", ""]
+  const teamIds = new Set(teams.map((t) => t.id))
+  const shown = pi.objectives.filter((o) => o.teamId === null || teamIds.has(o.teamId))
+  if (!shown.length) return [...out, "_No objectives for this PI._", ""]
+
+  const issues = pickedSprintIds.length
+    ? historyIssues.filter((i) => i.sprintIds.some((id) => pickedSprintIds.includes(id)))
+    : historyIssues
+  const predictability = piPredictability(shown)
+  out.push(
+    predictability
+      ? `**Predictability:** ${predictability.pct}% (${predictability.actual} of ${predictability.planned} planned business value).`
+      : `**Predictability:** ${pi.state === "closed" ? "no business values assessed" : "assessed when the PI ends"}.`,
+    "",
+  )
+
+  const rowsFor = (list: Objective[]) =>
+    table(
+      ["Objective", "Commitment", "BV planned / actual", "Done", "Health", pi.state === "closed" ? "Finished" : "Forecast"],
+      list.map((o) => {
+        const forecast = objectiveForecast(o, pi, issues, now)
+        return [
+          o.title,
+          o.committed ? "Committed" : "Uncommitted",
+          `${o.plannedBusinessValue ?? "—"} / ${o.actualBusinessValue ?? "—"}`,
+          `${objectiveProgress(o, pi, issues).pctDone}%`,
+          HEALTH_LABEL[objectiveHealth(o, pi, issues, now).level],
+          forecast === null ? "—" : `${forecast}%`,
+        ]
+      }),
+    )
+  for (const team of teams) {
+    const list = shown.filter((o) => o.teamId === team.id)
+    if (list.length) out.push(`### ${team.name}`, "", rowsFor(list), "")
+  }
+  const art = shown.filter((o) => o.teamId === null)
+  if (art.length) out.push("### ART level", "", rowsFor(art), "")
+  return out
+}
+
+const AGING_LISTED = 10
+
+/** Same tickets as the Flow page (scope's PI sprints or picked sprints, team filter), in working hours. */
+function flowSection({ dataset, historyIssues, historySprints, pickedSprintIds, teams, range, now, periodLabel }: Ctx): string[] {
+  const sprints = pickedSprintIds.length ? dataset.sprints.filter((s) => pickedSprintIds.includes(s.id)) : historySprints
+  const ids = new Set(sprints.map((s) => s.id))
+  const items = flowItems(dataset.sprints.length ? historyIssues.filter((i) => i.sprintIds.some((id) => ids.has(id))) : historyIssues)
+  const opts = { mode: "working" as const, now }
+  const velocity = flowVelocity(items, range)
+  const time = flowTime(items, range, opts)
+  const load = flowLoad(items, range, opts)
+  const efficiency = flowEfficiency(items, range, opts)
+  const dist = flowDistribution(items, sprints, range, opts)
+  const predictability = flowPredictability(dataset.programIncrements)
+  const size = sizeMix(items, range)
+  const history = historyCoverage(items, now)
+  const n = time.points.length
+  const quality = sampleQuality(n)
+  const members = teams.reduce((sum, t) => sum + t.memberIds.length, 0)
+  const d = (x: number | null) => (x === null ? "—" : x.toFixed(1))
+  const pcts = (p: Percentiles) => `p50 ${d(p.p50)} · p85 ${d(p.p85)} · p95 ${d(p.p95)} working days (n ${n})`
+
+  const out = [
+    "## Flow",
+    "",
+    `_Items, not points. Period: ${periodLabel}. Times are in working hours (Mon–Fri 09:00–18:00 London; a working day is 9 hours). History: ${history.weeks} weeks, ${HISTORY_LEVEL_LABEL[history.level].toLowerCase()}._`,
+    "",
+    ...(quality.note && quality.level !== "none" ? [`> ${quality.note}`, ""] : []),
+    table(
+      ["Metric", "Value"],
+      [
+        ["Flow time (created → done)", n ? pcts(time.lead) : "—"],
+        ["Cycle time (work started → done)", n ? pcts(time.cycle) : "—"],
+        [
+          "Load",
+          `${load.wipNow} in progress, average age ${d(load.avgAgeDays)} working days${members ? ` (${(load.wipNow / members).toFixed(1)} per team member)` : ""}`,
+        ],
+        [
+          "Velocity",
+          `${velocity.total} items (${velocity.delta >= 0 ? "+" : ""}${velocity.delta} vs the previous period; counted regardless of size${size.median === null ? "" : `, median ${size.median} pts`})`,
+        ],
+        ["Efficiency", efficiency.pct === null ? "—" : `${efficiency.pct}%`],
+        ["Distribution (finished)", FLOW_TYPES.map((t) => `${t} ${dist.finished[t]}`).join(" · ")],
+        ["Distribution (in progress)", FLOW_TYPES.map((t) => `${t} ${dist.wip[t]}`).join(" · ")],
+        [
+          "Predictability",
+          predictability.length ? predictability.map((p) => `${p.name}: ${p.pct === null ? "pending" : `${p.pct}%`}`).join(" · ") : "no PIs in this export",
+        ],
+      ],
+    ),
+    "",
+  ]
+  const perTeam = teamFlow(items, teams, range, opts, "created").filter((t) => t.velocity || t.wip)
+  if (perTeam.length > 1) {
+    out.push(
+      "### Teams",
+      "",
+      table(
+        ["Team", "Finished", "Flow time p50 / p85", "In progress", "Per member", "Efficiency"],
+        perTeam.map((t) => [
+          t.name,
+          String(t.velocity),
+          `${d(t.flowTime.p50)} / ${d(t.flowTime.p85)} wd (n ${t.flowTime.n})`,
+          String(t.wip),
+          t.wipPerMember === null ? "—" : t.wipPerMember.toFixed(1),
+          t.efficiency === null ? "—" : `${t.efficiency}%`,
+        ]),
+      ),
+      "",
+      "_Team-level system measures, for finding where work gets stuck; not for rating individuals._",
+      "",
+    )
+  }
+  // Aging compares age since work started with cycle time, so like is compared with like.
+  const p85 = time.cycle.p85
+  const drifting = p85 === null ? [] : load.aging.filter((a) => a.ageDays > p85).sort((a, b) => b.ageDays - a.ageDays)
+  if (drifting.length) {
+    out.push(
+      `### In progress longer than 85% of finished items' cycle time (${d(p85)} working days)`,
+      "",
+      table(
+        ["Ticket", "Summary", "Status", "Age"],
+        drifting.slice(0, AGING_LISTED).map((a) => [ticketRef(dataset, a.key), a.summary, a.status, `${d(a.ageDays)} wd`]),
+      ),
+      "",
+    )
+  }
   return out
 }
 

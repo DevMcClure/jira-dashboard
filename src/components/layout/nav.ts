@@ -6,10 +6,12 @@ import {
   LayoutDashboard,
   LayoutGrid,
   Milestone,
+  Target,
   Ticket,
   Timer,
   Upload,
   User,
+  Waves,
   type LucideIcon,
 } from "lucide-react"
 
@@ -22,12 +24,14 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: "Overview", url: "/", icon: LayoutGrid },
       { title: "PI", url: "/pi", icon: Milestone },
+      { title: "Objectives", url: "/objectives", icon: Target },
       { title: "Details", url: "/details", icon: LayoutDashboard },
       { title: "Health", url: "/health", icon: HeartPulse },
       { title: "Tickets", url: "/tickets", icon: Ticket },
       { title: "Sprints", url: "/sprints", icon: Timer },
       { title: "People", url: "/people", icon: User },
       { title: "Movements", url: "/movements", icon: ArrowRightLeft },
+      { title: "Flow", url: "/flow", icon: Waves },
     ],
   },
   {

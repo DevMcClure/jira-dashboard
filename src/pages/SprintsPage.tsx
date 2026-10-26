@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { EmptyState } from "@/components/common/EmptyState"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { SprintCard, type SprintStats } from "@/components/sprints/SprintCard"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { useHistoryIssues } from "@/hooks/useFilteredIssues"
 import { useHistorySprints } from "@/hooks/useScopedSprints"
@@ -20,6 +21,7 @@ export default function SprintsPage() {
   const issues = useHistoryIssues()
   const sprints = useHistorySprints()
   const navigate = useNavigate()
+  const to = useAppPath()
   const now = dataset.meta.generatedAt
 
   const stats = useMemo(() => {
@@ -39,7 +41,7 @@ export default function SprintsPage() {
   const open = (s: Sprint) => {
     setBurndownSprintId(s.id)
     setFilters({ ...filters, sprintIds: [s.id] })
-    navigate("/tickets")
+    navigate(to("/tickets"))
   }
 
   return (

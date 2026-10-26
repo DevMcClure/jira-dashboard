@@ -25,3 +25,6 @@ One short record per decision. Status is **Accepted** unless noted; "default unt
 | 0019 | [Report mode overrides the data context and locks it](0019-report-mode-overrides-data-context.md) | Accepted |
 | 0020 | [Downloading an export also saves a frozen report](0020-export-saves-frozen-report.md) | Accepted |
 | 0021 | [Custom date range](0021-custom-date-range.md) | Accepted |
+| 0022 | [Flow Time boundaries and the start-point switch](0022-flow-time-boundaries.md) | Accepted |
+| 0023 | [History levels and sample-size warnings](0023-history-and-sample-size.md) | Accepted |
+| 0024 | [Primary-first Flow layout, the WIP experiment, team level only](0024-primary-first-and-team-level.md) | Accepted |

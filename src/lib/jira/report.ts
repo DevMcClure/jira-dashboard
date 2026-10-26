@@ -23,7 +23,21 @@ import {
   workloadByPerson,
   type ObjectiveHealthLevel,
 } from "./metrics"
-import { flowDistribution, flowEfficiency, flowItems, flowLoad, flowPredictability, flowTime, flowVelocity, type Percentiles } from "./flow"
+import {
+  flowDistribution,
+  flowEfficiency,
+  flowItems,
+  flowLoad,
+  flowPredictability,
+  flowTime,
+  flowVelocity,
+  HISTORY_LEVEL_LABEL,
+  historyCoverage,
+  sampleQuality,
+  sizeMix,
+  teamFlow,
+  type Percentiles,
+} from "./flow"
 import { FLOW_TYPES } from "./flowConfig"
 import { periodLabel as labelForPeriod, periodRange, type DayRange, type Period } from "./period"
 import { resolveScope, type Scope } from "./scope"
@@ -257,7 +271,7 @@ function objectivesSection({ resolved, historyIssues, teams, now, pickedSprintId
 const AGING_LISTED = 10
 
 /** Same tickets as the Flow page (scope's PI sprints or picked sprints, team filter), in working hours. */
-function flowSection({ dataset, historyIssues, historySprints, pickedSprintIds, range, now, periodLabel }: Ctx): string[] {
+function flowSection({ dataset, historyIssues, historySprints, pickedSprintIds, teams, range, now, periodLabel }: Ctx): string[] {
   const sprints = pickedSprintIds.length ? dataset.sprints.filter((s) => pickedSprintIds.includes(s.id)) : historySprints
   const ids = new Set(sprints.map((s) => s.id))
   const items = flowItems(dataset.sprints.length ? historyIssues.filter((i) => i.sprintIds.some((id) => ids.has(id))) : historyIssues)
@@ -268,23 +282,36 @@ function flowSection({ dataset, historyIssues, historySprints, pickedSprintIds, 
   const efficiency = flowEfficiency(items, range, opts)
   const dist = flowDistribution(items, sprints, range, opts)
   const predictability = flowPredictability(dataset.programIncrements)
-  const d = (n: number | null) => (n === null ? "—" : n.toFixed(1))
-  const pcts = (p: Percentiles) => `p50 ${d(p.p50)} · p85 ${d(p.p85)} · p95 ${d(p.p95)} working days`
+  const size = sizeMix(items, range)
+  const history = historyCoverage(items, now)
+  const n = time.points.length
+  const quality = sampleQuality(n)
+  const members = teams.reduce((sum, t) => sum + t.memberIds.length, 0)
+  const d = (x: number | null) => (x === null ? "—" : x.toFixed(1))
+  const pcts = (p: Percentiles) => `p50 ${d(p.p50)} · p85 ${d(p.p85)} · p95 ${d(p.p95)} working days (n ${n})`
 
   const out = [
     "## Flow",
     "",
-    `_Items, not points. Period: ${periodLabel}. Times are in working hours (Mon–Fri 09:00–18:00 London; a working day is 9 hours)._`,
+    `_Items, not points. Period: ${periodLabel}. Times are in working hours (Mon–Fri 09:00–18:00 London; a working day is 9 hours). History: ${history.weeks} weeks, ${HISTORY_LEVEL_LABEL[history.level].toLowerCase()}._`,
     "",
+    ...(quality.note && quality.level !== "none" ? [`> ${quality.note}`, ""] : []),
     table(
       ["Metric", "Value"],
       [
-        ["Velocity", `${velocity.total} items (${velocity.delta >= 0 ? "+" : ""}${velocity.delta} vs the previous period)`],
-        ["Flow time (cycle)", time.points.length ? pcts(time.cycle) : "—"],
-        ["Lead time", time.points.length ? pcts(time.lead) : "—"],
-        ["Load", `${load.wipNow} in progress, average age ${d(load.avgAgeDays)} working days`],
+        ["Flow time (created → done)", n ? pcts(time.lead) : "—"],
+        ["Cycle time (work started → done)", n ? pcts(time.cycle) : "—"],
+        [
+          "Load",
+          `${load.wipNow} in progress, average age ${d(load.avgAgeDays)} working days${members ? ` (${(load.wipNow / members).toFixed(1)} per team member)` : ""}`,
+        ],
+        [
+          "Velocity",
+          `${velocity.total} items (${velocity.delta >= 0 ? "+" : ""}${velocity.delta} vs the previous period; counted regardless of size${size.median === null ? "" : `, median ${size.median} pts`})`,
+        ],
         ["Efficiency", efficiency.pct === null ? "—" : `${efficiency.pct}%`],
         ["Distribution (finished)", FLOW_TYPES.map((t) => `${t} ${dist.finished[t]}`).join(" · ")],
+        ["Distribution (in progress)", FLOW_TYPES.map((t) => `${t} ${dist.wip[t]}`).join(" · ")],
         [
           "Predictability",
           predictability.length ? predictability.map((p) => `${p.name}: ${p.pct === null ? "pending" : `${p.pct}%`}`).join(" · ") : "no PIs in this export",
@@ -293,11 +320,33 @@ function flowSection({ dataset, historyIssues, historySprints, pickedSprintIds, 
     ),
     "",
   ]
+  const perTeam = teamFlow(items, teams, range, opts, "created").filter((t) => t.velocity || t.wip)
+  if (perTeam.length > 1) {
+    out.push(
+      "### Teams",
+      "",
+      table(
+        ["Team", "Finished", "Flow time p50 / p85", "In progress", "Per member", "Efficiency"],
+        perTeam.map((t) => [
+          t.name,
+          String(t.velocity),
+          `${d(t.flowTime.p50)} / ${d(t.flowTime.p85)} wd (n ${t.flowTime.n})`,
+          String(t.wip),
+          t.wipPerMember === null ? "—" : t.wipPerMember.toFixed(1),
+          t.efficiency === null ? "—" : `${t.efficiency}%`,
+        ]),
+      ),
+      "",
+      "_Team-level system measures, for finding where work gets stuck; not for rating individuals._",
+      "",
+    )
+  }
+  // Aging compares age since work started with cycle time, so like is compared with like.
   const p85 = time.cycle.p85
   const drifting = p85 === null ? [] : load.aging.filter((a) => a.ageDays > p85).sort((a, b) => b.ageDays - a.ageDays)
   if (drifting.length) {
     out.push(
-      `### In progress longer than 85% of finished items (${d(p85)} working days)`,
+      `### In progress longer than 85% of finished items' cycle time (${d(p85)} working days)`,
       "",
       table(
         ["Ticket", "Summary", "Status", "Age"],

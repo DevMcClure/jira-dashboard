@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import sample from "../../../public/sample/jira-export.json"
 import flowFixture from "./__fixtures__/flow-export.json"
 import piFixture from "./__fixtures__/pi-export.json"
 import fixture from "./__fixtures__/small-export.json"
@@ -142,24 +143,36 @@ describe("buildReport: flow", () => {
   const fds = parseExport(flowFixture)
   const md = buildReport(fds, { ...ALL, period: "all", sections: ["flow"] })
 
-  it("reports the six flow metrics in working hours", () => {
+  it("reports flow time and load first, with boundaries, sample size and history", () => {
     // "All time" in sprint scope starts at the active sprint (12 Oct), so F-7 (done 6 Oct) is the
-    // previous period. Same window and numbers as flow.test.ts: cycle 3 h, 12 h, 20 h → p50 1.3 d,
-    // p85 = p95 2.2 d; efficiency 19 h / 35 h = 54%.
-    expect(md).toContain("## Flow")
-    expect(md).toContain("| Velocity | 3 items (+2 vs the previous period) |")
-    expect(md).toContain("| Flow time (cycle) | p50 1.3 · p85 2.2 · p95 2.2 working days |")
-    expect(md).toContain("| Lead time | p50 1.3 · p85 2.3 · p95 2.3 working days |")
-    expect(md).toContain("| Load | 1 in progress, average age 2.9 working days |")
+    // previous period. Same window as flow.test.ts: lead 10 h, 12 h, 21 h → p50 1.3 d, p85 2.3 d;
+    // cycle 3 h, 12 h, 20 h → p50 1.3 d, p85 2.2 d; efficiency 19 h / 35 h = 54%; median size 3 pts.
+    expect(md).toContain("History: 2 weeks, early insights.")
+    expect(md).toContain("> Only 3 finished items: percentiles are rough.")
+    expect(md).toContain("| Flow time (created → done) | p50 1.3 · p85 2.3 · p95 2.3 working days (n 3) |")
+    expect(md).toContain("| Cycle time (work started → done) | p50 1.3 · p85 2.2 · p95 2.2 working days (n 3) |")
+    expect(md).toContain("| Load | 1 in progress, average age 2.9 working days (1.0 per team member) |")
+    expect(md).toContain("| Velocity | 3 items (+2 vs the previous period; counted regardless of size, median 3 pts) |")
     expect(md).toContain("| Efficiency | 54% |")
     expect(md).toContain("| Distribution (finished) | Feature 1 · Defect 1 · Risk 0 · Debt 1 · Other 0 |")
+    expect(md).toContain("| Distribution (in progress) | Feature 1 · Defect 0 · Risk 0 · Debt 0 · Other 0 |")
     expect(md).toContain("| Predictability | no PIs in this export |")
+    expect(md.indexOf("Flow time (created")).toBeLessThan(md.indexOf("| Velocity |"))
+    // One team only, so no per-team table.
+    expect(md).not.toContain("### Teams")
   })
 
-  it("lists in-progress items older than the 85th percentile", () => {
-    // F-4 has been in flow 26 working hours (2.9 d), past p85 (2.2 d).
-    expect(md).toContain("### In progress longer than 85% of finished items (2.2 working days)")
+  it("lists in-progress items older than the 85th percentile of cycle time", () => {
+    // F-4 has been in flow 26 working hours (2.9 d), past the cycle-time p85 (2.2 d).
+    expect(md).toContain("### In progress longer than 85% of finished items' cycle time (2.2 working days)")
     expect(md).toMatch(/\| F-4 \| Still in review \| In Review \| 2\.9 wd \|/)
+  })
+
+  it("adds a team-level table when several teams are in scope", () => {
+    const md = buildReport(parseExport(sample), { ...ALL, period: "pi", sections: ["flow"] })
+    const rows = md.split("### Teams")[1]?.split("\n\n")[1]?.split("\n").slice(2) ?? []
+    expect(rows.map((r) => r.split(" | ")[0].replace("| ", ""))).toEqual(["Platform", "Web", "Mobile"])
+    expect(md).toContain("not for rating individuals")
   })
 
   it("shows predictability per PI when there are PIs", () => {

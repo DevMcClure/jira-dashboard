@@ -1,6 +1,6 @@
 # 0015. Nearest-rank percentiles; a working day is 9 hours
 
-- **Status:** Accepted
+- **Status:** Accepted (Flow Time start point refined by [0022](0022-flow-time-boundaries.md))
 - **Date:** 26 Oct 2026
 - **Phase:** F2
 

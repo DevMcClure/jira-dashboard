@@ -73,7 +73,7 @@ Commands: `dev`, `build` (type-check + build), `test`, `lint`, `mock:data` (rege
 | Tickets | `/tickets`, `/tickets/:key` | Data table with search, faceted filters, column visibility, sort and pagination. A row opens a side sheet with ticket details and a timeline of status and assignee changes, with time spent in each status. |
 | Sprints | `/sprints` | Sprint cards grouped by active, future and closed: progress, scope change, status counts. Click one to filter Tickets to it. |
 | People | `/people` | Workload per assignee, including Unassigned, sorted by open points. |
-| Flow | `/flow` | The six SAFe flow metrics, in **items and time, not points**. A working hours / calendar time toggle; every chart says which it uses. KPI row (velocity, flow time p85, load, efficiency, distribution, predictability), then: **aging WIP** (open items by status and age against cycle-time percentile lines; click a dot to open the ticket), throughput per week, cycle-time scatter with p50/p85/p95, WIP over time (active vs waiting), efficiency trend, "where the time goes" by status, distribution per sprint by flow type, predictability per PI with an 80–100% band. Charts cover at least the last 8 weeks. The ticket sheet gains a Flow block. |
+| Flow | `/flow` | The six SAFe flow metrics, in **items and time, not points**. The header has a **history meter** (weeks of history: Too early / Early insights / Patterns emerging / Established), a **Flow time from: Created (default) / Work started** switch, and **Working hours / Calendar time**; every chart says which clock it uses and how many items are behind its percentiles. There's a collapsible **"How these are measured"** panel. **Primary targets:** Flow time and Flow load tiles; **flow time vs throughput** (weekly, on the same weeks); **aging WIP** (age since work started against cycle-time percentiles; click a dot to open the ticket); flow time per item. **Load:** WIP over time; **WIP vs throughput** (one dot per week); a **team table** (team level only, no per-person view). **Supporting:** velocity (counted regardless of size) with a **size of finished items** chart; efficiency trend; where the time goes; **work mix now vs finished**; distribution per sprint (Count / Share); predictability per PI. Charts cover at least the last 8 weeks. |
 | Movements | `/movements` | Cumulative flow diagram, created vs resolved, transitions per day (by hour for single-day periods), and a full transitions table. |
 
 **My Reports** (sidebar group): reports saved in this browser, each with Open / Copy link / Delete.
@@ -192,16 +192,17 @@ Key behaviour:
 
 ## 11. Feature history (newest first)
 
-1. **Custom date range** in the period picker (header and Export). Reports with a custom range keep its dates. The plan's open questions were answered: reports default to live; In Review and Blocked are waiting; objectives are a Jira issue type; Flow joins the default report pages.
-2. **F3 Report mode**: save a view as a live or frozen report, My Reports in the sidebar, report mode with locked filters and a banner, shareable `/r?c=` links that work in any browser, Explore from here and Exit report, and Export downloads saved as frozen reports.
-3. **F2 Flow metrics**: `/flow` page with the six SAFe flow metrics, working-hours / calendar toggle, aging WIP, a Flow block in the ticket sheet, a Flow section in Export, timezone-aware working time, and validated flow-type colours.
-4. **F1 Objectives**: objective contract (lenient about plain strings), progress / health / forecast / predictability metrics, `/objectives` page with expandable rows and a burnup sheet, a "View all" link on the PI page's card, and an Objectives section in Export. The mock data has 4 epics and 3–4 objectives per team per PI.
-5. **F0 Groundwork**: sample data fetched from `public/` instead of bundled; `DataSource` and `ReportStore` interfaces with browser implementations; `docs/decisions/`; CLAUDE.md updated.
-6. Mock data made more realistic: PI-style sprint names; the PI page counts sprints per team.
-7. **PI scope** (PR #1): data contract, scope picker, PI page, "This PI" period, PI report section, two-PI mock data.
-8. "Guest" renamed "User"; logo mark "D"; "Yesterday" period added.
-9. Rendered Markdown preview on Export.
-10. Export page (Markdown report with scope, period and section choices).
-11. Data model aligned with the real Trawler output (raw JSON and audit log import).
-12. Drag-and-drop fix; Overview turned into team cards; Details page; Health page; team detail pages.
-13. GitHub Pages deploy; original POC build (shell, overview, tickets, sprints, people, movements, import, polish).
+1. **Flow page refined** after the DX flow-metrics article: primary-first layout, Flow Time start-point switch (default created), flow time vs throughput, WIP vs throughput, team table, size and now-vs-finished mix, history meter, sample-size warnings, "How these are measured", plus a fix for weekly buckets across clock changes.
+2. **Custom date range** in the period picker (header and Export). Reports with a custom range keep its dates. The plan's open questions were answered: reports default to live; In Review and Blocked are waiting; objectives are a Jira issue type; Flow joins the default report pages.
+3. **F3 Report mode**: save a view as a live or frozen report, My Reports in the sidebar, report mode with locked filters and a banner, shareable `/r?c=` links that work in any browser, Explore from here and Exit report, and Export downloads saved as frozen reports.
+4. **F2 Flow metrics**: `/flow` page with the six SAFe flow metrics, working-hours / calendar toggle, aging WIP, a Flow block in the ticket sheet, a Flow section in Export, timezone-aware working time, and validated flow-type colours.
+5. **F1 Objectives**: objective contract (lenient about plain strings), progress / health / forecast / predictability metrics, `/objectives` page with expandable rows and a burnup sheet, a "View all" link on the PI page's card, and an Objectives section in Export. The mock data has 4 epics and 3–4 objectives per team per PI.
+6. **F0 Groundwork**: sample data fetched from `public/` instead of bundled; `DataSource` and `ReportStore` interfaces with browser implementations; `docs/decisions/`; CLAUDE.md updated.
+7. Mock data made more realistic: PI-style sprint names; the PI page counts sprints per team.
+8. **PI scope** (PR #1): data contract, scope picker, PI page, "This PI" period, PI report section, two-PI mock data.
+9. "Guest" renamed "User"; logo mark "D"; "Yesterday" period added.
+10. Rendered Markdown preview on Export.
+11. Export page (Markdown report with scope, period and section choices).
+12. Data model aligned with the real Trawler output (raw JSON and audit log import).
+13. Drag-and-drop fix; Overview turned into team cards; Details page; Health page; team detail pages.
+14. GitHub Pages deploy; original POC build (shell, overview, tickets, sprints, people, movements, import, polish).

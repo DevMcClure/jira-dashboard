@@ -44,7 +44,12 @@ The **Objectives** page shows the PI's objectives. For each one you see business
 
 ## Flow metrics
 
-The **Flow** page shows the six SAFe flow metrics, counted in items and time rather than story points: velocity, flow time (cycle and lead time percentiles), load (WIP and the age of open items), efficiency (active vs waiting time), distribution (Feature / Defect / Risk / Debt) and predictability. It defaults to working hours (Mon–Fri 09:00–18:00 London), with a switch to calendar time. Which statuses count as active or waiting, and how Jira types map to flow types, is set in `src/lib/jira/flowConfig.ts`.
+The **Flow** page shows the six SAFe flow metrics, counted in items and time rather than story points. It leads with the two primary targets, **flow time** and **flow load**:
+- **Flow time** is shown from created (the default) or from work started; there's a switch.
+- Weekly flow time is lined up against throughput.
+- An aging chart shows which open items are drifting.
+
+After that come a **WIP vs throughput** view for finding the right amount of work in progress, and a per-team table (team level only). Velocity, efficiency, distribution (now vs finished, plus the size of finished items) and predictability follow as supporting metrics. A history meter and sample-size notes show how far to trust the numbers, and **"How these are measured"** lists every definition. It defaults to working hours (Mon–Fri 09:00–18:00 London), with a switch to calendar time. Which statuses count as active or waiting, and how Jira types map to flow types, is set in `src/lib/jira/flowConfig.ts`. Based on SAFe and the DX guide at https://getdx.com/blog/flow-metrics/.
 
 ## Export a report
 

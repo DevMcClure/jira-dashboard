@@ -18,9 +18,17 @@ import {
   flowPredictability,
   flowStart,
   flowTime,
+  flowTimeByWeek,
+  flowTimeDays,
+  flowTimePercentiles,
   flowVelocity,
+  historyCoverage,
   percentile,
+  sampleQuality,
+  sizeMix,
   statusSegments,
+  teamFlow,
+  weeklyLoad,
 } from "./flow"
 import { flowStateOf, flowTypeOf } from "./flowConfig"
 
@@ -188,5 +196,85 @@ describe("flowPredictability", () => {
       { piId: "PI-A", name: "PI A", state: "closed", pct: 125 },
       { piId: "PI-B", name: "PI B", state: "active", pct: null },
     ])
+  })
+})
+
+describe("flow time basis", () => {
+  it("'created' uses lead time and 'started' uses cycle time", () => {
+    const t = flowTime(items, range, working)
+    const f1 = t.points.find((p) => p.key === "F-1")!
+    expect([round(flowTimeDays(f1, "created")), round(flowTimeDays(f1, "started"))]).toEqual([round(21 * H), round(20 * H)])
+    expect(flowTimePercentiles(t, "created")).toBe(t.lead)
+    expect(flowTimePercentiles(t, "started")).toBe(t.cycle)
+  })
+})
+
+describe("flowTimeByWeek", () => {
+  it("gives each finish week's p50 / p85", () => {
+    // Week of 12 Oct: F-1 (cycle 20 h), F-2 (12 h) → p50 12 h, p85 20 h. Week of 19 Oct: F-3 (3 h).
+    const started = flowTimeByWeek(items, range, working, "started")
+    expect(started.map((w) => [w.week.toISOString().slice(0, 10), w.count, round(w.p50), round(w.p85)])).toEqual([
+      ["2026-10-12", 2, round(12 * H), round(20 * H)],
+      ["2026-10-19", 1, round(3 * H), round(3 * H)],
+    ])
+    // From created: F-1 21 h, F-2 12 h; F-3 10 h.
+    const created = flowTimeByWeek(items, range, working, "created")
+    expect(created.map((w) => [round(w.p50), round(w.p85)])).toEqual([
+      [round(12 * H), round(21 * H)],
+      [round(10 * H), round(10 * H)],
+    ])
+  })
+})
+
+describe("weeklyLoad", () => {
+  it("averages each week's end-of-day WIP beside its throughput and flow time", () => {
+    // Daily WIP 12–18 Oct: 1,1,0,0,1,1,1 → 5/7; 19–22 Oct: 0,1,1,1 → 3/4. Finished: 2, then 1.
+    const w = weeklyLoad(items, range, working, "started")
+    expect(w.map((r) => [round(r.avgWip), r.throughput, round(r.flowTimeP85)])).toEqual([
+      [round(5 / 7), 2, round(20 * H)],
+      [round(3 / 4), 1, round(3 * H)],
+    ])
+  })
+})
+
+describe("teamFlow", () => {
+  it("summarises each team, including WIP per member", () => {
+    const teams = [...ds.teams, { id: "TEAM-X", name: "Empty", memberIds: [] }]
+    const [f, x] = teamFlow(items, teams, range, working, "created")
+    // TEAM-F (1 member): 3 finished; lead times 10 h, 12 h, 21 h → p50 12 h, p85 21 h; F-4 in progress.
+    expect({ ...f, flowTime: { p50: round(f.flowTime.p50), p85: round(f.flowTime.p85), n: f.flowTime.n } }).toMatchObject({
+      teamId: "TEAM-F",
+      members: 1,
+      velocity: 3,
+      flowTime: { p50: round(12 * H), p85: round(21 * H), n: 3 },
+      wip: 1,
+      wipPerMember: 1,
+      efficiency: 54,
+      finished: { Feature: 1, Defect: 1, Risk: 0, Debt: 1, Other: 0 },
+    })
+    expect(x).toMatchObject({ velocity: 0, wip: 0, wipPerMember: null, efficiency: null, flowTime: { n: 0, p85: null } })
+  })
+})
+
+describe("sizeMix", () => {
+  it("buckets finished items by story points, with the median now and before", () => {
+    // In range: F-1 3, F-2 2, F-3 5 → median 3. Previous period: F-7 8.
+    const s = sizeMix(items, range)
+    expect(s.buckets.filter((b) => b.count).map((b) => [b.size, b.count])).toEqual([["2", 1], ["3", 1], ["5", 1]])
+    expect([s.finished, s.unestimated, s.median, s.previousMedian]).toEqual([3, 0, 3, 8])
+  })
+})
+
+describe("historyCoverage", () => {
+  it("counts whole weeks since the earliest flow start", () => {
+    // Earliest start: F-7, Mon 5 Oct 08:00Z; now Thu 22 Oct 16:00Z → 17⅓ days → 2 weeks.
+    expect(historyCoverage(items, now)).toMatchObject({ weeks: 2, finished: 4, level: "early" })
+    expect(historyCoverage([], now).level).toBe("too-early")
+  })
+})
+
+describe("sampleQuality", () => {
+  it("warns below 10 and below 20 items", () => {
+    expect([0, 3, 12, 20].map((n) => sampleQuality(n).level)).toEqual(["none", "low", "p95", "ok"])
   })
 })

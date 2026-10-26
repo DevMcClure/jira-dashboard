@@ -26,12 +26,14 @@ export function FlowBlock({ issue }: { issue: Issue }) {
   const { active, waiting } = activeWaiting(issue, { mode, now })
   const total = active + waiting
   const cycle = start ? toDays(elapsedMs(start, end ?? now, mode, hours), mode, hours) : null
+  const lead = toDays(elapsedMs(issue.created, end ?? now, mode, hours), mode, hours)
   const activePct = total > 0 ? Math.round((active / total) * 100) : null
 
   const rows: [string, string][] = [
     ["Flow type", flowTypeOf(issue)],
     ["Flow state", STATE_LABEL[flowStateOf(issue.status, issue)]],
-    [end ? "Cycle time" : "Cycle time so far", cycle === null ? "Not started" : `${formatDays(cycle)} ${unit}`],
+    [end ? "Flow time (since created)" : "Flow time so far (since created)", `${formatDays(lead)} ${unit}`],
+    [end ? "Cycle time (since work started)" : "Cycle time so far (since work started)", cycle === null ? "Not started" : `${formatDays(cycle)} ${unit}`],
     ["Active / waiting", total > 0 ? `${formatDays(toDays(active, mode, hours))} / ${formatDays(toDays(waiting, mode, hours))}` : "—"],
   ]
 

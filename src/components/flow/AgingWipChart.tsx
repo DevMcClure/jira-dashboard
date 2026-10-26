@@ -9,7 +9,7 @@ import { flowStateOf } from "@/lib/jira/flowConfig"
 import type { TimeMode } from "@/lib/jira/working-time"
 import { FlowChartCard } from "./FlowChartCard"
 
-type Props = { aging: AgingItem[]; cycle: Percentiles; mode: TimeMode; windowLabel: string }
+type Props = { aging: AgingItem[]; cycle: Percentiles; finished: number; mode: TimeMode; windowLabel: string }
 
 const config = { age: { label: "Age", color: "var(--chart-1)" } } satisfies ChartConfig
 const BANDS = [
@@ -23,7 +23,7 @@ const BANDS = [
  * lines are the cycle times that 50 / 85 / 95% of recently finished items stayed
  * under, so a dot above 85% is drifting past the team's usual.
  */
-export function AgingWipChart({ aging, cycle, mode, windowLabel }: Props) {
+export function AgingWipChart({ aging, cycle, finished, mode, windowLabel }: Props) {
   const { dataset } = useData()
   const navigate = useNavigate()
   const to = useAppPath()
@@ -47,10 +47,12 @@ export function AgingWipChart({ aging, cycle, mode, windowLabel }: Props) {
   return (
     <FlowChartCard
       title="Aging work in progress"
-      description={`Open items by status and age. Lines show finished items' cycle-time percentiles (${windowLabel}). ${
+      description={`Open items by status and age since work started. Lines show the cycle-time percentiles (work started → done) of items finished ${windowLabel}, so like is compared with like. ${
         over85 ? `${over85} past the 85% line.` : "None past the 85% line."
       } Click a dot to open it.`}
       mode={mode}
+      sample={finished}
+      hint="Cycle time only describes finished work; age is the daily signal. Items drifting past the 85% line are the ones to swarm on or unblock first."
       empty={aging.length === 0 && "Nothing is in progress."}
       heightClass="h-80"
     >

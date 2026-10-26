@@ -5,27 +5,29 @@ import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/
 import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { formatDays } from "@/lib/format"
-import type { FlowTimePoint, Percentiles } from "@/lib/jira/flow"
+import { FLOW_TIME_BASIS_LABEL, flowTimeDays, type FlowTimeBasis, type FlowTimePoint, type Percentiles } from "@/lib/jira/flow"
 import type { TimeMode } from "@/lib/jira/working-time"
 import { FlowChartCard } from "./FlowChartCard"
 
-type Props = { points: FlowTimePoint[]; cycle: Percentiles; mode: TimeMode; windowLabel: string }
+type Props = { points: FlowTimePoint[]; percentiles: Percentiles; basis: FlowTimeBasis; mode: TimeMode; windowLabel: string }
 
-const config = { cycle: { label: "Cycle time", color: "var(--chart-1)" } } satisfies ChartConfig
+const config = { days: { label: "Flow time", color: "var(--chart-1)" } } satisfies ChartConfig
 
-/** Flow time: one dot per finished item (when it finished × how long it took), with percentile lines. */
-export function CycleTimeScatter({ points, cycle, mode, windowLabel }: Props) {
+/** Flow time: one dot per finished item (when it finished × how long it took), with percentile lines. Follows the basis switch. */
+export function FlowTimeScatter({ points, percentiles: cycle, basis, mode, windowLabel }: Props) {
   const { dataset } = useData()
   const navigate = useNavigate()
   const to = useAppPath()
-  const data = points.map((p) => ({ ...p, t: p.doneAt.getTime(), cycle: Math.round(p.cycleDays * 10) / 10 }))
+  const data = points.map((p) => ({ ...p, t: p.doneAt.getTime(), days: Math.round(flowTimeDays(p, basis) * 10) / 10 }))
   const unit = mode === "working" ? "working days" : "days"
   return (
     <FlowChartCard
-      title="Cycle time"
-      description={`Start → done for each item finished ${windowLabel}. 85% finished within ${formatDays(cycle.p85)} ${unit}.`}
+      title="Flow time per item"
+      description={`${FLOW_TIME_BASIS_LABEL[basis]} → done for each item finished ${windowLabel}. 85% finished within ${formatDays(cycle.p85)} ${unit}.`}
       mode={mode}
+      sample={points.length}
       empty={points.length === 0 && "Nothing finished in this window."}
+      hint="Dots far above the 85% line are outliers worth a look; a cloud drifting upward over time means work is getting slower."
     >
       <ChartContainer config={config} className="aspect-auto h-64 w-full">
         <ScatterChart margin={{ top: 12, right: 48, left: -8, bottom: 0 }}>
@@ -41,7 +43,7 @@ export function CycleTimeScatter({ points, cycle, mode, windowLabel }: Props) {
             tickMargin={8}
             minTickGap={32}
           />
-          <YAxis type="number" dataKey="cycle" tickLine={false} axisLine={false} width={44} unit="d" allowDecimals={false} />
+          <YAxis type="number" dataKey="days" tickLine={false} axisLine={false} width={44} unit="d" allowDecimals={false} />
           <ZAxis range={[64, 64]} />
           {(["p50", "p85", "p95"] as const).map((k) =>
             cycle[k] === null ? null : (
@@ -65,7 +67,7 @@ export function CycleTimeScatter({ points, cycle, mode, windowLabel }: Props) {
                   <span className="font-mono text-muted-foreground">{p.key}</span>
                   <span className="font-medium">{dataset.byKey.get(p.key)?.summary}</span>
                   <span className="text-muted-foreground tabular-nums">
-                    {formatDays(p.cycleDays)} {unit} · done {format(p.doneAt, "d MMM")}
+                    {formatDays(flowTimeDays(p, basis))} {unit} · done {format(p.doneAt, "d MMM")}
                   </span>
                 </div>
               )
@@ -73,7 +75,7 @@ export function CycleTimeScatter({ points, cycle, mode, windowLabel }: Props) {
           />
           <Scatter
             data={data}
-            fill="var(--color-cycle)"
+            fill="var(--color-days)"
             fillOpacity={0.8}
             stroke="var(--card)"
             strokeWidth={2}

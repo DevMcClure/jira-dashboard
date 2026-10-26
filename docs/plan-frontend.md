@@ -97,6 +97,8 @@ Acceptance:
 - [x] The page respects scope, filters and period like every other page (see decision 0016 for the chart window)
 - [x] Each chart states whether it uses working hours or calendar time
 
+**Refined after F2** (26 Oct 2026, from the DX article on flow metrics): the page now leads with Flow Time and Flow Load, adds a "From created / From work started" switch for Flow Time (default created), aligned weekly flow time vs throughput, a WIP vs throughput view, a team table (team level only), size and now-vs-finished mix context, history and sample-size warnings, and a "How these are measured" panel. See decisions 0022–0024.
+
 ### F3: Report mode
 
 Goal: save a configured view as a named report. Anyone who opens it sees the dashboard set up exactly that way.

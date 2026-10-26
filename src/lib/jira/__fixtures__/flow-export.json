@@ -8,7 +8,7 @@
   ],
   "issues": [
     {
-      "key": "F-1", "summary": "Bounces through review and blocked", "type": "Story", "status": "Done", "statusCategory": "done",
+      "key": "F-1", "storyPoints": 3, "summary": "Bounces through review and blocked", "type": "Story", "status": "Done", "statusCategory": "done",
       "teamId": "TEAM-F", "sprintIds": [2], "created": "2026-10-12T09:00:00Z", "resolved": "2026-10-14T12:00:00Z",
       "changelog": [
         { "at": "2026-10-12T10:00:00Z", "field": "status", "from": "To Do", "to": "In Progress" },
@@ -19,7 +19,7 @@
       ]
     },
     {
-      "key": "F-2", "summary": "Reopened bug", "type": "Bug", "status": "Done", "statusCategory": "done",
+      "key": "F-2", "storyPoints": 2, "summary": "Reopened bug", "type": "Bug", "status": "Done", "statusCategory": "done",
       "teamId": "TEAM-F", "sprintIds": [2], "created": "2026-10-15T08:00:00Z", "resolved": "2026-10-16T11:00:00Z",
       "changelog": [
         { "at": "2026-10-15T08:00:00Z", "field": "status", "from": "To Do", "to": "In Progress" },
@@ -29,7 +29,7 @@
       ]
     },
     {
-      "key": "F-3", "summary": "Review waits over the weekend", "type": "Task", "labels": ["tech-debt"], "status": "Done", "statusCategory": "done",
+      "key": "F-3", "storyPoints": 5, "summary": "Review waits over the weekend", "type": "Task", "labels": ["tech-debt"], "status": "Done", "statusCategory": "done",
       "teamId": "TEAM-F", "sprintIds": [2], "created": "2026-10-16T08:00:00Z", "resolved": "2026-10-19T09:00:00Z",
       "changelog": [
         { "at": "2026-10-16T15:00:00Z", "field": "status", "from": "To Do", "to": "In Progress" },
@@ -38,7 +38,7 @@
       ]
     },
     {
-      "key": "F-4", "summary": "Still in review", "type": "Story", "status": "In Review", "statusCategory": "in_progress",
+      "key": "F-4", "storyPoints": 13, "summary": "Still in review", "type": "Story", "status": "In Review", "statusCategory": "in_progress",
       "teamId": "TEAM-F", "sprintIds": [2], "created": "2026-10-19T08:00:00Z",
       "changelog": [
         { "at": "2026-10-20T08:00:00Z", "field": "status", "from": "To Do", "to": "In Progress" },
@@ -55,7 +55,7 @@
       "teamId": "TEAM-F", "sprintIds": [2], "created": "2026-10-20T08:00:00Z"
     },
     {
-      "key": "F-7", "summary": "Done in the previous sprint", "type": "Story", "status": "Done", "statusCategory": "done",
+      "key": "F-7", "storyPoints": 8, "summary": "Done in the previous sprint", "type": "Story", "status": "Done", "statusCategory": "done",
       "teamId": "TEAM-F", "sprintIds": [1], "created": "2026-10-05T08:00:00Z", "resolved": "2026-10-06T08:00:00Z",
       "changelog": [
         { "at": "2026-10-05T08:00:00Z", "field": "status", "from": "To Do", "to": "In Progress" },

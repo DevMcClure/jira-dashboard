@@ -4,7 +4,7 @@
  * `working-time.ts`. See docs/plan-frontend.md → "Flow metrics research" and
  * docs/decisions/0007, 0014–0017.
  */
-import { eachDayOfInterval, endOfDay, startOfDay, startOfWeek } from "date-fns"
+import { eachDayOfInterval, eachWeekOfInterval, endOfDay, startOfDay, startOfWeek } from "date-fns"
 import { compareStatus } from "./constants"
 import { DEFAULT_FLOW_CONFIG, FLOW_TYPES, flowStateOf, flowTypeOf, isFlowItem, type FlowConfig, type FlowState, type FlowType } from "./flowConfig"
 import { piPredictability, statusAt } from "./metrics"
@@ -20,6 +20,8 @@ export type FlowOptions = {
 
 const inRange = (d: Date, r: DateRange) => d >= r.start && d <= r.end
 const weekOf = (d: Date) => startOfWeek(d, { weekStartsOn: 1 })
+/** Local Monday-start weeks covering the range. Calendar-aware, so weeks stay aligned across clock changes. */
+const weeksOf = (r: DateRange) => (r.end < r.start ? [] : eachWeekOfInterval({ start: r.start, end: r.end }, { weekStartsOn: 1 }))
 
 /** Flow items: everything except containers (Epics) and parts (Sub-tasks), per the config. */
 export function flowItems(issues: Issue[], cfg = DEFAULT_FLOW_CONFIG): Issue[] {
@@ -127,7 +129,7 @@ export function flowVelocity(items: Issue[], range: DateRange, cfg = DEFAULT_FLO
   const firsts = items.map((i) => firstDone(i, cfg)).filter((d): d is Date => d !== null)
   const inPeriod = firsts.filter((d) => inRange(d, range))
   const weeks = new Map<number, number>()
-  for (let w = weekOf(range.start); w <= range.end; w = new Date(w.getTime() + 7 * 86_400_000)) weeks.set(w.getTime(), 0)
+  for (const w of weeksOf(range)) weeks.set(w.getTime(), 0)
   for (const d of inPeriod) {
     const k = weekOf(d).getTime()
     weeks.set(k, (weeks.get(k) ?? 0) + 1)
@@ -218,9 +220,7 @@ export function flowEfficiency(items: Issue[], range: DateRange, opts: FlowOptio
   let active = 0
   let waiting = 0
   const weeks = new Map<number, { active: number; waiting: number; items: number }>()
-  for (let w = weekOf(range.start); w <= range.end; w = new Date(w.getTime() + 7 * 86_400_000)) {
-    weeks.set(w.getTime(), { active: 0, waiting: 0, items: 0 })
-  }
+  for (const w of weeksOf(range)) weeks.set(w.getTime(), { active: 0, waiting: 0, items: 0 })
   const byStatus = new Map<string, { state: FlowState; ms: number }>()
   for (const i of items) {
     const end = flowEnd(i, cfg)
@@ -288,4 +288,192 @@ export function flowDistribution(items: Issue[], sprints: Sprint[], range: DateR
 /** Flow Predictability per PI (from F1's objectives); null until a PI's committed objectives are assessed. */
 export function flowPredictability(pis: ProgramIncrement[]) {
   return pis.map((p) => ({ piId: p.id, name: p.name, state: p.state, pct: piPredictability(p.objectives)?.pct ?? null }))
+}
+
+// ---------------------------------------------------------------------------
+// Refinements (docs/decisions/0022–0024)
+// ---------------------------------------------------------------------------
+
+/**
+ * Where Flow Time starts. "created" = when the item entered the backlog (lead
+ * time; the DX article's definition), "started" = its first move into an
+ * active status (cycle time). Both end at the last move into done.
+ */
+export type FlowTimeBasis = "created" | "started"
+
+export const FLOW_TIME_BASIS_LABEL: Record<FlowTimeBasis, string> = {
+  created: "From created",
+  started: "From work started",
+}
+
+export function flowTimeDays(point: FlowTimePoint, basis: FlowTimeBasis): number {
+  return basis === "created" ? point.leadDays : point.cycleDays
+}
+
+/** The percentiles for a basis, from `flowTime`'s result. */
+export function flowTimePercentiles(time: ReturnType<typeof flowTime>, basis: FlowTimeBasis): Percentiles {
+  return basis === "created" ? time.lead : time.cycle
+}
+
+export type WeekFlowTime = { week: Date; count: number; p50: number | null; p85: number | null }
+
+/** Flow time per finish week (p50 / p85 of items finished that week), for the speed-vs-throughput trend. */
+export function flowTimeByWeek(items: Issue[], range: DateRange, opts: FlowOptions, basis: FlowTimeBasis): WeekFlowTime[] {
+  const byWeek = new Map<number, number[]>(weeksOf(range).map((w) => [w.getTime(), []]))
+  for (const p of flowTime(items, range, opts).points) byWeek.get(weekOf(p.doneAt).getTime())?.push(flowTimeDays(p, basis))
+  return [...byWeek.entries()].map(([w, values]) => ({
+    week: new Date(w),
+    count: values.length,
+    p50: percentile(values, 50),
+    p85: percentile(values, 85),
+  }))
+}
+
+export type WeekLoad = { week: Date; avgWip: number; throughput: number; flowTimeP85: number | null }
+
+/**
+ * Per week: average end-of-day WIP, items finished (first done) and flow time
+ * p85, for finding the WIP level where throughput peaks while flow time stays steady.
+ */
+export function weeklyLoad(items: Issue[], range: DateRange, opts: FlowOptions, basis: FlowTimeBasis): WeekLoad[] {
+  const cfg = opts.cfg ?? DEFAULT_FLOW_CONFIG
+  const wip = new Map<number, number[]>()
+  for (const d of flowLoad(items, range, opts).daily) {
+    const k = weekOf(d.date).getTime()
+    wip.set(k, [...(wip.get(k) ?? []), d.wip])
+  }
+  const throughput = new Map(flowVelocity(items, range, cfg).perWeek.map((w) => [w.week.getTime(), w.count]))
+  const time = new Map(flowTimeByWeek(items, range, opts, basis).map((w) => [w.week.getTime(), w.p85]))
+  return weeksOf(range)
+    .filter((w) => wip.has(w.getTime()))
+    .map((w) => {
+      const days = wip.get(w.getTime())!
+      return {
+        week: w,
+        avgWip: days.reduce((s, n) => s + n, 0) / days.length,
+        throughput: throughput.get(w.getTime()) ?? 0,
+        flowTimeP85: time.get(w.getTime()) ?? null,
+      }
+    })
+}
+
+export type TeamFlow = {
+  teamId: string
+  name: string
+  members: number
+  velocity: number
+  flowTime: Percentiles & { n: number }
+  wip: number
+  /** WIP divided by team size; null for a team with no members listed. */
+  wipPerMember: number | null
+  efficiency: number | null
+  finished: TypeCounts
+}
+
+/** The flow metrics per team. Team level only: flow measures the system, not individuals (decision 0024). */
+export function teamFlow(
+  items: Issue[],
+  teams: { id: string; name: string; memberIds: string[] }[],
+  range: DateRange,
+  opts: FlowOptions,
+  basis: FlowTimeBasis,
+): TeamFlow[] {
+  const cfg = opts.cfg ?? DEFAULT_FLOW_CONFIG
+  return teams.map((t) => {
+    const own = items.filter((i) => i.teamId === t.id)
+    const times = flowTime(own, range, opts).points.map((p) => flowTimeDays(p, basis))
+    const wip = own.filter((i) => {
+      const s = flowStateOf(i.status, i, cfg)
+      return s === "active" || s === "waiting"
+    }).length
+    const finished = emptyCounts()
+    for (const i of own) {
+      const end = flowEnd(i, cfg)
+      if (end && inRange(end, range)) finished[flowTypeOf(i, cfg)]++
+    }
+    return {
+      teamId: t.id,
+      name: t.name,
+      members: t.memberIds.length,
+      velocity: flowVelocity(own, range, cfg).total,
+      flowTime: { ...percentiles(times), n: times.length },
+      wip,
+      wipPerMember: t.memberIds.length ? wip / t.memberIds.length : null,
+      efficiency: flowEfficiency(own, range, opts).pct,
+      finished,
+    }
+  })
+}
+
+/** Story-point sizes shown as their own bucket; anything else is "Other". */
+export const SIZE_BUCKETS = ["1", "2", "3", "5", "8", "13", "Other", "Unestimated"] as const
+export type SizeBucket = (typeof SIZE_BUCKETS)[number]
+
+const median = (values: number[]) => {
+  if (!values.length) return null
+  const s = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(s.length / 2)
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2
+}
+
+/**
+ * Size of items finished (last done) in the range, by story points, with the
+ * median now and in the previous equal-length period. Velocity counts items
+ * regardless of size; this shows whether the size of work is shifting.
+ */
+export function sizeMix(items: Issue[], range: DateRange, cfg = DEFAULT_FLOW_CONFIG) {
+  const length = range.end.getTime() - range.start.getTime()
+  const previous: DateRange = { start: new Date(range.start.getTime() - length), end: new Date(range.start.getTime() - 1) }
+  const finishedIn = (r: DateRange) =>
+    items.filter((i) => {
+      const end = flowEnd(i, cfg)
+      return end !== null && inRange(end, r)
+    })
+  const counts = new Map<SizeBucket, number>(SIZE_BUCKETS.map((b) => [b, 0]))
+  const now = finishedIn(range)
+  for (const i of now) {
+    const p = i.storyPoints
+    const bucket: SizeBucket = p === null ? "Unestimated" : (SIZE_BUCKETS as readonly string[]).includes(String(p)) ? (String(p) as SizeBucket) : "Other"
+    counts.set(bucket, counts.get(bucket)! + 1)
+  }
+  const estimated = (list: Issue[]) => list.map((i) => i.storyPoints).filter((p): p is number => p !== null)
+  return {
+    buckets: SIZE_BUCKETS.map((size) => ({ size, count: counts.get(size)! })),
+    finished: now.length,
+    unestimated: counts.get("Unestimated")!,
+    median: median(estimated(now)),
+    previousMedian: median(estimated(finishedIn(previous))),
+  }
+}
+
+export type HistoryLevel = "too-early" | "early" | "emerging" | "established"
+
+export const HISTORY_LEVEL_LABEL: Record<HistoryLevel, string> = {
+  "too-early": "Too early",
+  early: "Early insights",
+  emerging: "Patterns emerging",
+  established: "Established",
+}
+
+/**
+ * How much flow history the items cover: whole weeks since the earliest flow
+ * start, and items finished. Levels follow the DX guidance: initial insights
+ * within 2–4 weeks, actionable patterns after 2–3 months (decision 0023).
+ */
+export function historyCoverage(items: Issue[], now: Date, cfg = DEFAULT_FLOW_CONFIG) {
+  const starts = items.map((i) => flowStart(i, cfg)).filter((d): d is Date => d !== null && d <= now)
+  const earliest = starts.length ? new Date(Math.min(...starts.map((d) => d.getTime()))) : null
+  const weeks = earliest ? Math.floor((now.getTime() - earliest.getTime()) / (7 * 86_400_000)) : 0
+  const level: HistoryLevel = weeks < 2 ? "too-early" : weeks < 8 ? "early" : weeks < 13 ? "emerging" : "established"
+  return { weeks, since: earliest, finished: items.filter((i) => flowEnd(i, cfg) !== null).length, level }
+}
+
+export type SampleQuality = { level: "none" | "low" | "p95" | "ok"; note: string | null }
+
+/** Whether n finished items are enough for percentiles: under 10 is rough, under 20 makes p95 shaky (decision 0023). */
+export function sampleQuality(n: number): SampleQuality {
+  if (n === 0) return { level: "none", note: "No finished items in this window." }
+  if (n < 10) return { level: "low", note: `Only ${n} finished item${n === 1 ? "" : "s"}: percentiles are rough.` }
+  if (n < 20) return { level: "p95", note: `Under 20 finished items: treat the 95th percentile with caution.` }
+  return { level: "ok", note: null }
 }

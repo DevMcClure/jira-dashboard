@@ -195,7 +195,7 @@ All five were answered on 26 Oct 2026.
 | Should a new report default to live (newest data) or frozen (exactly what you saw)? | F3 | **Live**, as the default had it; frozen is one click away (decision 0006) |
 | Where do PI objectives live today: a Jira issue type, Jira Align, Confluence, a spreadsheet? | F1 with real data | **A Jira issue type** linked to epics; the Trawler exports them and `trawler.ts` maps them (decision 0008) |
 | Which statuses in your real workflow count as "waiting"? | F2 accuracy | **In Review and Blocked**, as the default had it (decision 0007) |
-| Should the period picker get a custom date range now? It would help frozen reports. | F3 | **Yes**: add a custom range (planned as a follow-up; decision 0009 is superseded once it lands) |
+| Should the period picker get a custom date range now? It would help frozen reports. | F3 | **Yes**: added as "Custom range…" (decision 0021, superseding 0009) |
 | Which pages should a new report include by default? | F3 | **Overview, Details, PI, Objectives and Flow** |
 
 ## Handoff notes for Claude Code

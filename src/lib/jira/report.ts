@@ -25,7 +25,7 @@ import {
 } from "./metrics"
 import { flowDistribution, flowEfficiency, flowItems, flowLoad, flowPredictability, flowTime, flowVelocity, type Percentiles } from "./flow"
 import { FLOW_TYPES } from "./flowConfig"
-import { PERIODS, periodRange, type Period } from "./period"
+import { periodLabel as labelForPeriod, periodRange, type DayRange, type Period } from "./period"
 import { resolveScope, type Scope } from "./scope"
 import type { DateRange, Issue, JiraDataset, Objective, Sprint, Transition } from "./types"
 
@@ -49,6 +49,8 @@ export type ReportOptions = {
   teamIds: string[]
   sprintIds: number[]
   period: Period
+  /** The picked days when `period` is "custom". */
+  customDates?: DayRange | null
   sections: ReportSection[]
 }
 
@@ -87,7 +89,7 @@ export function reportScope(dataset: JiraDataset, options: ReportOptions) {
   const keys = new Set(issues.map((i) => i.key))
   const transitions = dataset.transitions.filter((t) => keys.has(t.issueKey))
   const now = dataset.meta.generatedAt
-  const range = periodRange(period, now, sprints, issues, resolved.pi)
+  const range = periodRange(period, now, sprints, issues, resolved.pi, options.customDates ?? null)
   const teams = teamIds.length ? dataset.teams.filter((t) => teamIds.includes(t.id)) : dataset.teams
   const historySprints = byTeams(resolved.historySprints, teamIds)
   return { issues, historyIssues, transitions, sprints, historySprints, teams, range, now, resolved, pickedSprintIds: sprintIds }
@@ -95,7 +97,7 @@ export function reportScope(dataset: JiraDataset, options: ReportOptions) {
 
 export function buildReport(dataset: JiraDataset, options: ReportOptions): string {
   const scope = reportScope(dataset, options)
-  const periodLabel = PERIODS.find((p) => p.value === options.period)!.label
+  const periodLabel = labelForPeriod(options.period, scope.range)
   const ctx = { dataset, ...scope, periodLabel }
   const want = new Set(options.sections)
   const { resolved } = scope
@@ -272,7 +274,7 @@ function flowSection({ dataset, historyIssues, historySprints, pickedSprintIds, 
   const out = [
     "## Flow",
     "",
-    `_Items, not points, ${periodLabel.toLowerCase()}. Times are in working hours (Mon–Fri 09:00–18:00 London; a working day is 9 hours)._`,
+    `_Items, not points. Period: ${periodLabel}. Times are in working hours (Mon–Fri 09:00–18:00 London; a working day is 9 hours)._`,
     "",
     table(
       ["Metric", "Value"],

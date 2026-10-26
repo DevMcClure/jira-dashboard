@@ -27,12 +27,13 @@ export function ReportModeProvider({ children, config, id, code, basePath }: Pro
       setScope: locked,
       period: view.period,
       setPeriod: locked,
+      setCustomDates: locked,
       fixedRange: view.fixedRange,
     }),
     [outer, view],
   )
 
-  const { setFilters, setScope, setPeriod } = outer
+  const { setFilters, setScope, setPeriod, setCustomDates } = outer
   const reportMode = useMemo<ReportMode>(
     () => ({
       config,
@@ -43,9 +44,11 @@ export function ReportModeProvider({ children, config, id, code, basePath }: Pro
         setFilters(view.filters)
         setScope(view.scope)
         setPeriod(view.period)
+        // A custom range carries its dates into the user's own picker.
+        if (view.period === "custom" && view.fixedRange) setCustomDates({ from: view.fixedRange.start, to: view.fixedRange.end })
       },
     }),
-    [config, id, code, basePath, view, setFilters, setScope, setPeriod],
+    [config, id, code, basePath, view, setFilters, setScope, setPeriod, setCustomDates],
   )
 
   return (

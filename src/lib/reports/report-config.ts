@@ -59,7 +59,7 @@ export const reportConfigSchema = z
     /** null = Unassigned. */
     assigneeIds: z.array(z.string().nullable()).max(1000).default([]),
     period: z.enum(PERIOD_VALUES),
-    /** Frozen reports pin the period to these dates. */
+    /** Frozen reports, and any custom period, pin the dates here. */
     from: iso.optional(),
     to: iso.optional(),
     pages: z.array(z.enum(PAGE_IDS)).min(1, "Include at least one page"),
@@ -71,8 +71,8 @@ export const reportConfigSchema = z
     if (!c.pages.includes(c.landingPage)) {
       ctx.addIssue({ code: "custom", path: ["landingPage"], message: "The landing page must be one of the report's pages" })
     }
-    if (c.kind === "frozen" && (!c.from || !c.to)) {
-      ctx.addIssue({ code: "custom", path: ["from"], message: "A frozen report needs fixed dates" })
+    if ((c.kind === "frozen" || c.period === "custom") && (!c.from || !c.to)) {
+      ctx.addIssue({ code: "custom", path: ["from"], message: "A frozen report or custom range needs fixed dates" })
     }
     if (c.scope === "pi" && !c.piId) {
       ctx.addIssue({ code: "custom", path: ["piId"], message: "A PI report needs a PI" })
@@ -114,7 +114,8 @@ export type ReportDetails = {
 }
 
 export function configFromView(view: DashboardView, details: ReportDetails): ReportConfig {
-  const frozen = details.kind === "frozen"
+  // A custom range is absolute, so even a live report keeps its dates.
+  const pinned = details.kind === "frozen" || view.period === "custom"
   return reportConfigSchema.parse({
     schemaVersion: 1,
     ...details,
@@ -124,12 +125,12 @@ export function configFromView(view: DashboardView, details: ReportDetails): Rep
     teamIds: view.filters.teamIds,
     assigneeIds: view.filters.assigneeIds,
     period: view.period,
-    ...(frozen ? { from: view.range.start.toISOString(), to: view.range.end.toISOString() } : {}),
+    ...(pinned ? { from: view.range.start.toISOString(), to: view.range.end.toISOString() } : {}),
     dataStamp: view.generatedAt.toISOString(),
   })
 }
 
-/** The dashboard state a report puts in place. Frozen reports carry fixed dates. */
+/** The dashboard state a report puts in place. Frozen reports and custom periods carry fixed dates. */
 export function viewFromConfig(config: ReportConfig) {
   const scope: Scope = config.scope === "pi" && config.piId ? { kind: "pi", piId: config.piId } : { kind: "sprint" }
   return {
@@ -137,7 +138,7 @@ export function viewFromConfig(config: ReportConfig) {
     scope,
     period: config.period,
     fixedRange:
-      config.kind === "frozen" && config.from && config.to
+      (config.kind === "frozen" || config.period === "custom") && config.from && config.to
         ? ({ start: new Date(config.from), end: new Date(config.to) } satisfies DateRange)
         : null,
   }

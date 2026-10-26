@@ -1,6 +1,6 @@
 # 0009. No custom date range this iteration
 
-- **Status:** Accepted (default until the open question is answered)
+- **Status:** Superseded by [0021](0021-custom-date-range.md) (answered 26 Oct 2026: add a custom range)
 - **Date:** 26 Oct 2026
 - **Phase:** Iteration plan
 

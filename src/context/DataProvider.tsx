@@ -4,7 +4,7 @@ import { AppLoading } from "@/components/common/AppLoading"
 import type { DataSource, LoadedData } from "@/lib/data/data-source"
 import { createStaticDataSource } from "@/lib/data/static-data-source"
 import { JiraExportError } from "@/lib/jira/adapter"
-import type { Period } from "@/lib/jira/period"
+import type { DayRange, Period } from "@/lib/jira/period"
 import { SPRINT_SCOPE, type Scope } from "@/lib/jira/scope"
 import { DataContext, EMPTY_FILTERS, type Filters, type LoadResult } from "./data-context"
 
@@ -34,13 +34,16 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
   const [burndownSprintId, setBurndownSprintId] = useState<number | null>(null)
   const [period, setPeriod] = useState<Period>("today")
   const [scope, setScope] = useState<Scope>(SPRINT_SCOPE)
+  const [customDates, setCustomDates] = useState<DayRange | null>(null)
 
   /** View state that only makes sense for the previous dataset. */
   const resetView = useCallback(() => {
     setFilters(EMPTY_FILTERS)
     setBurndownSprintId(null)
     setScope(SPRINT_SCOPE)
-    setPeriod((p) => (p === "pi" ? "today" : p))
+    // "This PI" and picked dates belong to the previous dataset.
+    setPeriod((p) => (p === "pi" || p === "custom" ? "today" : p))
+    setCustomDates(null)
   }, [])
 
   useEffect(() => {
@@ -104,11 +107,13 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
         setBurndownSprintId,
         period,
         setPeriod,
+        customDates,
+        setCustomDates,
         scope,
         setScope,
         fixedRange: null,
       },
-    [data, loadFromFile, resetToSample, filters, burndownSprintId, period, scope],
+    [data, loadFromFile, resetToSample, filters, burndownSprintId, period, customDates, scope],
   )
 
   if (!value) {

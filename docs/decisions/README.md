@@ -9,10 +9,10 @@ One short record per decision. Status is **Accepted** unless noted; "default unt
 | 0003 | [`DataSource` seam](0003-datasource-seam.md) | Accepted |
 | 0004 | [`ReportStore` seam](0004-reportstore-seam.md) | Accepted |
 | 0005 | [`ReportConfig` is a versioned zod schema](0005-reportconfig-versioned-zod.md) | Accepted |
-| 0006 | [Live and frozen reports; new reports default to live](0006-live-vs-frozen-reports.md) | Accepted (default) |
-| 0007 | [Flow metrics count items and time; status mapping and working hours](0007-flow-metrics-items-and-time.md) | Accepted (default) |
-| 0008 | [PI objectives come from the export; predictability formula](0008-objectives-from-export-and-predictability.md) | Accepted (default) |
-| 0009 | [No custom date range this iteration](0009-no-custom-date-range.md) | Accepted (default) |
+| 0006 | [Live and frozen reports; new reports default to live](0006-live-vs-frozen-reports.md) | Accepted |
+| 0007 | [Flow metrics count items and time; status mapping and working hours](0007-flow-metrics-items-and-time.md) | Accepted |
+| 0008 | [PI objectives come from the export; predictability formula](0008-objectives-from-export-and-predictability.md) | Accepted |
+| 0009 | [No custom date range this iteration](0009-no-custom-date-range.md) | Superseded by 0021 |
 | 0010 | [Metrics stay pure and shareable; report author is free text](0010-pure-shared-metrics-free-text-author.md) | Accepted |
 | 0011 | [An objective's rollup counts its tickets in the PI's sprints](0011-objective-rollup-scope.md) | Accepted |
 | 0012 | [Objectives with no tickets, and how the forecast works](0012-objective-health-and-forecast.md) | Accepted |
@@ -24,3 +24,4 @@ One short record per decision. Status is **Accepted** unless noted; "default unt
 | 0018 | [Report URLs: /reports/:id, and /r?c= links that carry the report](0018-report-urls.md) | Accepted |
 | 0019 | [Report mode overrides the data context and locks it](0019-report-mode-overrides-data-context.md) | Accepted |
 | 0020 | [Downloading an export also saves a frozen report](0020-export-saves-frozen-report.md) | Accepted |
+| 0021 | [Custom date range](0021-custom-date-range.md) | Accepted |

@@ -56,7 +56,7 @@ Commands: `dev`, `build` (type-check + build), `test`, `lint`, `mock:data` (rege
 **Header**, left to right:
 - sidebar toggle and breadcrumb
 - **Scope picker**: "Current sprint" or one PI; hidden when the export has no PIs
-- **Time period**: Today, Yesterday, Last 7 days, Last 14 days, Current sprint, This PI (only when PIs exist), All time
+- **Time period**: Today, Yesterday, Last 7 days, Last 14 days, Current sprint, This PI (only when PIs exist), All time, and **Custom range…** (a calendar dialog; whole days, inclusive, capped at the export's "now")
 - **Filters**: Sprints, Teams and Assignees multi-select popovers ("All" when empty)
 - theme toggle
 - "D" logo mark
@@ -182,7 +182,6 @@ Key behaviour:
 - **Real Trawler output** gives no sprint dates or PIs yet, so the time-based charts stay empty with real data until the Trawler is expanded.
 - PI "done" uses each ticket's current status, not a replay at the PI's end. That's fine for active PIs, but approximate for a closed PI whose tickets were reopened later.
 - Epic names come from Epic issues in the export. If those aren't exported, only keys are shown.
-- The time period offers presets only; there's no custom date range.
 - Objective forecasts skip weekends but not holidays (decision 0012).
 - The mock data's flow efficiency is ~60%. Real teams usually read well under 50%; the generator moves tickets only in working hours and has short review queues.
 - Flow settings (`flowConfig.ts`) are code, not a settings page, until the backend iteration.
@@ -193,15 +192,16 @@ Key behaviour:
 
 ## 11. Feature history (newest first)
 
-1. **F3 Report mode**: save a view as a live or frozen report, My Reports in the sidebar, report mode with locked filters and a banner, shareable `/r?c=` links that work in any browser, Explore from here and Exit report, and Export downloads saved as frozen reports.
-2. **F2 Flow metrics**: `/flow` page with the six SAFe flow metrics, working-hours / calendar toggle, aging WIP, a Flow block in the ticket sheet, a Flow section in Export, timezone-aware working time, and validated flow-type colours.
-3. **F1 Objectives**: objective contract (lenient about plain strings), progress / health / forecast / predictability metrics, `/objectives` page with expandable rows and a burnup sheet, a "View all" link on the PI page's card, and an Objectives section in Export. The mock data has 4 epics and 3–4 objectives per team per PI.
-4. **F0 Groundwork**: sample data fetched from `public/` instead of bundled; `DataSource` and `ReportStore` interfaces with browser implementations; `docs/decisions/`; CLAUDE.md updated.
-5. Mock data made more realistic: PI-style sprint names; the PI page counts sprints per team.
-6. **PI scope** (PR #1): data contract, scope picker, PI page, "This PI" period, PI report section, two-PI mock data.
-7. "Guest" renamed "User"; logo mark "D"; "Yesterday" period added.
-8. Rendered Markdown preview on Export.
-9. Export page (Markdown report with scope, period and section choices).
-10. Data model aligned with the real Trawler output (raw JSON and audit log import).
-11. Drag-and-drop fix; Overview turned into team cards; Details page; Health page; team detail pages.
-12. GitHub Pages deploy; original POC build (shell, overview, tickets, sprints, people, movements, import, polish).
+1. **Custom date range** in the period picker (header and Export). Reports with a custom range keep its dates. The plan's open questions were answered: reports default to live; In Review and Blocked are waiting; objectives are a Jira issue type; Flow joins the default report pages.
+2. **F3 Report mode**: save a view as a live or frozen report, My Reports in the sidebar, report mode with locked filters and a banner, shareable `/r?c=` links that work in any browser, Explore from here and Exit report, and Export downloads saved as frozen reports.
+3. **F2 Flow metrics**: `/flow` page with the six SAFe flow metrics, working-hours / calendar toggle, aging WIP, a Flow block in the ticket sheet, a Flow section in Export, timezone-aware working time, and validated flow-type colours.
+4. **F1 Objectives**: objective contract (lenient about plain strings), progress / health / forecast / predictability metrics, `/objectives` page with expandable rows and a burnup sheet, a "View all" link on the PI page's card, and an Objectives section in Export. The mock data has 4 epics and 3–4 objectives per team per PI.
+5. **F0 Groundwork**: sample data fetched from `public/` instead of bundled; `DataSource` and `ReportStore` interfaces with browser implementations; `docs/decisions/`; CLAUDE.md updated.
+6. Mock data made more realistic: PI-style sprint names; the PI page counts sprints per team.
+7. **PI scope** (PR #1): data contract, scope picker, PI page, "This PI" period, PI report section, two-PI mock data.
+8. "Guest" renamed "User"; logo mark "D"; "Yesterday" period added.
+9. Rendered Markdown preview on Export.
+10. Export page (Markdown report with scope, period and section choices).
+11. Data model aligned with the real Trawler output (raw JSON and audit log import).
+12. Drag-and-drop fix; Overview turned into team cards; Details page; Health page; team detail pages.
+13. GitHub Pages deploy; original POC build (shell, overview, tickets, sprints, people, movements, import, polish).

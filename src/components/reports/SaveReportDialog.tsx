@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useData } from "@/hooks/useData"
-import { PERIODS } from "@/lib/jira/period"
+import { periodLabel } from "@/lib/jira/period"
 import {
   configFromView,
   DEFAULT_REPORT_PAGES,
@@ -83,9 +83,9 @@ function SaveReportForm({ view, defaultTitle, onDone }: { view: DashboardView; d
     ["Assignees", view.filters.assigneeIds.length ? `${view.filters.assigneeIds.length} selected` : "Everyone"],
     [
       "Period",
-      kind === "frozen"
+      kind === "frozen" || view.period === "custom"
         ? `${format(view.range.start, "d MMM")} – ${format(view.range.end, "d MMM yyyy")} (pinned)`
-        : PERIODS.find((p) => p.value === view.period)!.label,
+        : periodLabel(view.period, view.range),
     ],
   ]
 

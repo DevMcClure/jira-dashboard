@@ -66,6 +66,12 @@ describe("reportConfigSchema", () => {
     })
   })
 
+  it("keeps a custom range's dates even in a live report", () => {
+    const custom = configFromView({ ...view, period: "custom" }, { title: "Custom", kind: "live", pages: ["overview"], landingPage: "overview" })
+    expect(custom).toMatchObject({ kind: "live", period: "custom", from: "2026-10-13T00:00:00.000Z", to: "2026-10-19T17:00:00.000Z" })
+    expect(viewFromConfig(custom).fixedRange).toEqual(week)
+  })
+
   it("rejects configs it can't honour", () => {
     const bad: [string, unknown][] = [
       ["no title", { ...acceptance, title: "  " }],
@@ -74,6 +80,7 @@ describe("reportConfigSchema", () => {
       ["unknown page", { ...acceptance, pages: ["overview", "admin"] }],
       ["future schema", { ...acceptance, schemaVersion: 2 }],
       ["frozen without dates", { ...acceptance, kind: "frozen" }],
+      ["custom period without dates", { ...acceptance, period: "custom" }],
       ["PI scope without a PI", { ...acceptance, scope: "pi" }],
       ["bad period", { ...acceptance, period: "forever" }],
       ["not an object", "hello"],

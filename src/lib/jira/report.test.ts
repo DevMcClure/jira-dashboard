@@ -168,6 +168,24 @@ describe("buildReport: flow", () => {
   })
 })
 
+describe("buildReport: custom range", () => {
+  it("uses the picked days for the period and every activity count", () => {
+    // 5–7 Oct: TST-2 created (6 Oct); TST-1 resolved (7 Oct); moves: TST-1 ×3, TST-2 ×1 (7 Oct), TST-3 ×1;
+    // TST-2 only became blocked on 8 Oct, outside the range.
+    const md = buildReport(ds, {
+      ...ALL,
+      period: "custom",
+      customDates: { from: new Date("2026-10-05T12:00:00Z"), to: new Date("2026-10-07T12:00:00Z") },
+      sections: ["summary"],
+    })
+    expect(md).toContain("- **Period:** 5 Oct – 7 Oct (5 Oct 2026 – 7 Oct 2026)")
+    expect(md).toContain("| Created (5 Oct – 7 Oct) | 1 |")
+    expect(md).toContain("| Resolved (5 Oct – 7 Oct) | 1 |")
+    expect(md).toContain("| Status moves (5 Oct – 7 Oct) | 5 |")
+    expect(md).toContain("| Newly blocked (5 Oct – 7 Oct) | 0 |")
+  })
+})
+
 describe("cell", () => {
   it("escapes pipes and flattens newlines", () => {
     expect(cell("a | b\n  c")).toBe("a \\| b c")

@@ -1,6 +1,6 @@
 import { createContext } from "react"
 import type { DataOrigin } from "@/lib/data/data-source"
-import type { Period } from "@/lib/jira/period"
+import type { DayRange, Period } from "@/lib/jira/period"
 import type { Scope } from "@/lib/jira/scope"
 import type { DateRange, JiraDataset } from "@/lib/jira/types"
 
@@ -34,6 +34,9 @@ export type DataContextValue = {
   /** Time period for activity (deltas, movements, charts). Defaults to "today". */
   period: Period
   setPeriod: (period: Period) => void
+  /** The dates picked for the "custom" period; null until a range is chosen. */
+  customDates: DayRange | null
+  setCustomDates: (dates: DayRange | null) => void
   /** Fixed dates that replace the period's range (frozen reports only); null normally. */
   fixedRange: DateRange | null
 }

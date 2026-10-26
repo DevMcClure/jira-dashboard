@@ -48,7 +48,7 @@ The **Flow** page shows the six SAFe flow metrics, counted in items and time rat
 
 ## Export a report
 
-The **Export** page builds a Markdown report of the dashboard. Pick the scope (current sprint or a whole PI), teams, sprints, time period and sections (summary, program increment, objectives, flow, teams, sprints, status breakdown, people, movements), check the live preview, then download the `.md` file or copy it. It starts from the header's current filters. The report is generated in `src/lib/jira/report.ts`.
+The **Export** page builds a Markdown report of the dashboard. Pick the scope (current sprint or a whole PI), teams, sprints, time period (a preset or a custom range of days) and sections (summary, program increment, objectives, flow, teams, sprints, status breakdown, people, movements), check the live preview, then download the `.md` file or copy it. It starts from the header's current filters. The report is generated in `src/lib/jira/report.ts`.
 
 ## Reports
 

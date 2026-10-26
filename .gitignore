@@ -28,7 +28,7 @@ pnpm-debug.log*
 !.env.example
 
 # Real Jira exports — keep real company data out of the repo.
-# Only the generated mock file (public/sample/jira-export.json) is committed.
+# Only the generated mock file (apps/web/public/sample/jira-export.json) is committed.
 exports/
 *.real.json
 jira-export.*.json
@@ -50,3 +50,7 @@ CLAUDE.md
 docs/01-BUILD_PLAN.md
 docs/02-DATA_CONTRACT.md
 docs/03-UI_SPEC.md
+# Working docs kept on the developer's machine (restored after the 26 Oct docs clear-out)
+docs/PROJECT_CONTEXT.md
+docs/plan-frontend.md
+docs/decisions/

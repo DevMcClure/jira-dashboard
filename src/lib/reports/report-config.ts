@@ -25,8 +25,8 @@ export const REPORT_PAGES = [
 export type ReportPageId = (typeof REPORT_PAGES)[number]["id"]
 const PAGE_IDS = REPORT_PAGES.map((p) => p.id) as [ReportPageId, ...ReportPageId[]]
 
-/** Pages a new report includes unless the author changes them (plan open question; default). */
-export const DEFAULT_REPORT_PAGES: ReportPageId[] = ["overview", "details", "pi", "objectives"]
+/** Pages a new report includes unless the author changes them (answered open question, 26 Oct 2026). */
+export const DEFAULT_REPORT_PAGES: ReportPageId[] = ["overview", "details", "pi", "objectives", "flow"]
 /** Pages that only make sense when the export has PIs. */
 export const PI_PAGES: ReportPageId[] = ["pi", "objectives"]
 

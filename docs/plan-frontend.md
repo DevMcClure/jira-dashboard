@@ -188,15 +188,15 @@ Two habits keep the backend move cheap:
 
 ## Open questions
 
-None of these block F0. Until one is answered, the plan uses the default shown.
+All five were answered on 26 Oct 2026.
 
-| Question | Affects | Default until answered |
+| Question | Affects | Answer |
 | --- | --- | --- |
-| Should a new report default to live (newest data) or frozen (exactly what you saw)? | F3 | live; frozen is one click away |
-| Where do PI objectives live today: a Jira issue type, Jira Align, Confluence, a spreadsheet? | F1 with real data | read from the export |
-| Which statuses in your real workflow count as "waiting"? | F2 accuracy | In Review and Blocked |
-| Should the period picker get a custom date range now? It would help frozen reports. | F3 | not this iteration; frozen reports pin the preset's dates |
-| Which pages should a new report include by default? | F3 | Overview, Details, PI, Objectives |
+| Should a new report default to live (newest data) or frozen (exactly what you saw)? | F3 | **Live**, as the default had it; frozen is one click away (decision 0006) |
+| Where do PI objectives live today: a Jira issue type, Jira Align, Confluence, a spreadsheet? | F1 with real data | **A Jira issue type** linked to epics; the Trawler exports them and `trawler.ts` maps them (decision 0008) |
+| Which statuses in your real workflow count as "waiting"? | F2 accuracy | **In Review and Blocked**, as the default had it (decision 0007) |
+| Should the period picker get a custom date range now? It would help frozen reports. | F3 | **Yes**: add a custom range (planned as a follow-up; decision 0009 is superseded once it lands) |
+| Which pages should a new report include by default? | F3 | **Overview, Details, PI, Objectives and Flow** |
 
 ## Handoff notes for Claude Code
 

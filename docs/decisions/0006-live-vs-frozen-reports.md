@@ -1,6 +1,6 @@
 # 0006. Live and frozen reports; new reports default to live
 
-- **Status:** Accepted (default until the open question is answered)
+- **Status:** Accepted (confirmed 26 Oct 2026)
 - **Date:** 26 Oct 2026
 - **Phase:** Iteration plan
 
@@ -12,4 +12,4 @@ Two kinds: **live** (filters re-applied, period stays relative such as "last 7 d
 
 ## Consequences
 - Live reports can drift from what the author saw; the banner's as-of time makes that visible.
-- Open question in `plan-frontend.md`: should the default be frozen instead?
+- Confirmed on 26 Oct 2026: new reports stay live by default.

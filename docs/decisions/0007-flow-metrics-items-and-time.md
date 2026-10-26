@@ -1,6 +1,6 @@
 # 0007. Flow metrics count items and time; status mapping and working hours
 
-- **Status:** Accepted (defaults until the open question is answered)
+- **Status:** Accepted (waiting statuses confirmed 26 Oct 2026)
 - **Date:** 26 Oct 2026
 - **Phase:** Iteration plan
 
@@ -13,4 +13,4 @@ Flow metrics sit beside the points-based views and don't replace them. `src/lib/
 ## Consequences
 - Flow efficiency will usually read well under 50%; that's expected.
 - Every flow chart states whether it uses working hours or calendar time.
-- Open question: which real statuses count as waiting.
+- Confirmed on 26 Oct 2026: In Review and Blocked are the waiting statuses in the real workflow. Add any new queue status to `flowConfig.ts`.

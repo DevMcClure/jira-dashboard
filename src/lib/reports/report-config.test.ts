@@ -3,6 +3,7 @@ import { createLocalReportStore } from "./local-report-store"
 import {
   configFromView,
   decodeReportConfig,
+  DEFAULT_REPORT_PAGES,
   encodeReportConfig,
   pageForPath,
   parseReportConfig,
@@ -123,6 +124,12 @@ describe("links", () => {
       `https://devmcclure.github.io/jira-dashboard/r?c=${code}`,
     )
     expect(reportLink(acceptance, "http://localhost:5173", "/")).toBe(`http://localhost:5173/r?c=${code}`)
+  })
+})
+
+describe("DEFAULT_REPORT_PAGES", () => {
+  it("is Overview, Details, PI, Objectives and Flow (answered open question)", () => {
+    expect(DEFAULT_REPORT_PAGES).toEqual(["overview", "details", "pi", "objectives", "flow"])
   })
 })
 

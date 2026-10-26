@@ -79,7 +79,7 @@ Commands: `dev`, `build` (type-check + build), `test`, `lint`, `mock:data` (rege
 **My Reports** (sidebar group): reports saved in this browser, each with Open / Copy link / Delete.
 
 **Report mode**
-- **Save as report** (header button, and on the Export page) opens a dialog: title, note, author, **Live** (filters re-applied to whatever data is loaded; relative period) or **Frozen** (period pinned to dates), the pages to include (default Overview, Details, PI, Objectives), and the landing page.
+- **Save as report** (header button, and on the Export page) opens a dialog: title, note, author, **Live** (filters re-applied to whatever data is loaded; relative period) or **Frozen** (period pinned to dates), the pages to include (default Overview, Details, PI, Objectives, Flow), and the landing page.
 - Opening a report shows `/reports/<id>/<page>` (saved) or `/r/<code>/<page>` (a shared link, from `/r?c=<code>`). The normal pages render under the report's view. The sidebar shows only the report's pages, header filters are visible but **locked**, and a banner shows the title, author, kind, as-of time and note. The banner offers **Copy link**, **Save to My Reports** (shared links), **Explore from here** (copy the view into your own filters) and **Exit report** (back to your previous view).
 - If the loaded data's `generatedAt` differs from the report's, the banner says so. Invalid or tampered links show a toast and the normal dashboard.
 - **Download .md** on Export also saves a frozen report.

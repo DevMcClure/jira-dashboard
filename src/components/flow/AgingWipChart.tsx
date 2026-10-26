@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { CartesianGrid, ReferenceLine, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts"
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { formatDays } from "@/lib/format"
 import type { AgingItem, Percentiles } from "@/lib/jira/flow"
@@ -25,6 +26,7 @@ const BANDS = [
 export function AgingWipChart({ aging, cycle, mode, windowLabel }: Props) {
   const { dataset } = useData()
   const navigate = useNavigate()
+  const to = useAppPath()
   const columns = dataset.statuses
     .filter((s) => {
       const state = flowStateOf(s.name, { status: s.name, statusCategory: s.category })
@@ -90,7 +92,7 @@ export function AgingWipChart({ aging, cycle, mode, windowLabel }: Props) {
             className="cursor-pointer"
             onClick={(point) => {
               const key = (point.payload as { key?: string } | undefined)?.key
-              if (key) navigate(`/tickets/${key}`)
+              if (key) navigate(to(`/tickets/${key}`))
             }}
           />
         </ScatterChart>

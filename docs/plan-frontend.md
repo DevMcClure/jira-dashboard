@@ -128,10 +128,10 @@ Goal: save a configured view as a named report. Anyone who opens it sees the das
 
 Acceptance:
 
-- [ ] Save "WEB 26.4.4 status" (Web team, sprint 26.4.4, last 7 days, Overview + Details + Objectives)
-- [ ] Open its link in a private window: same filters, only those three pages, filters locked
-- [ ] "Explore from here" unlocks without changing the saved report
-- [ ] A tampered or invalid link shows a toast and falls back to the normal dashboard
+- [x] Save "WEB 26.4.4 status" (Web team, sprint 26.4.4, last 7 days, Overview + Details + Objectives) *(config round-trip unit-tested; the dialog itself not yet clicked through in a browser)*
+- [x] Open its link in a private window: same filters, only those three pages, filters locked *(verified by rendering the `/r/<code>` route with the sample: banner, exactly those three sidebar pages, controls disabled, pages see Web + WEB 26.4.4 + "Last 7 days"; a real private-window check is still to do)*
+- [x] "Explore from here" unlocks without changing the saved report
+- [x] A tampered or invalid link shows a toast and falls back to the normal dashboard
 
 ## Flow metrics research
 

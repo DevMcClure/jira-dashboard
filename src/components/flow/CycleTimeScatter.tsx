@@ -2,6 +2,7 @@ import { format } from "date-fns"
 import { useNavigate } from "react-router-dom"
 import { CartesianGrid, ReferenceLine, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts"
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { formatDays } from "@/lib/format"
 import type { FlowTimePoint, Percentiles } from "@/lib/jira/flow"
@@ -16,6 +17,7 @@ const config = { cycle: { label: "Cycle time", color: "var(--chart-1)" } } satis
 export function CycleTimeScatter({ points, cycle, mode, windowLabel }: Props) {
   const { dataset } = useData()
   const navigate = useNavigate()
+  const to = useAppPath()
   const data = points.map((p) => ({ ...p, t: p.doneAt.getTime(), cycle: Math.round(p.cycleDays * 10) / 10 }))
   const unit = mode === "working" ? "working days" : "days"
   return (
@@ -79,7 +81,7 @@ export function CycleTimeScatter({ points, cycle, mode, windowLabel }: Props) {
             className="cursor-pointer"
             onClick={(point) => {
               const key = (point.payload as { key?: string } | undefined)?.key
-              if (key) navigate(`/tickets/${key}`)
+              if (key) navigate(to(`/tickets/${key}`))
             }}
           />
         </ScatterChart>

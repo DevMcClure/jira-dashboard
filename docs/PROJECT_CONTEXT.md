@@ -1,6 +1,6 @@
 # Jira Dashboard (Sprint Atlas): project context
 
-> Snapshot of the app as of **26 Oct 2026**: `main` at `3280b38` (PR #1, the PI work) plus **F0 Groundwork** (branch `f0-groundwork`) **F1 Objectives** (branch `f1-objectives`, on top of F0) and **F2 Flow metrics** (branch `f2-flow`, on top of F1). Paste this into a planning chat so it knows what already exists. Whoever reads it has no access to the code, so this file is the source of truth for the current state. The current iteration's plan is `docs/plan-frontend.md`.
+> Snapshot of the app as of **26 Oct 2026**: `main` at `3280b38` (PR #1, the PI work) plus **F0 Groundwork** (branch `f0-groundwork`) **F1 Objectives** (branch `f1-objectives`, on top of F0) **F2 Flow metrics** (branch `f2-flow`, on top of F1) and **F3 Report mode** (branch `f3-report-mode`, on top of F2). Paste this into a planning chat so it knows what already exists. Whoever reads it has no access to the code, so this file is the source of truth for the current state. The current iteration's plan is `docs/plan-frontend.md`.
 
 ## 1. What it is
 
@@ -75,6 +75,14 @@ Commands: `dev`, `build` (type-check + build), `test`, `lint`, `mock:data` (rege
 | People | `/people` | Workload per assignee, including Unassigned, sorted by open points. |
 | Flow | `/flow` | The six SAFe flow metrics, in **items and time, not points**. A working hours / calendar time toggle; every chart says which it uses. KPI row (velocity, flow time p85, load, efficiency, distribution, predictability), then: **aging WIP** (open items by status and age against cycle-time percentile lines; click a dot to open the ticket), throughput per week, cycle-time scatter with p50/p85/p95, WIP over time (active vs waiting), efficiency trend, "where the time goes" by status, distribution per sprint by flow type, predictability per PI with an 80–100% band. Charts cover at least the last 8 weeks. The ticket sheet gains a Flow block. |
 | Movements | `/movements` | Cumulative flow diagram, created vs resolved, transitions per day (by hour for single-day periods), and a full transitions table. |
+
+**My Reports** (sidebar group): reports saved in this browser, each with Open / Copy link / Delete.
+
+**Report mode**
+- **Save as report** (header button, and on the Export page) opens a dialog: title, note, author, **Live** (filters re-applied to whatever data is loaded; relative period) or **Frozen** (period pinned to dates), the pages to include (default Overview, Details, PI, Objectives), and the landing page.
+- Opening a report shows `/reports/<id>/<page>` (saved) or `/r/<code>/<page>` (a shared link, from `/r?c=<code>`). The normal pages render under the report's view. The sidebar shows only the report's pages, header filters are visible but **locked**, and a banner shows the title, author, kind, as-of time and note. The banner offers **Copy link**, **Save to My Reports** (shared links), **Explore from here** (copy the view into your own filters) and **Exit report** (back to your previous view).
+- If the loaded data's `generatedAt` differs from the report's, the banner says so. Invalid or tampered links show a toast and the normal dashboard.
+- **Download .md** on Export also saves a frozen report.
 
 **About the Data**
 | Page | Route | What it shows |
@@ -157,7 +165,8 @@ Key behaviour:
 
 - `src/lib/jira/flow.ts`, `flowConfig.ts`, `working-time.ts`: flow metrics, their settings (status → active / waiting, type → Feature / Defect / Risk / Debt / Other, working hours Mon–Fri 09–18 Europe/London), and timezone-aware working-time maths.
 - `src/lib/data/`: the **`DataSource`** interface (`load`, `loadFile`, `reset`) and `createStaticDataSource` (sample fetch + uploads remembered in `localStorage`). `DataProvider` only talks to this, so a server-backed source can replace it later.
-- `src/lib/reports/`: the **`ReportStore`** interface (`list`, `get`, `save`, `remove`, generic over the config) and `createLocalReportStore` on `localStorage`. Not used by any page yet; F3 (Report mode) wires it up.
+- `src/lib/reports/`: the **`ReportStore`** interface and `createLocalReportStore` on `localStorage`; `report-config.ts` (the versioned zod `ReportConfig`, view ↔ config, link encode/decode); `store.ts` (the app's store instance plus change events).
+- Report mode: `components/reports/` (`ReportModeProvider` overrides and locks the data context, the save dialog, banner, My Reports nav), `routes/` (shared page routes and report routes), `hooks/useAppPath.ts` (keeps links inside a report).
 
 - `src/lib/jira/`: `schema.ts` (zod), `types.ts`, `adapter.ts` (`parseExport`), `trawler.ts` (raw Trawler → contract), `metrics.ts` (all calculations), `period.ts`, `scope.ts` (resolves the current-sprint / PI scope), `report.ts` (Markdown report), plus tests and fixtures.
 - `src/context/DataProvider.tsx`: loads through a `DataSource` (full-screen skeleton until ready, error card with Retry / Import if the sample can't be fetched), plus upload/reset, filters, period, scope, burndown sprint.
@@ -184,14 +193,15 @@ Key behaviour:
 
 ## 11. Feature history (newest first)
 
-1. **F2 Flow metrics**: `/flow` page with the six SAFe flow metrics, working-hours / calendar toggle, aging WIP, a Flow block in the ticket sheet, a Flow section in Export, timezone-aware working time, and validated flow-type colours.
-2. **F1 Objectives**: objective contract (lenient about plain strings), progress / health / forecast / predictability metrics, `/objectives` page with expandable rows and a burnup sheet, a "View all" link on the PI page's card, and an Objectives section in Export. The mock data has 4 epics and 3–4 objectives per team per PI.
-3. **F0 Groundwork**: sample data fetched from `public/` instead of bundled; `DataSource` and `ReportStore` interfaces with browser implementations; `docs/decisions/`; CLAUDE.md updated.
-4. Mock data made more realistic: PI-style sprint names; the PI page counts sprints per team.
-5. **PI scope** (PR #1): data contract, scope picker, PI page, "This PI" period, PI report section, two-PI mock data.
-6. "Guest" renamed "User"; logo mark "D"; "Yesterday" period added.
-7. Rendered Markdown preview on Export.
-8. Export page (Markdown report with scope, period and section choices).
-9. Data model aligned with the real Trawler output (raw JSON and audit log import).
-10. Drag-and-drop fix; Overview turned into team cards; Details page; Health page; team detail pages.
-11. GitHub Pages deploy; original POC build (shell, overview, tickets, sprints, people, movements, import, polish).
+1. **F3 Report mode**: save a view as a live or frozen report, My Reports in the sidebar, report mode with locked filters and a banner, shareable `/r?c=` links that work in any browser, Explore from here and Exit report, and Export downloads saved as frozen reports.
+2. **F2 Flow metrics**: `/flow` page with the six SAFe flow metrics, working-hours / calendar toggle, aging WIP, a Flow block in the ticket sheet, a Flow section in Export, timezone-aware working time, and validated flow-type colours.
+3. **F1 Objectives**: objective contract (lenient about plain strings), progress / health / forecast / predictability metrics, `/objectives` page with expandable rows and a burnup sheet, a "View all" link on the PI page's card, and an Objectives section in Export. The mock data has 4 epics and 3–4 objectives per team per PI.
+4. **F0 Groundwork**: sample data fetched from `public/` instead of bundled; `DataSource` and `ReportStore` interfaces with browser implementations; `docs/decisions/`; CLAUDE.md updated.
+5. Mock data made more realistic: PI-style sprint names; the PI page counts sprints per team.
+6. **PI scope** (PR #1): data contract, scope picker, PI page, "This PI" period, PI report section, two-PI mock data.
+7. "Guest" renamed "User"; logo mark "D"; "Yesterday" period added.
+8. Rendered Markdown preview on Export.
+9. Export page (Markdown report with scope, period and section choices).
+10. Data model aligned with the real Trawler output (raw JSON and audit log import).
+11. Drag-and-drop fix; Overview turned into team cards; Details page; Health page; team detail pages.
+12. GitHub Pages deploy; original POC build (shell, overview, tickets, sprints, people, movements, import, polish).

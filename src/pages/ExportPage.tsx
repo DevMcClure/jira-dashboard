@@ -1,8 +1,9 @@
 import { format } from "date-fns"
-import { CalendarDays, Copy, Download, Layers, Timer, Users } from "lucide-react"
+import { BookmarkPlus, CalendarDays, Copy, Download, Layers, Timer, Users } from "lucide-react"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { MarkdownView } from "@/components/export/MarkdownView"
+import { SaveReportDialog } from "@/components/reports/SaveReportDialog"
 import { FilterPopover, type FilterOption } from "@/components/filters/FilterPopover"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
@@ -14,7 +15,9 @@ import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, Sele
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useData } from "@/hooks/useData"
 import { PERIODS, type Period } from "@/lib/jira/period"
-import { buildReport, REPORT_SECTIONS, reportSprints, type ReportSection } from "@/lib/jira/report"
+import { buildReport, REPORT_SECTIONS, reportScope, reportSprints, type ReportSection } from "@/lib/jira/report"
+import { configFromView, DEFAULT_REPORT_PAGES, PI_PAGES, type DashboardView } from "@/lib/reports/report-config"
+import { saveReport } from "@/lib/reports/store"
 import { SPRINT_SCOPE, type Scope } from "@/lib/jira/scope"
 
 const SPRINT = "__sprint__"
@@ -62,14 +65,41 @@ export default function ExportPage() {
 
   const fileName = `sprint-report-${format(dataset.meta.generatedAt, "yyyy-MM-dd")}.md`
 
-  const download = () => {
+  // The export's options as a dashboard view, for saving as a report.
+  const view = useMemo<DashboardView>(
+    () => ({
+      filters: { sprintIds, teamIds, assigneeIds: [] },
+      scope,
+      period,
+      range: reportScope(dataset, { scope, teamIds, sprintIds, period, sections }).range,
+      generatedAt: dataset.meta.generatedAt,
+    }),
+    [dataset, scope, teamIds, sprintIds, period, sections],
+  )
+  const reportTitle = markdown.split("\n", 1)[0].replace(/^#\s*/, "")
+  const [saveOpen, setSaveOpen] = useState(false)
+
+  /** Downloading also keeps a frozen report of exactly this view (docs/decisions/0020). */
+  const download = async () => {
     const url = URL.createObjectURL(new Blob([markdown], { type: "text/markdown" }))
     const a = document.createElement("a")
     a.href = url
     a.download = fileName
     a.click()
     URL.revokeObjectURL(url)
-    toast.success(`Downloaded ${fileName}`)
+    try {
+      const pages = DEFAULT_REPORT_PAGES.filter((p) => pis.length || !PI_PAGES.includes(p))
+      const config = configFromView(view, {
+        title: `${reportTitle} (${format(dataset.meta.generatedAt, "d MMM yyyy")})`.slice(0, 120),
+        kind: "frozen",
+        pages,
+        landingPage: pages[0],
+      })
+      await saveReport({ config })
+      toast.success(`Downloaded ${fileName}`, { description: "Also saved as a frozen report in My Reports." })
+    } catch {
+      toast.success(`Downloaded ${fileName}`, { description: "It couldn't be saved as a report: this browser's storage is blocked or full." })
+    }
   }
 
   const copy = async () => {
@@ -88,6 +118,10 @@ export default function ExportPage() {
         description="Download a Markdown report of the dashboard for the teams, sprints and period you choose."
         actions={
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSaveOpen(true)}>
+              <BookmarkPlus />
+              Save as report
+            </Button>
             <Button variant="outline" size="sm" onClick={copy} disabled={!sections.length}>
               <Copy />
               Copy Markdown
@@ -99,6 +133,7 @@ export default function ExportPage() {
           </div>
         }
       />
+      <SaveReportDialog open={saveOpen} onOpenChange={setSaveOpen} view={view} defaultTitle={reportTitle} />
 
       <div className="grid gap-4 xl:grid-cols-[22rem_1fr]">
         <Card className="self-start">

@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { Outlet } from "react-router-dom"
 import { PageSkeleton } from "@/components/common/PageSkeleton"
+import { ReportBanner } from "@/components/reports/ReportBanner"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "./AppSidebar"
 import { SiteHeader } from "./SiteHeader"
@@ -17,6 +18,7 @@ export function AppLayout() {
         />
         <SiteHeader />
         <div className="relative flex flex-1 flex-col gap-4 p-6">
+          <ReportBanner />
           <Suspense fallback={<PageSkeleton />}>
             <Outlet />
           </Suspense>

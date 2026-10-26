@@ -1,8 +1,10 @@
+import { Lock } from "lucide-react"
 import { Fragment } from "react"
-import { Link, useLocation, useMatch } from "react-router-dom"
+import { Link, matchPath } from "react-router-dom"
 import { GlobalFilters } from "@/components/filters/GlobalFilters"
 import { PeriodPicker } from "@/components/filters/PeriodPicker"
 import { ScopePicker } from "@/components/filters/ScopePicker"
+import { SaveReportButton } from "@/components/reports/SaveReportButton"
 import { ThemeToggle } from "@/components/theme/ThemeToggle"
 import {
   Breadcrumb,
@@ -14,15 +16,21 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useAppPath, useInnerPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
+import { useReportMode } from "@/hooks/useReportMode"
 import { LogoMark } from "./LogoMark"
 import { navItemFor } from "./nav"
 
 export function SiteHeader() {
-  const { pathname } = useLocation()
+  // Inside a report, paths are relative to the report's base.
+  const pathname = useInnerPath()
+  const to = useAppPath()
+  const locked = useReportMode() !== null
   const { dataset } = useData()
-  const key = useMatch("/tickets/:key")?.params.key
-  const teamId = useMatch("/teams/:teamId")?.params.teamId
+  const key = matchPath("/tickets/:key", pathname)?.params.key
+  const teamId = matchPath("/teams/:teamId", pathname)?.params.teamId
   const item = navItemFor(pathname)
   const leaf = key ?? (teamId ? (dataset.teamById.get(teamId)?.name ?? teamId) : undefined)
   const crumbs = [item?.title ?? "Not found", ...(leaf ? [leaf] : [])]
@@ -39,7 +47,7 @@ export function SiteHeader() {
               <BreadcrumbItem className="truncate">
                 {i < crumbs.length - 1 && item ? (
                   <BreadcrumbLink asChild>
-                    <Link to={item.url}>{c}</Link>
+                    <Link to={to(item.url)}>{c}</Link>
                   </BreadcrumbLink>
                 ) : (
                   <BreadcrumbPage className={key && i > 0 ? "font-mono" : undefined}>{c}</BreadcrumbPage>
@@ -50,9 +58,20 @@ export function SiteHeader() {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="ml-auto flex items-center gap-2">
-        <ScopePicker />
-        <PeriodPicker />
-        <GlobalFilters />
+        {locked && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex size-8 items-center justify-center text-muted-foreground" aria-label="Filters are locked by this report">
+                <Lock className="size-3.5" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Locked by this report. Use “Explore from here” to change them.</TooltipContent>
+          </Tooltip>
+        )}
+        <ScopePicker disabled={locked} />
+        <PeriodPicker disabled={locked} />
+        <GlobalFilters disabled={locked} />
+        <SaveReportButton />
         <ThemeToggle />
         <LogoMark />
       </div>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { useFilteredTransitions } from "@/hooks/useFilteredTransitions"
 import { usePeriod } from "@/hooks/usePeriod"
@@ -17,6 +18,7 @@ const HEAD = "h-9 text-xs font-medium tracking-wide text-muted-foreground upperc
 export function RecentMovements({ limit = 15 }: { limit?: number }) {
   const { dataset } = useData()
   const navigate = useNavigate()
+  const to = useAppPath()
   const { range, phrase } = usePeriod()
   const inPeriod = useFilteredTransitions().filter((t) => t.at >= range.start && t.at <= range.end)
   const recent = inPeriod.slice(-limit).reverse()
@@ -33,7 +35,7 @@ export function RecentMovements({ limit = 15 }: { limit?: number }) {
         </CardDescription>
         <CardAction>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/movements">
+            <Link to={to("/movements")}>
               View all <ArrowRight />
             </Link>
           </Button>
@@ -59,7 +61,7 @@ export function RecentMovements({ limit = 15 }: { limit?: number }) {
             ) : (
               recent.map((t) => {
                 const issue = dataset.byKey.get(t.issueKey)
-                const open = () => navigate(`/tickets/${t.issueKey}`)
+                const open = () => navigate(to(`/tickets/${t.issueKey}`))
                 return (
                   <TableRow
                     key={`${t.issueKey}-${t.at.getTime()}`}

@@ -8,6 +8,7 @@ import { SprintHealthCard } from "@/components/health/SprintHealthCard"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { useHistoryIssues } from "@/hooks/useFilteredIssues"
 import { useScope } from "@/hooks/useScope"
@@ -23,6 +24,7 @@ export default function HealthPage() {
   const issues = useHistoryIssues()
   const sprints = useHistorySprints()
   const navigate = useNavigate()
+  const to = useAppPath()
   const scope = useScope()
   const now = dataset.meta.generatedAt
   // In PI scope, the PI's own health heads the page.
@@ -56,7 +58,7 @@ export default function HealthPage() {
 
   const open = (s: Sprint) => {
     setBurndownSprintId(s.id)
-    navigate(s.teamId ? `/teams/${s.teamId}` : "/details")
+    navigate(to(s.teamId ? `/teams/${s.teamId}` : "/details"))
   }
 
   return (
@@ -74,7 +76,7 @@ export default function HealthPage() {
               {piRow.pctDone}% of points done with {piRow.pctElapsed}% of the PI gone · {piRow.donePoints} /{" "}
               {piRow.totalPoints} pts
               {pi.state === "active" && ` · ${piRow.daysLeft} days left`} ·{" "}
-              <Link to="/pi" className="underline underline-offset-4 hover:text-foreground">
+              <Link to={to("/pi")} className="underline underline-offset-4 hover:text-foreground">
                 PI details
               </Link>
             </CardDescription>

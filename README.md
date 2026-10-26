@@ -50,6 +50,10 @@ The **Flow** page shows the six SAFe flow metrics, counted in items and time rat
 
 The **Export** page builds a Markdown report of the dashboard. Pick the scope (current sprint or a whole PI), teams, sprints, time period and sections (summary, program increment, objectives, flow, teams, sprints, status breakdown, people, movements), check the live preview, then download the `.md` file or copy it. It starts from the header's current filters. The report is generated in `src/lib/jira/report.ts`.
 
+## Reports
+
+**Save as report** (in the header, or on the Export page) saves the current filters, scope and period as a named report, either **live** (re-applied to the newest data) or **frozen** (pinned dates). Reports appear under **My Reports** in the sidebar. Opening one shows the dashboard set up that way, with the filters locked and only the chosen pages. **Copy link** gives a `/r?c=…` link that carries the whole report, so it opens in any browser without saving anything. **Explore from here** copies the report's filters into your own view to keep exploring. Reports are kept in this browser for now; a backend will store them later without changing the screens.
+
 ## Project docs
 
 - `docs/PROJECT_CONTEXT.md`: the app's current state, for planning.

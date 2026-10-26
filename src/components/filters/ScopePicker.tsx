@@ -6,7 +6,7 @@ import { SPRINT_SCOPE } from "@/lib/jira/scope"
 const SPRINT = "__sprint__"
 
 /** Header scope control: the current sprint, or one whole PI. Hidden when the export has no PIs. */
-export function ScopePicker() {
+export function ScopePicker({ disabled = false }: { disabled?: boolean }) {
   const { dataset, scope, setScope, filters, setFilters, setBurndownSprintId } = useData()
   const pis = dataset.programIncrements
   if (!pis.length) return null
@@ -19,7 +19,7 @@ export function ScopePicker() {
   }
 
   return (
-    <Select value={scope.kind === "pi" ? scope.piId : SPRINT} onValueChange={onChange}>
+    <Select value={scope.kind === "pi" ? scope.piId : SPRINT} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger size="sm" className="h-8 gap-1.5" aria-label="Scope">
         <Layers className="size-3.5" />
         <SelectValue />

@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { formatDateTime, formatDuration, formatRelative } from "@/lib/format"
 import type { DateRange, Transition } from "@/lib/jira/types"
@@ -23,6 +24,7 @@ const NOBODY = "__nobody__"
 export function TransitionsTable({ transitions, range }: { transitions: Transition[]; range: DateRange }) {
   const { dataset } = useData()
   const navigate = useNavigate()
+  const to = useAppPath()
   const now = dataset.meta.generatedAt
   const [query, setQuery] = useState("")
   const [toStatuses, setToStatuses] = useState<string[]>([])
@@ -130,7 +132,7 @@ export function TransitionsTable({ transitions, range }: { transitions: Transiti
               </TableRow>
             ) : (
               visible.map((t) => {
-                const open = () => navigate(`/tickets/${t.issueKey}`)
+                const open = () => navigate(to(`/tickets/${t.issueKey}`))
                 return (
                   <TableRow
                     key={`${t.issueKey}-${t.at.getTime()}`}

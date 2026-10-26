@@ -3,6 +3,7 @@ import { useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { AvatarStack } from "@/components/common/AvatarStack"
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useHistoryIssues } from "@/hooks/useFilteredIssues"
 import { useHistorySprints } from "@/hooks/useScopedSprints"
 import { pluralize } from "@/lib/format"
@@ -40,7 +41,8 @@ export function TeamCard({ team, issues, transitions, range, periodLabel }: Prop
   const historyIssues = useHistoryIssues()
   const historySprints = useHistorySprints()
   const navigate = useNavigate()
-  const open = () => navigate(`/teams/${team.id}`)
+  const to = useAppPath()
+  const open = () => navigate(to(`/teams/${team.id}`))
 
   const { counts, remaining, vel, avgVelocity, workload, activity } = useMemo(() => {
     const teamIssues = issues.filter((i) => i.teamId === team.id)

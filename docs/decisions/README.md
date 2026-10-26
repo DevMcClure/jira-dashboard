@@ -21,3 +21,6 @@ One short record per decision. Status is **Accepted** unless noted; "default unt
 | 0015 | [Nearest-rank percentiles; a working day is 9 hours](0015-percentiles-and-working-day.md) | Accepted |
 | 0016 | [The Flow page's tickets and chart window](0016-flow-page-tickets-and-window.md) | Accepted |
 | 0017 | [Unknown statuses, WIP and the colour palette](0017-flow-state-fallbacks-and-wip.md) | Accepted |
+| 0018 | [Report URLs: /reports/:id, and /r?c= links that carry the report](0018-report-urls.md) | Accepted |
+| 0019 | [Report mode overrides the data context and locks it](0019-report-mode-overrides-data-context.md) | Accepted |
+| 0020 | [Downloading an export also saves a frozen report](0020-export-saves-frozen-report.md) | Accepted |

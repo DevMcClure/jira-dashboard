@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/common/EmptyState"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import type { EpicProgress } from "@/lib/jira/metrics"
 
@@ -12,6 +13,7 @@ const HEAD = "h-9 text-xs font-medium tracking-wide text-muted-foreground upperc
 export function EpicProgressTable({ epics }: { epics: EpicProgress[] }) {
   const { dataset } = useData()
   const navigate = useNavigate()
+  const to = useAppPath()
   const teamNames = (ids: string[]) => ids.map((id) => dataset.teamById.get(id)?.name ?? id).join(", ")
 
   return (
@@ -37,7 +39,7 @@ export function EpicProgressTable({ epics }: { epics: EpicProgress[] }) {
             <TableBody>
               {epics.map((e) => {
                 const name = dataset.byKey.get(e.epicKey)?.summary
-                const open = () => navigate(`/tickets/${e.epicKey}`)
+                const open = () => navigate(to(`/tickets/${e.epicKey}`))
                 return (
                   <TableRow
                     key={e.epicKey}

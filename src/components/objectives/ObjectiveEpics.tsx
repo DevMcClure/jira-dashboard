@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import { StatusBadge } from "@/components/common/StatusBadge"
 import { Progress } from "@/components/ui/progress"
+import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
 import { epicProgress, objectiveIssues } from "@/lib/jira/metrics"
 import type { Issue, Objective, ProgramIncrement } from "@/lib/jira/types"
@@ -10,6 +11,7 @@ type Props = { objective: Objective; pi: ProgramIncrement; issues: Issue[] }
 /** An objective's linked epics with their progress and tickets, plus any directly linked tickets. */
 export function ObjectiveEpics({ objective, pi, issues }: Props) {
   const { dataset } = useData()
+  const to = useAppPath()
   const tickets = objectiveIssues(objective, pi, issues)
   const progress = new Map(epicProgress(tickets).map((e) => [e.epicKey, e]))
   const direct = new Set(objective.issueKeys)
@@ -48,7 +50,7 @@ export function ObjectiveEpics({ objective, pi, issues }: Props) {
               {g.tickets.map((t) => (
                 <li key={t.key}>
                   <Link
-                    to={`/tickets/${t.key}`}
+                    to={to(`/tickets/${t.key}`)}
                     className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
                   >
                     <span className="w-20 shrink-0 font-mono text-xs text-muted-foreground">{t.key}</span>

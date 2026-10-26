@@ -2,7 +2,7 @@ import { createContext } from "react"
 import type { DataOrigin } from "@/lib/data/data-source"
 import type { Period } from "@/lib/jira/period"
 import type { Scope } from "@/lib/jira/scope"
-import type { JiraDataset } from "@/lib/jira/types"
+import type { DateRange, JiraDataset } from "@/lib/jira/types"
 
 /** Empty array = no filter ("All"). `null` in assigneeIds = Unassigned. */
 export type Filters = {
@@ -34,6 +34,8 @@ export type DataContextValue = {
   /** Time period for activity (deltas, movements, charts). Defaults to "today". */
   period: Period
   setPeriod: (period: Period) => void
+  /** Fixed dates that replace the period's range (frozen reports only); null normally. */
+  fixedRange: DateRange | null
 }
 
 export const DataContext = createContext<DataContextValue | null>(null)

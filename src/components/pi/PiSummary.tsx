@@ -5,6 +5,7 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { pluralize } from "@/lib/format"
 import type { piHealth } from "@/lib/jira/metrics"
 import type { ProgramIncrement } from "@/lib/jira/types"
+import { useAppPath } from "@/hooks/useAppPath"
 
 const MAX_LISTED = 5
 
@@ -30,6 +31,7 @@ function Tile({ label, value, detail }: { label: string; value: string; detail: 
 /** Headline PI numbers plus its objectives. */
 export function PiSummary({ pi, health, sprintsPerTeam }: Props) {
   const closed = pi.state === "closed"
+  const to = useAppPath()
   return (
     <div className="grid gap-4 xl:grid-cols-[1fr_22rem]">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -56,7 +58,7 @@ export function PiSummary({ pi, health, sprintsPerTeam }: Props) {
           {pi.objectives.length > 0 && (
             <CardAction>
               <Button variant="ghost" size="sm" className="-my-1.5 h-7" asChild>
-                <Link to="/objectives">
+                <Link to={to("/objectives")}>
                   View all <ArrowRight />
                 </Link>
               </Button>

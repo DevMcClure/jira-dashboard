@@ -5,8 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @jira-dashboard/web dev",
+    "dev:api": "pnpm -r --parallel run dev:api",
+    "db:dev": "docker compose -f docker-compose.dev.yml up -d",
     "build": "pnpm -r --if-present typecheck && pnpm --filter @jira-dashboard/web build",
     "lint": "oxlint",
+    "build:server": "pnpm --filter @jira-dashboard/server build",
+    "start:server": "pnpm --filter @jira-dashboard/server start",
     "preview": "pnpm --filter @jira-dashboard/web preview",
     "test": "pnpm -r --if-present test",
     "mock:data": "pnpm --filter @jira-dashboard/web mock:data",

@@ -1,0 +1,12 @@
+# Local testing only: a throwaway MongoDB for trying the server templates on your
+# machine (`pnpm db:dev`). Not used in your environment and not a deployment.
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - jira-dashboard-dev-mongo:/data/db
+
+volumes:
+  jira-dashboard-dev-mongo:

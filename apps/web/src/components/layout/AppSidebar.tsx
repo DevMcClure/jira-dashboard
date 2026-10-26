@@ -26,6 +26,7 @@ import {
 import { MyReportsNav } from "@/components/reports/MyReportsNav"
 import { useAppPath, useInnerPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
+import { originLabel } from "@/lib/data/origin-label"
 import { useReportMode } from "@/hooks/useReportMode"
 import { pageForPath } from "@jira-dashboard/core/report-config"
 import { NAV_GROUPS, navItemFor } from "./nav"
@@ -88,7 +89,7 @@ export function AppSidebar() {
 
 function AppSwitcher() {
   const navigate = useNavigate()
-  const { source, resetToSample } = useData()
+  const { source, dataMode, resetToSample } = useData()
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -115,9 +116,9 @@ function AppSwitcher() {
               Import a JSON export…
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled={source.kind === "sample"} onSelect={resetToSample}>
+            <DropdownMenuItem disabled={source.kind !== "upload"} onSelect={resetToSample}>
               <RotateCcw />
-              Reset to sample data
+              {dataMode === "api" ? "Back to server data" : "Reset to sample data"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -128,7 +129,7 @@ function AppSwitcher() {
 
 function DataSourceLine() {
   const { source, dataset } = useData()
-  const name = source.kind === "sample" ? "sample" : source.fileName
+  const name = originLabel(source).short
   return (
     <p
       className="truncate px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden"

@@ -1,4 +1,5 @@
 import { createContext } from "react"
+import type { DataMode } from "@/lib/data/data-mode"
 import type { DataOrigin } from "@/lib/data/data-source"
 import type { DayRange, Period } from "@jira-dashboard/core/period"
 import type { Scope } from "@jira-dashboard/core/scope"
@@ -17,8 +18,10 @@ export type LoadResult = { ok: true; dataset: JiraDataset } | { ok: false; probl
 
 export type DataContextValue = {
   dataset: JiraDataset
-  /** Sample or uploaded file. */
+  /** Sample, uploaded file, or the server's dataset. */
   source: DataOrigin
+  /** Which build this is: "static" (sample + uploads) or "api" (the server's data). */
+  dataMode: DataMode
   /** The raw JSON text currently loaded (for "Download current data"). */
   rawJson: string
   loadFromFile: (file: File) => Promise<LoadResult>

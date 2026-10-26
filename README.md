@@ -23,9 +23,57 @@ A pnpm workspace:
 | --- | --- |
 | `apps/web` (`@jira-dashboard/web`) | The React dashboard (Vite). It's what GitHub Pages serves. |
 | `packages/core` (`@jira-dashboard/core`) | The Jira data contract, the Trawler adapter and every number the dashboard shows: metrics, flow, periods, scope, the Markdown report and the report config. It's pure TypeScript, shared by the web app and (from phase B1) the server, so both compute the same numbers. |
-| `apps/server` (`@jira-dashboard/server`) | A placeholder for the API added in phase B1 of `docs/plan-backend.md`. |
+| `apps/server` (`@jira-dashboard/server`) | The API (Node 22, Fastify, MongoDB). It serves the dashboard's data from any MongoDB, configured entirely through environment variables. |
 
 Run a single package with `pnpm --filter <name> <script>`, e.g. `pnpm --filter core test`.
+
+## Two build modes
+
+The web app is built in one of two modes, set by `VITE_DATA_MODE`:
+
+| Mode | Data | Runs on |
+| --- | --- | --- |
+| `static` (default) | the bundled sample, plus files you upload | GitHub Pages: the public demo, never real data |
+| `api` | the server's current dataset, from MongoDB | your own server, which you deploy |
+
+Pages don't know which mode they're in.
+
+## Run with the API locally
+
+For trying the server template on your machine:
+
+1. Start a MongoDB: `pnpm db:dev` starts a throwaway one in Docker (`docker-compose.dev.yml`), or run your own `mongod`.
+2. `cp .env.example .env`; the placeholders work for local testing as they are.
+3. `pnpm dev:api` starts the API (on `PORT`, default 3000, with `SEED_MOCK=true` loading the mock data into an empty database) and the web app in `api` mode at http://localhost:5173. The dev server forwards `/api` to the API.
+
+Check it with `curl http://localhost:3000/api/health`. The API has three routes so far:
+- `GET /api/health`: the server and database status
+- `GET /api/config`: the mode, and which features are on
+- `GET /api/dataset`: the current dataset, with an `ETag` per ingest
+
+## Porting to your environment
+
+Everything you set lives in a `.env` at the repo root (git-ignored), or in the real environment. `.env.example` lists every variable with a placeholder, and CI fails if a `.env` file is ever committed. Nothing real is in the code.
+
+| Variable | What you set it to |
+| --- | --- |
+| `HOST`, `PORT` | the interface and port your server listens on |
+| `BASE_PATH` | a sub-path, if the app sits behind one (`/` for none) |
+| `CORS_ORIGIN` | the URL(s) the web app is served from, comma-separated |
+| `LOG_LEVEL` | as needed |
+| `MONGO_URI`, `MONGO_DB_NAME` | your Mongo connection string and database name |
+| `MONGO_TLS_CA_FILE` | path to a CA file, if your Mongo uses TLS with a private CA |
+| `SEED_MOCK` | `false` once real data flows |
+| `VITE_DATA_MODE`, `VITE_API_BASE_URL` | `api`, and where the web app reaches the server (build-time) |
+
+Checklist:
+
+- [ ] Copy `.env.example` to `.env` and fill in every value
+- [ ] Build the web app with `VITE_DATA_MODE=api` and your `VITE_API_BASE_URL` (`pnpm build`)
+- [ ] Build the server (`pnpm build:server`) and start it on your host (`pnpm start:server`, or `node --env-file=.env apps/server/dist/index.js`). It's a plain Node 22 process; deployment is up to you.
+- [ ] Check `GET /api/health`
+
+Sign-in, the live Trawler feed, snapshots and shared reports arrive in later phases of `docs/plan-backend.md`, each adding its own variables here.
 
 ## Deploy to GitHub Pages
 

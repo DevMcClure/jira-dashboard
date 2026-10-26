@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import { AppLoading } from "@/components/common/AppLoading"
+import { createApiDataSource } from "@/lib/data/api-data-source"
+import { API_BASE_URL, DATA_MODE } from "@/lib/data/data-mode"
 import type { DataSource, LoadedData } from "@/lib/data/data-source"
 import { createStaticDataSource } from "@/lib/data/static-data-source"
 import { JiraExportError } from "@jira-dashboard/core/adapter"
@@ -8,8 +10,15 @@ import type { DayRange, Period } from "@jira-dashboard/core/period"
 import { SPRINT_SCOPE, type Scope } from "@jira-dashboard/core/scope"
 import { DataContext, EMPTY_FILTERS, type Filters, type LoadResult } from "./data-context"
 
-/** The sample export, served from public/sample/ (under Vite's base, e.g. /jira-dashboard/ on Pages). */
-const defaultSource = createStaticDataSource({ sampleUrl: `${import.meta.env.BASE_URL}sample/jira-export.json` })
+/**
+ * The build's data source: the server in api mode, otherwise the sample served
+ * from public/sample/ (under Vite's base, e.g. /jira-dashboard/ on Pages).
+ * DATA_MODE is fixed at build time, so a static build leaves the API code out.
+ */
+const defaultSource: DataSource =
+  DATA_MODE === "api"
+    ? createApiDataSource({ baseUrl: API_BASE_URL })
+    : createStaticDataSource({ sampleUrl: `${import.meta.env.BASE_URL}sample/jira-export.json` })
 
 function problemsFrom(err: unknown): string[] {
   if (err instanceof JiraExportError) return err.problems
@@ -70,7 +79,11 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
         setBootError(null)
         resetView()
         toast.success(`Loaded ${loaded.dataset.issues.length} tickets from ${file.name}`, {
-          description: remembered ? undefined : "File is too large to remember after a refresh.",
+          description: remembered
+            ? undefined
+            : DATA_MODE === "api"
+              ? "Previewing in this browser only; the server's data is unchanged."
+              : "File is too large to remember after a refresh.",
         })
         return { ok: true, dataset: loaded.dataset }
       } catch (err) {
@@ -87,9 +100,12 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
       (loaded) => {
         setData(loaded)
         resetView()
-        toast.success("Reset to sample data")
+        toast.success(DATA_MODE === "api" ? "Back to the server's data" : "Reset to sample data")
       },
-      (err) => toast.error("Couldn't load the sample data", { description: summarise(problemsFrom(err)) }),
+      (err) =>
+        toast.error(DATA_MODE === "api" ? "Couldn't load the server's data" : "Couldn't load the sample data", {
+          description: summarise(problemsFrom(err)),
+        }),
     )
   }, [dataSource, resetView])
 
@@ -98,6 +114,7 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
       data && {
         dataset: data.dataset,
         source: data.origin,
+        dataMode: DATA_MODE,
         rawJson: data.rawJson,
         loadFromFile,
         resetToSample,

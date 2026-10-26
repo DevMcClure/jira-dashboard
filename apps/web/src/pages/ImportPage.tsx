@@ -9,11 +9,12 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useData } from "@/hooks/useData"
+import { originLabel } from "@/lib/data/origin-label"
 
 type Outcome = { kind: "ok"; fileName: string } | { kind: "error"; fileName: string; problems: string[] }
 
 export default function ImportPage() {
-  const { dataset, source, rawJson, loadFromFile, resetToSample } = useData()
+  const { dataset, source, dataMode, rawJson, loadFromFile, resetToSample } = useData()
   const [busy, setBusy] = useState(false)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
 
@@ -29,13 +30,13 @@ export default function ImportPage() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = source.kind === "upload" ? source.fileName : "jira-export.sample.json"
+    a.download = originLabel(source).fileName
     a.click()
     URL.revokeObjectURL(url)
   }
 
   const summary: [string, string][] = [
-    ["Loaded from", source.kind === "sample" ? "Bundled sample data" : source.fileName],
+    ["Loaded from", originLabel(source).long],
     ["Source", dataset.meta.source ?? "—"],
     ["Generated at", format(dataset.meta.generatedAt, "d MMM yyyy, HH:mm")],
     ["Sprints", String(dataset.sprints.length)],
@@ -48,12 +49,16 @@ export default function ImportPage() {
     <>
       <PageHeader
         title="Import"
-        description="Load a Jira Trawler JSON export to replace the sample data."
+        description={
+          dataMode === "api"
+            ? "Preview a Jira Trawler export in this browser. The server's data isn't changed."
+            : "Load a Jira Trawler JSON export to replace the sample data."
+        }
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={resetToSample} disabled={source.kind === "sample"}>
+            <Button variant="outline" size="sm" onClick={resetToSample} disabled={source.kind !== "upload"}>
               <RotateCcw />
-              Reset to sample data
+              {dataMode === "api" ? "Back to server data" : "Reset to sample data"}
             </Button>
             <Button variant="outline" size="sm" onClick={download}>
               <Download />

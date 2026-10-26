@@ -5,10 +5,11 @@
  */
 import type { JiraDataset } from "@jira-dashboard/core/types"
 
-/** What the loaded data is: the bundled sample, or a file the user uploaded. */
+/** What the loaded data is: the bundled sample, a file the user uploaded, or the server's current dataset (api mode). */
 export type DataOrigin =
   | { kind: "sample" }
   | { kind: "upload"; fileName: string; loadedAt: string }
+  | { kind: "server"; ingestId: string }
 
 export type LoadedData = {
   dataset: JiraDataset

@@ -2,12 +2,13 @@ import { format } from "date-fns"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useData } from "@/hooks/useData"
+import { originLabel } from "@/lib/data/origin-label"
 
 export default function AboutPage() {
   const { dataset, source } = useData()
   const { meta } = dataset
   const rows: [string, string][] = [
-    ["Loaded from", source.kind === "sample" ? "Bundled sample data" : source.fileName],
+    ["Loaded from", originLabel(source).long],
     ["Source", meta.source ?? "—"],
     ["Format version", meta.version ?? "—"],
     ["Generated at", format(meta.generatedAt, "d MMM yyyy, HH:mm")],

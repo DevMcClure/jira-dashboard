@@ -1,4 +1,5 @@
 import { createContext } from "react"
+import type { DataOrigin } from "@/lib/data/data-source"
 import type { Period } from "@/lib/jira/period"
 import type { Scope } from "@/lib/jira/scope"
 import type { JiraDataset } from "@/lib/jira/types"
@@ -12,15 +13,12 @@ export type Filters = {
 
 export const EMPTY_FILTERS: Filters = { sprintIds: [], teamIds: [], assigneeIds: [] }
 
-export type DataSource =
-  | { kind: "sample" }
-  | { kind: "upload"; fileName: string; loadedAt: string }
-
 export type LoadResult = { ok: true; dataset: JiraDataset } | { ok: false; problems: string[] }
 
 export type DataContextValue = {
   dataset: JiraDataset
-  source: DataSource
+  /** Sample or uploaded file. */
+  source: DataOrigin
   /** The raw JSON text currently loaded (for "Download current data"). */
   rawJson: string
   loadFromFile: (file: File) => Promise<LoadResult>

@@ -26,7 +26,7 @@ One-time setup: in the repo on GitHub, go to **Settings → Pages** and set **So
 ## Use real data
 
 - **Quick:** open the **Import** page and drop in a Trawler JSON file, or the Trawler's audit `.log` (its `PROJECT` / `TICKET` lines are read directly).
-- **As the default:** replace `src/data/jira-export.json`. ⚠️ Anything bundled is published on GitHub Pages, so don't commit real company data. Use the Import page for that (files stay in your browser).
+- **As the default:** replace `public/sample/jira-export.json` (or regenerate it with `pnpm run mock:data`). ⚠️ Anything bundled is published on GitHub Pages, so don't commit real company data. Use the Import page for that (files stay in your browser).
 
 The Import page shows an example of the expected format, and `src/lib/jira/schema.ts` defines it exactly. If the real export looks different, only `src/lib/jira/adapter.ts` (and `schema.ts`) need to change.
 
@@ -41,6 +41,12 @@ For this to work, the export needs a top-level `programIncrements` list (id, nam
 ## Export a report
 
 The **Export** page builds a Markdown report of the dashboard. Pick the scope (current sprint or a whole PI), teams, sprints, time period and sections (summary, program increment, teams, sprints, status breakdown, people, movements), check the live preview, then download the `.md` file or copy it. It starts from the header's current filters. The report is generated in `src/lib/jira/report.ts`.
+
+## Project docs
+
+- `docs/PROJECT_CONTEXT.md`: the app's current state, for planning.
+- `docs/plan-frontend.md`: the current iteration plan (objectives, flow metrics, report mode).
+- `docs/decisions/`: one short record per decision.
 
 ## Built with
 

@@ -1,5 +1,6 @@
 /**
- * Deterministic mock Jira Trawler export → src/data/jira-export.json
+ * Deterministic mock Jira Trawler export → public/sample/jira-export.json
+ * (served as a static file and fetched at runtime, not bundled)
  *
  *   npm run mock:data
  *
@@ -853,7 +854,7 @@ function main() {
   }
 
   const here = dirname(fileURLToPath(import.meta.url))
-  const outPath = resolve(here, "../src/data/jira-export.json")
+  const outPath = resolve(here, "../public/sample/jira-export.json")
   writeFileSync(outPath, JSON.stringify(output, null, 2) + "\n")
   printSummary(output.issues, sprints, outPath)
 }

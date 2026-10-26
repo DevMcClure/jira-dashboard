@@ -28,7 +28,7 @@ pnpm-debug.log*
 !.env.example
 
 # Real Jira exports — keep real company data out of the repo.
-# Only the generated mock file (src/data/jira-export.json) is committed.
+# Only the generated mock file (public/sample/jira-export.json) is committed.
 exports/
 *.real.json
 jira-export.*.json

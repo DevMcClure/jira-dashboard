@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { parseExport } from "@/lib/jira/adapter"
-import { sprintHealth } from "@/lib/jira/metrics"
-import raw from "./jira-export.json"
+import raw from "../../../public/sample/jira-export.json"
+import { parseExport } from "./adapter"
+import { sprintHealth } from "./metrics"
 
 /** Guards the consistency rules from docs/02-DATA_CONTRACT.md → "Mock data generator". */
 describe("bundled mock export", () => {

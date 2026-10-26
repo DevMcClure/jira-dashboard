@@ -27,8 +27,8 @@ export default function ExportPage() {
   const [sprintIds, setSprintIds] = useState(filters.sprintIds)
   const [period, setPeriod] = useState<Period>(headerPeriod)
   const pis = dataset.programIncrements
-  // The PI section only makes sense when the export has PIs.
-  const sectionChoices = pis.length ? REPORT_SECTIONS : REPORT_SECTIONS.filter((s) => s.value !== "pi")
+  // PI and Objectives sections only make sense when the export has PIs.
+  const sectionChoices = pis.length ? REPORT_SECTIONS : REPORT_SECTIONS.filter((s) => s.value !== "pi" && s.value !== "objectives")
   const periods = pis.length ? PERIODS : PERIODS.filter((p) => p.value !== "pi")
   const [sections, setSections] = useState<ReportSection[]>(sectionChoices.map((s) => s.value))
 

@@ -6,8 +6,22 @@
     "jiraBaseUrl": "https://example.atlassian.net"
   },
   "programIncrements": [
-    { "id": "PI-B", "name": "PI B", "startDate": "2026-09-28T00:00:00Z", "endDate": "2026-10-23T23:59:59Z", "objectives": ["Ship it"] },
-    { "id": "PI-A", "name": "PI A", "startDate": "2026-08-31T00:00:00Z", "endDate": "2026-09-25T23:59:59Z" }
+    {
+      "id": "PI-B", "name": "PI B", "startDate": "2026-09-28T00:00:00Z", "endDate": "2026-10-23T23:59:59Z",
+      "objectives": [
+        "Ship it",
+        { "id": "OBJ-B1", "title": "Epic one shipped", "teamId": "TEAM-TST", "ownerId": "u-9", "plannedBusinessValue": 8, "epicKeys": ["TST-E1"] },
+        { "id": "OBJ-B2", "title": "Stretch: mid-sprint task", "teamId": "TEAM-TST", "committed": false, "plannedBusinessValue": 3, "issueKeys": ["TST-4"] },
+        { "id": "OBJ-B3", "title": "Nothing linked yet", "teamId": "NOPE", "plannedBusinessValue": 11, "epicKeys": ["TST-E9"] }
+      ]
+    },
+    {
+      "id": "PI-A", "name": "PI A", "startDate": "2026-08-31T00:00:00Z", "endDate": "2026-09-25T23:59:59Z",
+      "objectives": [
+        { "id": "OBJ-A1", "title": "PI A commitment", "teamId": "TEAM-TST", "plannedBusinessValue": 8, "actualBusinessValue": 6, "issueKeys": ["TST-1"] },
+        { "id": "OBJ-A2", "title": "PI A stretch", "teamId": "TEAM-TST", "committed": false, "plannedBusinessValue": 4, "actualBusinessValue": 4 }
+      ]
+    }
   ],
   "teams": [{ "id": "TEAM-TST", "name": "Test", "projectKey": "TST", "memberIds": ["u-1"] }],
   "people": [{ "id": "u-1", "displayName": "Alice Adams" }],

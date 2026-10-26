@@ -10,24 +10,29 @@ import {
   countByStatusCategory,
   cycleTimeDays,
   epicProgress,
+  objectiveForecast,
+  objectiveHealth,
+  objectiveProgress,
   piHealth,
+  piPredictability,
   remainingPoints,
   sprintHealth,
   sprintVelocity,
   timeInCurrentStatus,
   velocity,
   workloadByPerson,
-  type HealthLevel,
+  type ObjectiveHealthLevel,
 } from "./metrics"
 import { PERIODS, periodRange, type Period } from "./period"
 import { resolveScope, type Scope } from "./scope"
-import type { DateRange, Issue, JiraDataset, Sprint, Transition } from "./types"
+import type { DateRange, Issue, JiraDataset, Objective, Sprint, Transition } from "./types"
 
-export type ReportSection = "summary" | "pi" | "teams" | "sprints" | "status" | "people" | "movements"
+export type ReportSection = "summary" | "pi" | "objectives" | "teams" | "sprints" | "status" | "people" | "movements"
 
 export const REPORT_SECTIONS: { value: ReportSection; label: string; description: string }[] = [
   { value: "summary", label: "Summary", description: "Headline counts and activity in the period" },
   { value: "pi", label: "Program increment", description: "PI health, points per sprint and epic progress" },
+  { value: "objectives", label: "Objectives", description: "PI objectives: business value, progress, health and forecast" },
   { value: "teams", label: "Teams", description: "Per-team tickets, remaining work and velocity" },
   { value: "sprints", label: "Sprints", description: "Sprint health, progress and scope" },
   { value: "status", label: "Status breakdown", description: "Tickets in each workflow status" },
@@ -44,11 +49,12 @@ export type ReportOptions = {
   sections: ReportSection[]
 }
 
-const HEALTH_LABEL: Record<HealthLevel, string> = {
+const HEALTH_LABEL: Record<ObjectiveHealthLevel, string> = {
   on_track: "On track",
   at_risk: "At risk",
   off_track: "Off track",
   completed: "Completed",
+  no_data: "No tickets",
 }
 
 const RECENT_MOVES = 15
@@ -81,7 +87,7 @@ export function reportScope(dataset: JiraDataset, options: ReportOptions) {
   const range = periodRange(period, now, sprints, issues, resolved.pi)
   const teams = teamIds.length ? dataset.teams.filter((t) => teamIds.includes(t.id)) : dataset.teams
   const historySprints = byTeams(resolved.historySprints, teamIds)
-  return { issues, historyIssues, transitions, sprints, historySprints, teams, range, now, resolved }
+  return { issues, historyIssues, transitions, sprints, historySprints, teams, range, now, resolved, pickedSprintIds: sprintIds }
 }
 
 export function buildReport(dataset: JiraDataset, options: ReportOptions): string {
@@ -112,6 +118,7 @@ export function buildReport(dataset: JiraDataset, options: ReportOptions): strin
 
   if (want.has("summary")) out.push(...summarySection(ctx))
   if (want.has("pi")) out.push(...piSection(ctx))
+  if (want.has("objectives")) out.push(...objectivesSection(ctx))
   if (want.has("teams")) out.push(...teamsSection(ctx))
   if (want.has("sprints")) out.push(...sprintsSection(ctx))
   if (want.has("status")) out.push(...statusSection(ctx))
@@ -159,7 +166,7 @@ function piSection({ dataset, resolved, historySprints, historyIssues, now }: Ct
     `**${pi.name}**: ${HEALTH_LABEL[health.level]}. ${health.pctDone}% of points done with ${health.pctElapsed}% of the PI gone (${health.donePoints} / ${health.totalPoints} pts, ${health.ticketCount} tickets${pi.state === "active" ? `, ${health.daysLeft} days left` : ""}).`,
     "",
   )
-  if (pi.objectives.length) out.push("**Objectives**", "", ...pi.objectives.map((o) => `- ${inline(o)}`), "")
+  if (pi.objectives.length) out.push("**Objectives**", "", ...pi.objectives.map((o) => `- ${inline(o.title)}`), "")
 
   const started = historySprints.filter((s) => s.state !== "future" && s.startDate)
   if (started.length) {
@@ -194,6 +201,50 @@ function piSection({ dataset, resolved, historySprints, historyIssues, now }: Ct
     ),
     "",
   )
+  return out
+}
+
+/** Same rules as the Objectives page: picked sprints narrow the tickets; a team filter hides other teams' objectives. */
+function objectivesSection({ resolved, historyIssues, teams, now, pickedSprintIds }: Ctx): string[] {
+  const pi = resolved.pi
+  const out = [`## Objectives${pi ? ` (${pi.name})` : ""}`, ""]
+  if (!pi) return [...out, "_This export has no program increments._", ""]
+  const teamIds = new Set(teams.map((t) => t.id))
+  const shown = pi.objectives.filter((o) => o.teamId === null || teamIds.has(o.teamId))
+  if (!shown.length) return [...out, "_No objectives for this PI._", ""]
+
+  const issues = pickedSprintIds.length
+    ? historyIssues.filter((i) => i.sprintIds.some((id) => pickedSprintIds.includes(id)))
+    : historyIssues
+  const predictability = piPredictability(shown)
+  out.push(
+    predictability
+      ? `**Predictability:** ${predictability.pct}% (${predictability.actual} of ${predictability.planned} planned business value).`
+      : `**Predictability:** ${pi.state === "closed" ? "no business values assessed" : "assessed when the PI ends"}.`,
+    "",
+  )
+
+  const rowsFor = (list: Objective[]) =>
+    table(
+      ["Objective", "Commitment", "BV planned / actual", "Done", "Health", pi.state === "closed" ? "Finished" : "Forecast"],
+      list.map((o) => {
+        const forecast = objectiveForecast(o, pi, issues, now)
+        return [
+          o.title,
+          o.committed ? "Committed" : "Uncommitted",
+          `${o.plannedBusinessValue ?? "—"} / ${o.actualBusinessValue ?? "—"}`,
+          `${objectiveProgress(o, pi, issues).pctDone}%`,
+          HEALTH_LABEL[objectiveHealth(o, pi, issues, now).level],
+          forecast === null ? "—" : `${forecast}%`,
+        ]
+      }),
+    )
+  for (const team of teams) {
+    const list = shown.filter((o) => o.teamId === team.id)
+    if (list.length) out.push(`### ${team.name}`, "", rowsFor(list), "")
+  }
+  const art = shown.filter((o) => o.teamId === null)
+  if (art.length) out.push("### ART level", "", rowsFor(art), "")
   return out
 }
 

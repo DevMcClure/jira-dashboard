@@ -64,9 +64,9 @@ Goal: see each PI objective's progress, worked out from its epics and tickets.
 
 Acceptance:
 
-- [ ] Both mock PIs show objectives; PI 26.3 shows a predictability %
-- [ ] Scope, team and sprint filters update the rollups
-- [ ] An export with no objectives shows an empty state, not an error
+- [x] Both mock PIs show objectives; PI 26.3 shows a predictability % (86% in the sample: 76 of 88 planned BV)
+- [x] Scope, team and sprint filters update the rollups (see decisions 0011 and 0013)
+- [x] An export with no objectives shows an empty state, not an error
 
 ### F2: Flow metrics
 

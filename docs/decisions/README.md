@@ -14,3 +14,6 @@ One short record per decision. Status is **Accepted** unless noted; "default unt
 | 0008 | [PI objectives come from the export; predictability formula](0008-objectives-from-export-and-predictability.md) | Accepted (default) |
 | 0009 | [No custom date range this iteration](0009-no-custom-date-range.md) | Accepted (default) |
 | 0010 | [Metrics stay pure and shareable; report author is free text](0010-pure-shared-metrics-free-text-author.md) | Accepted |
+| 0011 | [An objective's rollup counts its tickets in the PI's sprints](0011-objective-rollup-scope.md) | Accepted |
+| 0012 | [Objectives with no tickets, and how the forecast works](0012-objective-health-and-forecast.md) | Accepted |
+| 0013 | [ART-level objectives always show; team filters narrow their rollup](0013-art-objectives-and-team-filter.md) | Accepted |

@@ -1,6 +1,6 @@
 # Jira Dashboard (Sprint Atlas): project context
 
-> Snapshot of the app as of **26 Oct 2026**: `main` at `3280b38` (PR #1, the PI work) plus **F0 Groundwork** on branch `f0-groundwork`. Paste this into a planning chat so it knows what already exists. Whoever reads it has no access to the code, so this file is the source of truth for the current state. The current iteration's plan is `docs/plan-frontend.md`.
+> Snapshot of the app as of **26 Oct 2026**: `main` at `3280b38` (PR #1, the PI work) plus **F0 Groundwork** (branch `f0-groundwork`) and **F1 Objectives** (branch `f1-objectives`, on top of F0). Paste this into a planning chat so it knows what already exists. Whoever reads it has no access to the code, so this file is the source of truth for the current state. The current iteration's plan is `docs/plan-frontend.md`.
 
 ## 1. What it is
 
@@ -66,6 +66,7 @@ Commands: `dev`, `build` (type-check + build), `test`, `lint`, `mock:data` (rege
 |---|---|---|
 | Overview | `/` | One card per team: tickets, remaining points, average velocity, activity in the period (moves, created, done, blocked), velocity chart, members with workload. Click a card to open the team page. |
 | PI | `/pi` | The PI in scope (or the current PI in sprint scope). Tiles: % of points done vs % of time gone, points, tickets, days left; objectives; **PI burnup** (done vs scope, sprint boundaries, "Today" line); **sprint calendar** (row per team, column per sprint, health per cell, click → tickets); a card per team (PI health + velocity); **epics table** (progress per epic, least done first). |
+| Objectives | `/objectives` | The PI in scope's objectives. Tiles: committed objectives on track / at risk / off track, the uncommitted count, and **predictability** (Σ actual ÷ Σ planned business value of committed objectives, closed PIs only). A card per team, then **ART level**. Each row shows the title, a Committed or Uncommitted badge, BV planned / actual, progress with a "time gone" marker, health and forecast. A row expands to its epics and tickets; "Burnup" opens a side sheet with the objective's burnup. Team filters hide other teams' objectives; ART objectives always show. |
 | Details | `/details` | KPI row (total, in progress, blocked, in review, each with a delta and a 14-day sparkline), sprint burndown with a sprint picker, status donut, recent movements, sprint health list, tickets by assignee. |
 | Team detail | `/teams/:id` | The Details view for one team, plus velocity and members. |
 | Health | `/health` | Counts by health level, active-sprint cards worst first, closed-sprint table, and a PI health line when a PI is selected. |
@@ -101,7 +102,9 @@ Top-level keys:
 - `teams`: `id`, `name`, `projectKey`, `memberIds`
 - `people`: `id`, `displayName`, `email?`, `avatarUrl?`
 - `sprints`: `id`, `name`, `teamId`, `state` (future / active / closed), `goal`, `startDate`, `endDate`, `completeDate`, **`piId?`**
-- **`programIncrements?`**: `id`, `name`, `startDate`, `endDate`, `state?`, `objectives?[]` (objectives are plain strings today)
+- **`programIncrements?`**: `id`, `name`, `startDate`, `endDate`, `state?`, `objectives?[]`
+  - each objective is `{ id, title, teamId? (null = ART level), description?, ownerId?, committed? (default true), plannedBusinessValue?, actualBusinessValue? (0–10), epicKeys?[], issueKeys?[] }`
+  - plain strings (older exports) still load as ART-level committed objectives with no links
 - `issues`:
   - identity and text: `key`, `summary`, `description`, `type` (Story / Bug / Task / Sub-task / Epic / Spike), `labels`
   - status: `status`, `statusCategory` (todo / in_progress / done)
@@ -142,7 +145,8 @@ Key behaviour:
   - **PI 26.3**: 22 Jun – 28 Aug 2026, all closed.
   - **PI 26.4**: 31 Aug – 6 Nov 2026. Sprints .1–.3 are closed, **.4 is active** (12–23 Oct, ~60% elapsed at "now"), and .5 is future.
 - **Sprint names** follow `{team} {PI}.{n}`, e.g. **"PLAT 26.4.4"** = PI 26.4, sprint 4. That's 30 sprints in total.
-- **441 tickets**, including **18 epics** (3 per team per PI) and 3 objectives per PI (plain strings).
+- **448 tickets**, including **24 epics** (4 per team per PI).
+- **Objectives**: 3–4 per team per PI plus 3 ART-level ones per PI (15 in PI 26.3, 13 in PI 26.4). About 1 in 4 is uncommitted, and each links 1–3 epics. PI 26.3 has actual business values, giving **86% predictability**.
 - Realistic summaries per domain: billing, auth and webhooks; onboarding, accessibility and search; push notifications, offline mode and widgets.
 - Each closed sprint finishes ~85% of its work and carries the rest over into the next sprint, sometimes across the PI boundary.
 - The active sprint has every status mix.
@@ -168,6 +172,7 @@ Key behaviour:
 - PI "done" uses each ticket's current status, not a replay at the PI's end. That's fine for active PIs, but approximate for a closed PI whose tickets were reopened later.
 - Epic names come from Epic issues in the export. If those aren't exported, only keys are shown.
 - The time period offers presets only; there's no custom date range.
+- Objective forecasts skip weekends but not holidays (decision 0012).
 - No PI-over-PI comparison view yet, although the mock data has a closed previous PI to support one.
 - No IP (Innovation & Planning) sprint concept; all 5 sprints are treated the same.
 - `CLAUDE.md` (local, git-ignored) now says pnpm and oxlint, and lists the rules for the new seams (fixed in F0).
@@ -175,12 +180,13 @@ Key behaviour:
 
 ## 11. Feature history (newest first)
 
-1. **F0 Groundwork**: sample data fetched from `public/` instead of bundled; `DataSource` and `ReportStore` interfaces with browser implementations; `docs/decisions/`; CLAUDE.md updated.
-2. Mock data made more realistic: PI-style sprint names; the PI page counts sprints per team.
-3. **PI scope** (PR #1): data contract, scope picker, PI page, "This PI" period, PI report section, two-PI mock data.
-4. "Guest" renamed "User"; logo mark "D"; "Yesterday" period added.
-5. Rendered Markdown preview on Export.
-6. Export page (Markdown report with scope, period and section choices).
-7. Data model aligned with the real Trawler output (raw JSON and audit log import).
-8. Drag-and-drop fix; Overview turned into team cards; Details page; Health page; team detail pages.
-9. GitHub Pages deploy; original POC build (shell, overview, tickets, sprints, people, movements, import, polish).
+1. **F1 Objectives**: objective contract (lenient about plain strings), progress / health / forecast / predictability metrics, `/objectives` page with expandable rows and a burnup sheet, a "View all" link on the PI page's card, and an Objectives section in Export. The mock data has 4 epics and 3–4 objectives per team per PI.
+2. **F0 Groundwork**: sample data fetched from `public/` instead of bundled; `DataSource` and `ReportStore` interfaces with browser implementations; `docs/decisions/`; CLAUDE.md updated.
+3. Mock data made more realistic: PI-style sprint names; the PI page counts sprints per team.
+4. **PI scope** (PR #1): data contract, scope picker, PI page, "This PI" period, PI report section, two-PI mock data.
+5. "Guest" renamed "User"; logo mark "D"; "Yesterday" period added.
+6. Rendered Markdown preview on Export.
+7. Export page (Markdown report with scope, period and section choices).
+8. Data model aligned with the real Trawler output (raw JSON and audit log import).
+9. Drag-and-drop fix; Overview turned into team cards; Details page; Health page; team detail pages.
+10. GitHub Pages deploy; original POC build (shell, overview, tickets, sprints, people, movements, import, polish).

@@ -6,7 +6,7 @@
  * in the app should need to change.
  */
 import { categoryForStatus, compareStatus, statusColorVar } from "./constants"
-import { exportSchema, type RawExport, type RawIssue } from "./schema"
+import { exportSchema, type RawExport, type RawIssue, type RawObjective } from "./schema"
 import {
   isTrawlerLog,
   isTrawlerShape,
@@ -19,6 +19,7 @@ import type {
   ChangelogEntry,
   Issue,
   JiraDataset,
+  Objective,
   Meta,
   Person,
   ProgramIncrement,
@@ -101,11 +102,12 @@ function buildDataset(data: RawExport): JiraDataset {
     )
     .sort((a, b) => (a.startDate?.getTime() ?? Infinity) - (b.startDate?.getTime() ?? Infinity))
 
-  synthesiseMissingPeople(people, teams, issues)
-
   const transitions = buildTransitions(issues)
   const meta = toMeta(data, issues, teams, sprints)
-  const programIncrements = toProgramIncrements(data, sprints, meta.generatedAt)
+  const programIncrements = toProgramIncrements(data, sprints, teams, meta.generatedAt)
+  const objectives = programIncrements.flatMap((p) => p.objectives)
+
+  synthesiseMissingPeople(people, teams, issues, objectives)
 
   return {
     meta,
@@ -119,6 +121,7 @@ function buildDataset(data: RawExport): JiraDataset {
     sprintById: new Map(sprints.map((s) => [s.id, s])),
     teamById: new Map(teams.map((t) => [t.id, t])),
     piById: new Map(programIncrements.map((p) => [p.id, p])),
+    objectiveById: new Map(objectives.map((o) => [o.id, o])),
     transitions,
     statuses: collectStatuses(issues),
   }
@@ -183,7 +186,7 @@ function buildTransitions(issues: Issue[]): Transition[] {
 }
 
 /** Any person id referenced but not defined becomes "Unknown (<id>)". */
-function synthesiseMissingPeople(people: Person[], teams: Team[], issues: Issue[]) {
+function synthesiseMissingPeople(people: Person[], teams: Team[], issues: Issue[], objectives: Objective[]) {
   const known = new Set(people.map((p) => p.id))
   const add = (id: string | null) => {
     if (!id || known.has(id)) return
@@ -191,6 +194,7 @@ function synthesiseMissingPeople(people: Person[], teams: Team[], issues: Issue[
     people.push({ id, displayName: `Unknown (${id})`, email: null, avatarUrl: null })
   }
   for (const t of teams) t.memberIds.forEach(add)
+  for (const o of objectives) add(o.ownerId)
   for (const i of issues) {
     add(i.assigneeId)
     add(i.reporterId)
@@ -245,7 +249,8 @@ function toMeta(data: RawExport, issues: Issue[], teams: Team[], sprints: Sprint
  * the PI whose dates contain their start; a PI without a state gets one from
  * its dates vs `now`.
  */
-function toProgramIncrements(data: RawExport, sprints: Sprint[], now: Date): ProgramIncrement[] {
+function toProgramIncrements(data: RawExport, sprints: Sprint[], teams: Team[], now: Date): ProgramIncrement[] {
+  const teamIds = new Set(teams.map((t) => t.id))
   const pis = (data.programIncrements ?? [])
     .map(
       (p): ProgramIncrement => {
@@ -257,7 +262,7 @@ function toProgramIncrements(data: RawExport, sprints: Sprint[], now: Date): Pro
           startDate,
           endDate,
           state: p.state ?? (now < startDate ? "future" : now > endDate ? "closed" : "active"),
-          objectives: p.objectives ?? [],
+          objectives: (p.objectives ?? []).map((o, i) => toObjective(o, i, p.id, teamIds)),
           sprintIds: [],
         }
       },
@@ -274,4 +279,41 @@ function toProgramIncrements(data: RawExport, sprints: Sprint[], now: Date): Pro
     if (s.piId) byId.get(s.piId)!.sprintIds.push(s.id)
   }
   return pis
+}
+
+/** 0–10 integers only; anything else is "not set". */
+const toBusinessValue = (v: number | null | undefined) =>
+  typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 10 ? v : null
+
+/** A plain string is an ART-level committed objective with no links (older exports). */
+function toObjective(raw: string | RawObjective, index: number, piId: string, teamIds: Set<string>): Objective {
+  if (typeof raw === "string") {
+    return {
+      id: `${piId}#${index + 1}`,
+      piId,
+      teamId: null,
+      title: raw,
+      description: null,
+      ownerId: null,
+      committed: true,
+      plannedBusinessValue: null,
+      actualBusinessValue: null,
+      epicKeys: [],
+      issueKeys: [],
+    }
+  }
+  return {
+    id: raw.id,
+    // Nested under its PI, so the parent wins over a stray piId.
+    piId,
+    teamId: raw.teamId && teamIds.has(raw.teamId) ? raw.teamId : null,
+    title: raw.title,
+    description: raw.description ?? null,
+    ownerId: raw.ownerId ?? null,
+    committed: raw.committed ?? true,
+    plannedBusinessValue: toBusinessValue(raw.plannedBusinessValue),
+    actualBusinessValue: toBusinessValue(raw.actualBusinessValue),
+    epicKeys: raw.epicKeys ?? [],
+    issueKeys: raw.issueKeys ?? [],
+  }
 }

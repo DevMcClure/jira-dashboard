@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   Milestone,
+  Target,
   Ticket,
   Timer,
   Upload,
@@ -22,6 +23,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: "Overview", url: "/", icon: LayoutGrid },
       { title: "PI", url: "/pi", icon: Milestone },
+      { title: "Objectives", url: "/objectives", icon: Target },
       { title: "Details", url: "/details", icon: LayoutDashboard },
       { title: "Health", url: "/health", icon: HeartPulse },
       { title: "Tickets", url: "/tickets", icon: Ticket },

@@ -108,8 +108,32 @@ describe("buildReport with PIs", () => {
     expect(md).toContain("| Epic one ([TST-E1](https://example.atlassian.net/browse/TST-E1)) | Test | 60% | 1 / 2 | 3 / 5 |")
   })
 
+  it("has an Objectives section with BV, progress, health and forecast", () => {
+    const md = buildReport(pds, { ...opts, sections: ["objectives"] })
+    expect(md).toContain("## Objectives (PI B)")
+    expect(md).toContain("**Predictability:** assessed when the PI ends.")
+    expect(md).toContain("### Test")
+    expect(md).toContain("| Epic one shipped | Committed | 8 / — | 60% | On track | 100% |")
+    expect(md).toContain("| Stretch: mid-sprint task | Uncommitted | 3 / — | 0% | Off track | 0% |")
+    expect(md).toContain("### ART level")
+    expect(md).toContain("| Nothing linked yet | Committed | — / — | 0% | No tickets | — |")
+  })
+
+  it("shows predictability for a closed PI", () => {
+    const md = buildReport(pds, { ...opts, scope: { kind: "pi", piId: "PI-A" }, sections: ["objectives"] })
+    expect(md).toContain("**Predictability:** 125% (10 of 8 planned business value).")
+    expect(md).toContain("| PI A commitment | Committed | 8 / 6 | 100% | Completed | 100% |")
+  })
+
+  it("narrows objective rollups to picked sprints", () => {
+    // Only TST-3 (2 pts, in progress) of Epic one is in sprint 2.
+    const md = buildReport(pds, { ...opts, sprintIds: [12], sections: ["objectives"] })
+    expect(md).toContain("| Epic one shipped | Committed | 8 / — | 0% |")
+  })
+
   it("says so when there are no PIs", () => {
     expect(buildReport(ds, { ...ALL, sections: ["pi"] })).toContain("_This export has no program increments._")
+    expect(buildReport(ds, { ...ALL, sections: ["objectives"] })).toContain("_This export has no program increments._")
   })
 })
 

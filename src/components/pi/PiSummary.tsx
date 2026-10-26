@@ -1,8 +1,12 @@
-import { Target } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowRight, Target } from "lucide-react"
+import { Link } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { pluralize } from "@/lib/format"
 import type { piHealth } from "@/lib/jira/metrics"
 import type { ProgramIncrement } from "@/lib/jira/types"
+
+const MAX_LISTED = 5
 
 type Props = {
   pi: ProgramIncrement
@@ -44,14 +48,35 @@ export function PiSummary({ pi, health, sprintsPerTeam }: Props) {
             <Target className="size-4 text-muted-foreground" />
             Objectives
           </CardTitle>
-          <CardDescription>What this PI committed to</CardDescription>
+          <CardDescription>
+            {pi.objectives.length
+              ? `${pi.objectives.filter((o) => o.committed).length} committed, ${pi.objectives.filter((o) => !o.committed).length} uncommitted`
+              : "What this PI committed to"}
+          </CardDescription>
+          {pi.objectives.length > 0 && (
+            <CardAction>
+              <Button variant="ghost" size="sm" className="-my-1.5 h-7" asChild>
+                <Link to="/objectives">
+                  View all <ArrowRight />
+                </Link>
+              </Button>
+            </CardAction>
+          )}
         </CardHeader>
         <CardContent>
           {pi.objectives.length ? (
             <ul className="list-disc space-y-1 pl-5 text-sm">
-              {pi.objectives.map((o) => (
-                <li key={o}>{o}</li>
-              ))}
+              {[...pi.objectives]
+                .sort((a, b) => Number(b.committed) - Number(a.committed))
+                .slice(0, MAX_LISTED)
+                .map((o) => (
+                  <li key={o.id} className="truncate">
+                    {o.title}
+                  </li>
+                ))}
+              {pi.objectives.length > MAX_LISTED && (
+                <li className="list-none text-muted-foreground">+{pi.objectives.length - MAX_LISTED} more</li>
+              )}
             </ul>
           ) : (
             <p className="text-sm text-muted-foreground">No objectives in the export.</p>

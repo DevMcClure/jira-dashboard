@@ -39,6 +39,12 @@
   --status-blocked: oklch(0.577 0.245 27.325);
   --status-qa: oklch(0.769 0.188 70.08);
   --status-done: oklch(0.704 0.14 182.503);
+  /* Flow types (categorical). Validated with the dataviz palette checks (light, on white). */
+  --flow-feature: oklch(0.52 0.22 264);
+  --flow-defect: oklch(0.58 0.22 17);
+  --flow-risk: oklch(0.66 0.16 62);
+  --flow-debt: oklch(0.6 0.11 185);
+  --flow-other: oklch(0.6 0.01 260);
 
   /* Brand logo mark (the reference app's blue "A") */
   --brand: oklch(0.546 0.245 262.881);
@@ -86,6 +92,12 @@
   --status-blocked: oklch(0.637 0.237 25.331);
   --status-qa: oklch(0.828 0.189 84.429);
   --status-done: oklch(0.777 0.152 181.912);
+  /* Flow types: dark steps, validated against the dark card and page. */
+  --flow-feature: oklch(0.62 0.19 260);
+  --flow-defect: oklch(0.56 0.21 10);
+  --flow-risk: oklch(0.66 0.14 80);
+  --flow-debt: oklch(0.66 0.12 182);
+  --flow-other: oklch(0.6 0.01 260);
 
   --brand: oklch(0.623 0.214 259.815);
   --brand-foreground: oklch(0.985 0 0);
@@ -134,6 +146,11 @@
   --color-status-blocked: var(--status-blocked);
   --color-status-qa: var(--status-qa);
   --color-status-done: var(--status-done);
+  --color-flow-feature: var(--flow-feature);
+  --color-flow-defect: var(--flow-defect);
+  --color-flow-risk: var(--flow-risk);
+  --color-flow-debt: var(--flow-debt);
+  --color-flow-other: var(--flow-other);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-sidebar: var(--sidebar);

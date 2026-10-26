@@ -36,3 +36,10 @@ export function initials(name: string): string {
 export function pluralize(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`
 }
+
+/** Days with one decimal ("2.3"), "<0.1" for tiny non-zero values. */
+export function formatDays(days: number | null): string {
+  if (days === null) return "—"
+  if (days > 0 && days < 0.05) return "<0.1"
+  return days.toFixed(1)
+}

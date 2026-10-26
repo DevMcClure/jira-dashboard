@@ -23,16 +23,19 @@ import {
   workloadByPerson,
   type ObjectiveHealthLevel,
 } from "./metrics"
+import { flowDistribution, flowEfficiency, flowItems, flowLoad, flowPredictability, flowTime, flowVelocity, type Percentiles } from "./flow"
+import { FLOW_TYPES } from "./flowConfig"
 import { PERIODS, periodRange, type Period } from "./period"
 import { resolveScope, type Scope } from "./scope"
 import type { DateRange, Issue, JiraDataset, Objective, Sprint, Transition } from "./types"
 
-export type ReportSection = "summary" | "pi" | "objectives" | "teams" | "sprints" | "status" | "people" | "movements"
+export type ReportSection = "summary" | "pi" | "objectives" | "flow" | "teams" | "sprints" | "status" | "people" | "movements"
 
 export const REPORT_SECTIONS: { value: ReportSection; label: string; description: string }[] = [
   { value: "summary", label: "Summary", description: "Headline counts and activity in the period" },
   { value: "pi", label: "Program increment", description: "PI health, points per sprint and epic progress" },
   { value: "objectives", label: "Objectives", description: "PI objectives: business value, progress, health and forecast" },
+  { value: "flow", label: "Flow", description: "The six flow metrics, in items and working time" },
   { value: "teams", label: "Teams", description: "Per-team tickets, remaining work and velocity" },
   { value: "sprints", label: "Sprints", description: "Sprint health, progress and scope" },
   { value: "status", label: "Status breakdown", description: "Tickets in each workflow status" },
@@ -119,6 +122,7 @@ export function buildReport(dataset: JiraDataset, options: ReportOptions): strin
   if (want.has("summary")) out.push(...summarySection(ctx))
   if (want.has("pi")) out.push(...piSection(ctx))
   if (want.has("objectives")) out.push(...objectivesSection(ctx))
+  if (want.has("flow")) out.push(...flowSection(ctx))
   if (want.has("teams")) out.push(...teamsSection(ctx))
   if (want.has("sprints")) out.push(...sprintsSection(ctx))
   if (want.has("status")) out.push(...statusSection(ctx))
@@ -245,6 +249,61 @@ function objectivesSection({ resolved, historyIssues, teams, now, pickedSprintId
   }
   const art = shown.filter((o) => o.teamId === null)
   if (art.length) out.push("### ART level", "", rowsFor(art), "")
+  return out
+}
+
+const AGING_LISTED = 10
+
+/** Same tickets as the Flow page (scope's PI sprints or picked sprints, team filter), in working hours. */
+function flowSection({ dataset, historyIssues, historySprints, pickedSprintIds, range, now, periodLabel }: Ctx): string[] {
+  const sprints = pickedSprintIds.length ? dataset.sprints.filter((s) => pickedSprintIds.includes(s.id)) : historySprints
+  const ids = new Set(sprints.map((s) => s.id))
+  const items = flowItems(dataset.sprints.length ? historyIssues.filter((i) => i.sprintIds.some((id) => ids.has(id))) : historyIssues)
+  const opts = { mode: "working" as const, now }
+  const velocity = flowVelocity(items, range)
+  const time = flowTime(items, range, opts)
+  const load = flowLoad(items, range, opts)
+  const efficiency = flowEfficiency(items, range, opts)
+  const dist = flowDistribution(items, sprints, range, opts)
+  const predictability = flowPredictability(dataset.programIncrements)
+  const d = (n: number | null) => (n === null ? "—" : n.toFixed(1))
+  const pcts = (p: Percentiles) => `p50 ${d(p.p50)} · p85 ${d(p.p85)} · p95 ${d(p.p95)} working days`
+
+  const out = [
+    "## Flow",
+    "",
+    `_Items, not points, ${periodLabel.toLowerCase()}. Times are in working hours (Mon–Fri 09:00–18:00 London; a working day is 9 hours)._`,
+    "",
+    table(
+      ["Metric", "Value"],
+      [
+        ["Velocity", `${velocity.total} items (${velocity.delta >= 0 ? "+" : ""}${velocity.delta} vs the previous period)`],
+        ["Flow time (cycle)", time.points.length ? pcts(time.cycle) : "—"],
+        ["Lead time", time.points.length ? pcts(time.lead) : "—"],
+        ["Load", `${load.wipNow} in progress, average age ${d(load.avgAgeDays)} working days`],
+        ["Efficiency", efficiency.pct === null ? "—" : `${efficiency.pct}%`],
+        ["Distribution (finished)", FLOW_TYPES.map((t) => `${t} ${dist.finished[t]}`).join(" · ")],
+        [
+          "Predictability",
+          predictability.length ? predictability.map((p) => `${p.name}: ${p.pct === null ? "pending" : `${p.pct}%`}`).join(" · ") : "no PIs in this export",
+        ],
+      ],
+    ),
+    "",
+  ]
+  const p85 = time.cycle.p85
+  const drifting = p85 === null ? [] : load.aging.filter((a) => a.ageDays > p85).sort((a, b) => b.ageDays - a.ageDays)
+  if (drifting.length) {
+    out.push(
+      `### In progress longer than 85% of finished items (${d(p85)} working days)`,
+      "",
+      table(
+        ["Ticket", "Summary", "Status", "Age"],
+        drifting.slice(0, AGING_LISTED).map((a) => [ticketRef(dataset, a.key), a.summary, a.status, `${d(a.ageDays)} wd`]),
+      ),
+      "",
+    )
+  }
   return out
 }
 

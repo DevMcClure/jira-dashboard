@@ -1,0 +1,66 @@
+{
+  "meta": { "source": "jira-trawler", "generatedAt": "2026-10-22T16:00:00Z" },
+  "teams": [{ "id": "TEAM-F", "name": "Flow", "projectKey": "F", "memberIds": ["u-1"] }],
+  "people": [{ "id": "u-1", "displayName": "Alice Adams" }],
+  "sprints": [
+    { "id": 1, "name": "F 1", "teamId": "TEAM-F", "state": "closed", "startDate": "2026-09-28T08:00:00Z", "endDate": "2026-10-09T16:00:00Z", "completeDate": "2026-10-09T16:00:00Z" },
+    { "id": 2, "name": "F 2", "teamId": "TEAM-F", "state": "active", "startDate": "2026-10-12T08:00:00Z", "endDate": "2026-10-23T16:00:00Z" }
+  ],
+  "issues": [
+    {
+      "key": "F-1", "summary": "Bounces through review and blocked", "type": "Story", "status": "Done", "statusCategory": "done",
+      "teamId": "TEAM-F", "sprintIds": [2], "created": "2026-10-12T09:00:00Z", "resolved": "2026-10-14T12:00:00Z",
+      "changelog": [
+        { "at": "2026-10-12T10:00:00Z", "field": "status", "from": "To Do", "to": "In Progress" },
+        { "at": "2026-10-13T10:00:00Z", "field": "status", "from": "In Progress", "to": "In Review" },
+        { "at": "2026-10-13T14:00:00Z", "field": "status", "from": "In Review", "to": "Blocked" },
+        { "at": "2026-10-14T09:00:00Z", "field": "status", "from": "Blocked", "to": "In Progress" },
+        { "at": "2026-10-14T12:00:00Z", "field": "status", "from": "In Progress", "to": "Done" }
+      ]
+    },
+    {
+      "key": "F-2", "summary": "Reopened bug", "type": "Bug", "status": "Done", "statusCategory": "done",
+      "teamId": "TEAM-F", "sprintIds": [2], "created": "2026-10-15T08:00:00Z", "resolved": "2026-10-16T11:00:00Z",
+      "changelog": [
+        { "at": "2026-10-15T08:00:00Z", "field": "status", "from": "To Do", "to": "In Progress" },
+        { "at": "2026-10-15T12:00:00Z", "field": "status", "from": "In Progress", "to": "Done" },
+        { "at": "2026-10-16T09:00:00Z", "field": "status", "from": "Done", "to": "In Progress" },
+        { "at": "2026-10-16T11:00:00Z", "field": "status", "from": "In Progress", "to": "Done" }
+      ]
+    },
+    {
+      "key": "F-3", "summary": "Review waits over the weekend", "type": "Task", "labels": ["tech-debt"], "status": "Done", "statusCategory": "done",
+      "teamId": "TEAM-F", "sprintIds": [2], "created": "2026-10-16T08:00:00Z", "resolved": "2026-10-19T09:00:00Z",
+      "changelog": [
+        { "at": "2026-10-16T15:00:00Z", "field": "status", "from": "To Do", "to": "In Progress" },
+        { "at": "2026-10-16T16:00:00Z", "field": "status", "from": "In Progress", "to": "In Review" },
+        { "at": "2026-10-19T09:00:00Z", "field": "status", "from": "In Review", "to": "Done" }
+      ]
+    },
+    {
+      "key": "F-4", "summary": "Still in review", "type": "Story", "status": "In Review", "statusCategory": "in_progress",
+      "teamId": "TEAM-F", "sprintIds": [2], "created": "2026-10-19T08:00:00Z",
+      "changelog": [
+        { "at": "2026-10-20T08:00:00Z", "field": "status", "from": "To Do", "to": "In Progress" },
+        { "at": "2026-10-21T13:00:00Z", "field": "status", "from": "In Progress", "to": "In Review" }
+      ]
+    },
+    {
+      "key": "F-5", "summary": "An epic is a container, not a flow item", "type": "Epic", "status": "In Progress", "statusCategory": "in_progress",
+      "teamId": "TEAM-F", "sprintIds": [], "created": "2026-10-01T08:00:00Z",
+      "changelog": [{ "at": "2026-10-12T08:00:00Z", "field": "status", "from": "To Do", "to": "In Progress" }]
+    },
+    {
+      "key": "F-6", "summary": "Not started risk spike", "type": "Spike", "labels": ["Risk"], "status": "To Do", "statusCategory": "todo",
+      "teamId": "TEAM-F", "sprintIds": [2], "created": "2026-10-20T08:00:00Z"
+    },
+    {
+      "key": "F-7", "summary": "Done in the previous sprint", "type": "Story", "status": "Done", "statusCategory": "done",
+      "teamId": "TEAM-F", "sprintIds": [1], "created": "2026-10-05T08:00:00Z", "resolved": "2026-10-06T08:00:00Z",
+      "changelog": [
+        { "at": "2026-10-05T08:00:00Z", "field": "status", "from": "To Do", "to": "In Progress" },
+        { "at": "2026-10-06T08:00:00Z", "field": "status", "from": "In Progress", "to": "Done" }
+      ]
+    }
+  ]
+}

@@ -42,9 +42,13 @@ For this to work, the export needs a top-level `programIncrements` list (id, nam
 
 The **Objectives** page shows the PI's objectives. For each one you see business value, progress rolled up from its epics' tickets, health against the time gone, and a forecast for the end of the PI. For a closed PI it also shows **predictability** (actual ÷ planned business value of committed objectives). Objectives come from the export's `programIncrements[].objectives`; older exports with plain-string objectives still load.
 
+## Flow metrics
+
+The **Flow** page shows the six SAFe flow metrics, counted in items and time rather than story points: velocity, flow time (cycle and lead time percentiles), load (WIP and the age of open items), efficiency (active vs waiting time), distribution (Feature / Defect / Risk / Debt) and predictability. It defaults to working hours (Mon–Fri 09:00–18:00 London), with a switch to calendar time. Which statuses count as active or waiting, and how Jira types map to flow types, is set in `src/lib/jira/flowConfig.ts`.
+
 ## Export a report
 
-The **Export** page builds a Markdown report of the dashboard. Pick the scope (current sprint or a whole PI), teams, sprints, time period and sections (summary, program increment, objectives, teams, sprints, status breakdown, people, movements), check the live preview, then download the `.md` file or copy it. It starts from the header's current filters. The report is generated in `src/lib/jira/report.ts`.
+The **Export** page builds a Markdown report of the dashboard. Pick the scope (current sprint or a whole PI), teams, sprints, time period and sections (summary, program increment, objectives, flow, teams, sprints, status breakdown, people, movements), check the live preview, then download the `.md` file or copy it. It starts from the header's current filters. The report is generated in `src/lib/jira/report.ts`.
 
 ## Project docs
 

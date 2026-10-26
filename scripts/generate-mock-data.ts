@@ -819,7 +819,15 @@ function generateTeamIssues(team: TeamDef, sprints: SprintPlan[]): Draft[] {
       teamId: team.id,
       sprintIds,
       storyPoints,
-      labels: Array.from(new Set([pick(team.labels), ...(chance(0.4) ? [pick(team.labels)] : [])])),
+      labels: Array.from(
+        new Set([
+          pick(team.labels),
+          ...(chance(0.4) ? [pick(team.labels)] : []),
+          // Flow distribution: some Tasks are tech debt and some Spikes reduce a risk.
+          ...(type === "Task" && chance(0.4) ? ["tech-debt"] : []),
+          ...(type === "Spike" && chance(0.4) ? ["risk"] : []),
+        ]),
+      ),
       epicKey: type === "Spike" || chance(0.25) ? null : pick(team.epics[Math.floor(sprints.indexOf(sprint) / SPRINTS_PER_PI)])[0],
       parentKey: null,
       created: iso(createdAt),

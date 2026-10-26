@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import flowFixture from "./__fixtures__/flow-export.json"
 import piFixture from "./__fixtures__/pi-export.json"
 import fixture from "./__fixtures__/small-export.json"
 import { parseExport } from "./adapter"
@@ -134,6 +135,36 @@ describe("buildReport with PIs", () => {
   it("says so when there are no PIs", () => {
     expect(buildReport(ds, { ...ALL, sections: ["pi"] })).toContain("_This export has no program increments._")
     expect(buildReport(ds, { ...ALL, sections: ["objectives"] })).toContain("_This export has no program increments._")
+  })
+})
+
+describe("buildReport: flow", () => {
+  const fds = parseExport(flowFixture)
+  const md = buildReport(fds, { ...ALL, period: "all", sections: ["flow"] })
+
+  it("reports the six flow metrics in working hours", () => {
+    // "All time" in sprint scope starts at the active sprint (12 Oct), so F-7 (done 6 Oct) is the
+    // previous period. Same window and numbers as flow.test.ts: cycle 3 h, 12 h, 20 h → p50 1.3 d,
+    // p85 = p95 2.2 d; efficiency 19 h / 35 h = 54%.
+    expect(md).toContain("## Flow")
+    expect(md).toContain("| Velocity | 3 items (+2 vs the previous period) |")
+    expect(md).toContain("| Flow time (cycle) | p50 1.3 · p85 2.2 · p95 2.2 working days |")
+    expect(md).toContain("| Lead time | p50 1.3 · p85 2.3 · p95 2.3 working days |")
+    expect(md).toContain("| Load | 1 in progress, average age 2.9 working days |")
+    expect(md).toContain("| Efficiency | 54% |")
+    expect(md).toContain("| Distribution (finished) | Feature 1 · Defect 1 · Risk 0 · Debt 1 · Other 0 |")
+    expect(md).toContain("| Predictability | no PIs in this export |")
+  })
+
+  it("lists in-progress items older than the 85th percentile", () => {
+    // F-4 has been in flow 26 working hours (2.9 d), past p85 (2.2 d).
+    expect(md).toContain("### In progress longer than 85% of finished items (2.2 working days)")
+    expect(md).toMatch(/\| F-4 \| Still in review \| In Review \| 2\.9 wd \|/)
+  })
+
+  it("shows predictability per PI when there are PIs", () => {
+    const pds = parseExport(piFixture)
+    expect(buildReport(pds, { ...ALL, sections: ["flow"] })).toContain("| Predictability | PI A: 125% · PI B: pending |")
   })
 })
 

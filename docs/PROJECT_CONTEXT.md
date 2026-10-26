@@ -1,6 +1,6 @@
 # Jira Dashboard (Sprint Atlas): project context
 
-> Snapshot of the app as of **26 Oct 2026**: `main` at `3280b38` (PR #1, the PI work) plus **F0 Groundwork** (branch `f0-groundwork`) and **F1 Objectives** (branch `f1-objectives`, on top of F0). Paste this into a planning chat so it knows what already exists. Whoever reads it has no access to the code, so this file is the source of truth for the current state. The current iteration's plan is `docs/plan-frontend.md`.
+> Snapshot of the app as of **26 Oct 2026**: `main` at `3280b38` (PR #1, the PI work) plus **F0 Groundwork** (branch `f0-groundwork`) **F1 Objectives** (branch `f1-objectives`, on top of F0) and **F2 Flow metrics** (branch `f2-flow`, on top of F1). Paste this into a planning chat so it knows what already exists. Whoever reads it has no access to the code, so this file is the source of truth for the current state. The current iteration's plan is `docs/plan-frontend.md`.
 
 ## 1. What it is
 
@@ -73,6 +73,7 @@ Commands: `dev`, `build` (type-check + build), `test`, `lint`, `mock:data` (rege
 | Tickets | `/tickets`, `/tickets/:key` | Data table with search, faceted filters, column visibility, sort and pagination. A row opens a side sheet with ticket details and a timeline of status and assignee changes, with time spent in each status. |
 | Sprints | `/sprints` | Sprint cards grouped by active, future and closed: progress, scope change, status counts. Click one to filter Tickets to it. |
 | People | `/people` | Workload per assignee, including Unassigned, sorted by open points. |
+| Flow | `/flow` | The six SAFe flow metrics, in **items and time, not points**. A working hours / calendar time toggle; every chart says which it uses. KPI row (velocity, flow time p85, load, efficiency, distribution, predictability), then: **aging WIP** (open items by status and age against cycle-time percentile lines; click a dot to open the ticket), throughput per week, cycle-time scatter with p50/p85/p95, WIP over time (active vs waiting), efficiency trend, "where the time goes" by status, distribution per sprint by flow type, predictability per PI with an 80–100% band. Charts cover at least the last 8 weeks. The ticket sheet gains a Flow block. |
 | Movements | `/movements` | Cumulative flow diagram, created vs resolved, transitions per day (by hour for single-day periods), and a full transitions table. |
 
 **About the Data**
@@ -145,8 +146,8 @@ Key behaviour:
   - **PI 26.3**: 22 Jun – 28 Aug 2026, all closed.
   - **PI 26.4**: 31 Aug – 6 Nov 2026. Sprints .1–.3 are closed, **.4 is active** (12–23 Oct, ~60% elapsed at "now"), and .5 is future.
 - **Sprint names** follow `{team} {PI}.{n}`, e.g. **"PLAT 26.4.4"** = PI 26.4, sprint 4. That's 30 sprints in total.
-- **448 tickets**, including **24 epics** (4 per team per PI).
-- **Objectives**: 3–4 per team per PI plus 3 ART-level ones per PI (15 in PI 26.3, 13 in PI 26.4). About 1 in 4 is uncommitted, and each links 1–3 epics. PI 26.3 has actual business values, giving **86% predictability**.
+- **445 tickets**, including **24 epics** (4 per team per PI). About 40% of Tasks are labelled `tech-debt` and 40% of Spikes `risk`, so every flow type appears.
+- **Objectives**: 3–4 per team per PI plus 3 ART-level ones per PI (15 in PI 26.3, 13 in PI 26.4). About 1 in 4 is uncommitted, and each links 1–3 epics. PI 26.3 has actual business values, giving **81% predictability** (71 of 88 planned business value).
 - Realistic summaries per domain: billing, auth and webhooks; onboarding, accessibility and search; push notifications, offline mode and widgets.
 - Each closed sprint finishes ~85% of its work and carries the rest over into the next sprint, sometimes across the PI boundary.
 - The active sprint has every status mix.
@@ -154,6 +155,7 @@ Key behaviour:
 
 ## 9. Code map (for reference)
 
+- `src/lib/jira/flow.ts`, `flowConfig.ts`, `working-time.ts`: flow metrics, their settings (status → active / waiting, type → Feature / Defect / Risk / Debt / Other, working hours Mon–Fri 09–18 Europe/London), and timezone-aware working-time maths.
 - `src/lib/data/`: the **`DataSource`** interface (`load`, `loadFile`, `reset`) and `createStaticDataSource` (sample fetch + uploads remembered in `localStorage`). `DataProvider` only talks to this, so a server-backed source can replace it later.
 - `src/lib/reports/`: the **`ReportStore`** interface (`list`, `get`, `save`, `remove`, generic over the config) and `createLocalReportStore` on `localStorage`. Not used by any page yet; F3 (Report mode) wires it up.
 
@@ -173,6 +175,8 @@ Key behaviour:
 - Epic names come from Epic issues in the export. If those aren't exported, only keys are shown.
 - The time period offers presets only; there's no custom date range.
 - Objective forecasts skip weekends but not holidays (decision 0012).
+- The mock data's flow efficiency is ~60%. Real teams usually read well under 50%; the generator moves tickets only in working hours and has short review queues.
+- Flow settings (`flowConfig.ts`) are code, not a settings page, until the backend iteration.
 - No PI-over-PI comparison view yet, although the mock data has a closed previous PI to support one.
 - No IP (Innovation & Planning) sprint concept; all 5 sprints are treated the same.
 - `CLAUDE.md` (local, git-ignored) now says pnpm and oxlint, and lists the rules for the new seams (fixed in F0).
@@ -180,13 +184,14 @@ Key behaviour:
 
 ## 11. Feature history (newest first)
 
-1. **F1 Objectives**: objective contract (lenient about plain strings), progress / health / forecast / predictability metrics, `/objectives` page with expandable rows and a burnup sheet, a "View all" link on the PI page's card, and an Objectives section in Export. The mock data has 4 epics and 3–4 objectives per team per PI.
-2. **F0 Groundwork**: sample data fetched from `public/` instead of bundled; `DataSource` and `ReportStore` interfaces with browser implementations; `docs/decisions/`; CLAUDE.md updated.
-3. Mock data made more realistic: PI-style sprint names; the PI page counts sprints per team.
-4. **PI scope** (PR #1): data contract, scope picker, PI page, "This PI" period, PI report section, two-PI mock data.
-5. "Guest" renamed "User"; logo mark "D"; "Yesterday" period added.
-6. Rendered Markdown preview on Export.
-7. Export page (Markdown report with scope, period and section choices).
-8. Data model aligned with the real Trawler output (raw JSON and audit log import).
-9. Drag-and-drop fix; Overview turned into team cards; Details page; Health page; team detail pages.
-10. GitHub Pages deploy; original POC build (shell, overview, tickets, sprints, people, movements, import, polish).
+1. **F2 Flow metrics**: `/flow` page with the six SAFe flow metrics, working-hours / calendar toggle, aging WIP, a Flow block in the ticket sheet, a Flow section in Export, timezone-aware working time, and validated flow-type colours.
+2. **F1 Objectives**: objective contract (lenient about plain strings), progress / health / forecast / predictability metrics, `/objectives` page with expandable rows and a burnup sheet, a "View all" link on the PI page's card, and an Objectives section in Export. The mock data has 4 epics and 3–4 objectives per team per PI.
+3. **F0 Groundwork**: sample data fetched from `public/` instead of bundled; `DataSource` and `ReportStore` interfaces with browser implementations; `docs/decisions/`; CLAUDE.md updated.
+4. Mock data made more realistic: PI-style sprint names; the PI page counts sprints per team.
+5. **PI scope** (PR #1): data contract, scope picker, PI page, "This PI" period, PI report section, two-PI mock data.
+6. "Guest" renamed "User"; logo mark "D"; "Yesterday" period added.
+7. Rendered Markdown preview on Export.
+8. Export page (Markdown report with scope, period and section choices).
+9. Data model aligned with the real Trawler output (raw JSON and audit log import).
+10. Drag-and-drop fix; Overview turned into team cards; Details page; Health page; team detail pages.
+11. GitHub Pages deploy; original POC build (shell, overview, tickets, sprints, people, movements, import, polish).

@@ -17,3 +17,7 @@ One short record per decision. Status is **Accepted** unless noted; "default unt
 | 0011 | [An objective's rollup counts its tickets in the PI's sprints](0011-objective-rollup-scope.md) | Accepted |
 | 0012 | [Objectives with no tickets, and how the forecast works](0012-objective-health-and-forecast.md) | Accepted |
 | 0013 | [ART-level objectives always show; team filters narrow their rollup](0013-art-objectives-and-team-filter.md) | Accepted |
+| 0014 | [Flow metrics live in their own files](0014-flow-code-layout.md) | Accepted |
+| 0015 | [Nearest-rank percentiles; a working day is 9 hours](0015-percentiles-and-working-day.md) | Accepted |
+| 0016 | [The Flow page's tickets and chart window](0016-flow-page-tickets-and-window.md) | Accepted |
+| 0017 | [Unknown statuses, WIP and the colour palette](0017-flow-state-fallbacks-and-wip.md) | Accepted |

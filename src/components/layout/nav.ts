@@ -11,6 +11,7 @@ import {
   Timer,
   Upload,
   User,
+  Waves,
   type LucideIcon,
 } from "lucide-react"
 
@@ -30,6 +31,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { title: "Sprints", url: "/sprints", icon: Timer },
       { title: "People", url: "/people", icon: User },
       { title: "Movements", url: "/movements", icon: ArrowRightLeft },
+      { title: "Flow", url: "/flow", icon: Waves },
     ],
   },
   {

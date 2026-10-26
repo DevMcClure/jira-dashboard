@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import raw from "../../../public/sample/jira-export.json"
 import { parseExport } from "./adapter"
+import { flowItems } from "./flow"
+import { FLOW_TYPES, flowTypeOf } from "./flowConfig"
 import { objectiveHealth, piPredictability, sprintHealth } from "./metrics"
 
 /** Guards the consistency rules from docs/02-DATA_CONTRACT.md → "Mock data generator". */
@@ -108,6 +110,11 @@ describe("bundled mock export", () => {
     const [closed, current] = ds.programIncrements
     expect(piPredictability(closed.objectives)?.pct).toBeGreaterThan(50)
     expect(piPredictability(current.objectives)).toBeNull()
+  })
+
+  it("has every flow type among its flow items", () => {
+    const types = new Set(flowItems(ds.issues).map((i) => flowTypeOf(i)))
+    expect([...FLOW_TYPES].filter((t) => !types.has(t))).toEqual([])
   })
 
   it("has one active sprint per team at roughly 60% elapsed", () => {

@@ -64,7 +64,7 @@ Goal: see each PI objective's progress, worked out from its epics and tickets.
 
 Acceptance:
 
-- [x] Both mock PIs show objectives; PI 26.3 shows a predictability % (86% in the sample: 76 of 88 planned BV)
+- [x] Both mock PIs show objectives; PI 26.3 shows a predictability % (81% in the current sample: 71 of 88 planned BV)
 - [x] Scope, team and sprint filters update the rollups (see decisions 0011 and 0013)
 - [x] An export with no objectives shows an empty state, not an error
 
@@ -93,9 +93,9 @@ Goal: a Flow page with the six SAFe flow metrics, built from the changelog. See 
 
 Acceptance:
 
-- [ ] Every flow number has a unit test with a hand-worked fixture
-- [ ] The page respects scope, filters and period like every other page
-- [ ] Each chart states whether it uses working hours or calendar time
+- [x] Every flow number has a unit test with a hand-worked fixture (`flow.test.ts`, `working-time.test.ts`, `__fixtures__/flow-export.json`)
+- [x] The page respects scope, filters and period like every other page (see decision 0016 for the chart window)
+- [x] Each chart states whether it uses working hours or calendar time
 
 ### F3: Report mode
 

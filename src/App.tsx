@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 const AboutPage = lazy(() => import("@/pages/AboutPage"))
 const DetailsPage = lazy(() => import("@/pages/DetailsPage"))
 const ExportPage = lazy(() => import("@/pages/ExportPage"))
+const FlowPage = lazy(() => import("@/pages/FlowPage"))
 const HealthPage = lazy(() => import("@/pages/HealthPage"))
 const ImportPage = lazy(() => import("@/pages/ImportPage"))
 const MovementsPage = lazy(() => import("@/pages/MovementsPage"))
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="sprints" element={<SprintsPage />} />
             <Route path="people" element={<PeoplePage />} />
             <Route path="movements" element={<MovementsPage />} />
+            <Route path="flow" element={<FlowPage />} />
             <Route path="import" element={<ImportPage />} />
             <Route path="export" element={<ExportPage />} />
             <Route path="about" element={<AboutPage />} />

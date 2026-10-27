@@ -1,6 +1,6 @@
 import { createContext } from "react"
 import type { DataMode } from "@/lib/data/data-mode"
-import type { DataOrigin } from "@/lib/data/data-source"
+import type { DataOrigin, SnapshotRun, SnapshotSummary } from "@/lib/data/data-source"
 import type { DayRange, Period } from "@jira-dashboard/core/period"
 import type { Scope } from "@jira-dashboard/core/scope"
 import type { DateRange, JiraDataset } from "@jira-dashboard/core/types"
@@ -16,8 +16,24 @@ export const EMPTY_FILTERS: Filters = { sprintIds: [], teamIds: [], assigneeIds:
 
 export type LoadResult = { ok: true; dataset: JiraDataset } | { ok: false; problems: string[] }
 
+/** api mode: the server's daily snapshots. */
+export type SnapshotHistory = {
+  list: (teamId: string, from: string, to: string) => Promise<SnapshotSummary[]>
+  /** Admins: snapshot a day now (default yesterday). */
+  takeNow: (date?: string) => Promise<SnapshotRun>
+}
+
 export type DataContextValue = {
+  /** What the pages show: the loaded data, or that data replayed to the "As of" day. */
   dataset: JiraDataset
+  /** The data as loaded, before any "As of" replay (for labels about the data itself). */
+  liveDataset: JiraDataset
+  /** The past day being shown, or null for now. */
+  asOf: Date | null
+  /** Show the end of a past day (null: back to now). Null where "As of" isn't offered: the static build and reports. */
+  setAsOf: ((day: Date | null) => void) | null
+  /** api mode: snapshot history; null in the static build. */
+  history: SnapshotHistory | null
   /** Sample, uploaded file, or the server's dataset. */
   source: DataOrigin
   /** Which build this is: "static" (sample + uploads) or "api" (the server's data). */

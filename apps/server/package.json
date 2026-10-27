@@ -12,6 +12,7 @@
     "dev:api": "pnpm run dev",
     "build": "node build.mjs",
     "start": "node --env-file-if-exists=../../.env dist/index.js",
+    "snapshot:backfill": "tsx --env-file-if-exists=../../.env src/snapshots/backfill-cli.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest"

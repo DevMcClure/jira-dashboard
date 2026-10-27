@@ -1,6 +1,7 @@
 import { Lock } from "lucide-react"
 import { Fragment } from "react"
 import { Link, matchPath } from "react-router-dom"
+import { AsOfPicker } from "@/components/filters/AsOfPicker"
 import { GlobalFilters } from "@/components/filters/GlobalFilters"
 import { PeriodPicker } from "@/components/filters/PeriodPicker"
 import { ScopePicker } from "@/components/filters/ScopePicker"
@@ -68,12 +69,16 @@ export function SiteHeader() {
             <TooltipContent>Locked by this report. Use “Explore from here” to change them.</TooltipContent>
           </Tooltip>
         )}
+        <AsOfPicker />
         <ScopePicker disabled={locked} />
         <PeriodPicker disabled={locked} />
         <GlobalFilters disabled={locked} />
         <SaveReportButton />
         <ThemeToggle />
-        <LogoMark />
+        {/* Decorative; dropped where the header is tight. */}
+        <div className="hidden xl:block">
+          <LogoMark />
+        </div>
       </div>
     </header>
   )

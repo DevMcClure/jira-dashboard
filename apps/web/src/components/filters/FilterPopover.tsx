@@ -31,6 +31,8 @@ type Props = {
   /** Text shown when nothing is selected. */
   emptyLabel?: string
   className?: string
+  /** E.g. "hidden xl:inline" to show only the icon and value where space is short (the title stays in the label). */
+  titleClassName?: string
   align?: "start" | "end"
   disabled?: boolean
 }
@@ -44,6 +46,7 @@ export function FilterPopover({
   onChange,
   emptyLabel = "All",
   className,
+  titleClassName,
   align = "end",
   disabled = false,
 }: Props) {
@@ -56,9 +59,15 @@ export function FilterPopover({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className={cn("h-8 gap-1.5 border-dashed", className)} disabled={disabled}>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn("h-8 gap-1.5 border-dashed", className)}
+          disabled={disabled}
+          aria-label={`${title}: ${selected.length ? `${selected.length} selected` : emptyLabel}`}
+        >
           {Icon && <Icon className="size-3.5" />}
-          {title}
+          <span className={titleClassName}>{title}</span>
           {selected.length > 0 ? (
             <Badge variant="secondary" className="rounded-sm px-1 font-normal tabular-nums">
               {selected.length}

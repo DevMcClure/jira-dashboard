@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { toast } from "sonner"
 import { AppLoading } from "@/components/common/AppLoading"
 import { LIVE_UPDATE_TOAST, useLiveUpdates } from "@/hooks/useLiveUpdates"
+import { asOfMoment } from "@/lib/data/as-of"
 import { createApiDataSource } from "@/lib/data/api-data-source"
 import { API_BASE_URL, DATA_MODE } from "@/lib/data/data-mode"
 import type { DataSource, LoadedData } from "@/lib/data/data-source"
 import { createStaticDataSource } from "@/lib/data/static-data-source"
 import { JiraExportError } from "@jira-dashboard/core/adapter"
+import { datasetAsOf } from "@jira-dashboard/core/asof"
 import type { DayRange, Period } from "@jira-dashboard/core/period"
 import { SPRINT_SCOPE, type Scope } from "@jira-dashboard/core/scope"
 import { DataContext, EMPTY_FILTERS, type Filters, type LoadResult } from "./data-context"
@@ -41,8 +43,11 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
   const [data, setDataState] = useState<LoadedData | null>(null)
   /** The server ingest last loaded (api mode), kept while a local file is previewed. */
   const [serverIngestId, setServerIngestId] = useState<string | null>(null)
+  /** api mode: the past day being shown ("As of"). New data always returns to now. */
+  const [asOf, setAsOfState] = useState<Date | null>(null)
   const setData = useCallback((loaded: LoadedData) => {
     setDataState(loaded)
+    setAsOfState(null)
     if (loaded.origin.kind === "server") setServerIngestId(loaded.origin.ingestId)
   }, [])
   /** Set when the first load failed and there's nothing to show yet. */
@@ -166,10 +171,25 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
     onRefresh: refresh,
   })
 
+  // Replayed with the same core function as the server's snapshot job.
+  const shown = useMemo(() => (data && asOf ? datasetAsOf(data.dataset, asOfMoment(asOf)) : (data?.dataset ?? null)), [data, asOf])
+  const history = useMemo(
+    () =>
+      dataSource.snapshots && dataSource.takeSnapshot
+        ? { list: dataSource.snapshots.bind(dataSource), takeNow: dataSource.takeSnapshot.bind(dataSource) }
+        : null,
+    [dataSource],
+  )
+
   const value = useMemo(
     () =>
-      data && {
-        dataset: data.dataset,
+      data &&
+      shown && {
+        dataset: shown,
+        liveDataset: data.dataset,
+        asOf,
+        setAsOf: DATA_MODE === "api" ? setAsOfState : null,
+        history,
         source: data.origin,
         dataMode: DATA_MODE,
         rawJson: data.rawJson,
@@ -189,7 +209,7 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
         setScope,
         fixedRange: null,
       },
-    [data, loadFromFile, resetToSample, refresh, publish, publishFile, filters, burndownSprintId, period, customDates, scope],
+    [data, shown, asOf, history, loadFromFile, resetToSample, refresh, publish, publishFile, filters, burndownSprintId, period, customDates, scope],
   )
 
   if (!value) {

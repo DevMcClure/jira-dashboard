@@ -81,13 +81,13 @@ export function createMongoDatasetStore(db: Db, { inlineLimitBytes = INLINE_LIMI
         await datasets.insertOne({ _id: datasetId, ingestId, json })
       }
       await ingests.updateMany({ status: "current" }, { $set: { status: "superseded" } })
-      const doc: IngestDoc = { _id: ingestId, receivedAt: new Date(), generatedAt, counts, status: "current", datasetId, ...recorded }
+      const doc: IngestDoc = { ...recorded, _id: ingestId, receivedAt: new Date(), generatedAt, counts, status: "current", datasetId }
       await ingests.insertOne(doc)
       return toIngest(doc)
     },
 
     async recordRejected({ errors, ...recorded }) {
-      const doc: IngestDoc = { _id: randomUUID(), receivedAt: new Date(), generatedAt: null, counts: EMPTY_COUNTS, status: "rejected", datasetId: null, errors, ...recorded }
+      const doc: IngestDoc = { ...recorded, _id: randomUUID(), receivedAt: new Date(), generatedAt: null, counts: EMPTY_COUNTS, status: "rejected", datasetId: null, errors }
       await ingests.insertOne(doc)
       return toIngest(doc)
     },
@@ -129,13 +129,13 @@ export function createMemoryDatasetStore(opts: { failPing?: boolean } = {}): Dat
     },
     async insertCurrent({ json, generatedAt, counts, ...recorded }) {
       for (const i of ingests) if (i.status === "current") i.status = "superseded"
-      const ingest: Ingest = { id: randomUUID(), receivedAt: new Date(), generatedAt, counts, status: "current", datasetId: randomUUID(), ...recorded }
+      const ingest: Ingest = { ...recorded, id: randomUUID(), receivedAt: new Date(), generatedAt, counts, status: "current", datasetId: randomUUID() }
       texts.set(ingest.datasetId!, json)
       ingests.push(ingest)
       return ingest
     },
     async recordRejected({ errors, ...recorded }) {
-      const ingest: Ingest = { id: randomUUID(), receivedAt: new Date(), generatedAt: null, counts: EMPTY_COUNTS, status: "rejected", datasetId: null, errors, ...recorded }
+      const ingest: Ingest = { ...recorded, id: randomUUID(), receivedAt: new Date(), generatedAt: null, counts: EMPTY_COUNTS, status: "rejected", datasetId: null, errors }
       ingests.push(ingest)
       return ingest
     },

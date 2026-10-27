@@ -127,13 +127,13 @@ function AppSwitcher() {
 }
 
 function DataSourceLine() {
-  const { source, dataset } = useData()
+  const { source, liveDataset } = useData()
   return (
     <p
       className="truncate px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden"
       title={originLabel(source).long}
     >
-      {dataLineLabel(source, dataset.meta.generatedAt)}
+      {dataLineLabel(source, liveDataset.meta.generatedAt)}
     </p>
   )
 }

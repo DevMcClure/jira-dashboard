@@ -34,7 +34,7 @@ describe("GET /api/config", () => {
       mode: "api",
       version: "1.2.3",
       authProvider: "mock",
-      features: { auth: true, ingest: true, snapshots: false, sharedReports: false },
+      features: { auth: true, ingest: true, snapshots: true, sharedReports: false },
     })
   })
 })

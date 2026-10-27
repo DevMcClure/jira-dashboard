@@ -86,6 +86,12 @@ const envSchema = z.object({
   TRAWLER_PULL_URL: z.string().trim().optional(),
   TRAWLER_PULL_PATH: z.string().trim().optional(),
   TRAWLER_PULL_CRON: z.string().trim().optional(),
+
+  // --- Daily snapshots (B4)
+  /** When to snapshot yesterday, in SNAPSHOT_TZ; "off" turns the schedule off. */
+  SNAPSHOT_CRON: z.string().trim().default("0 6 * * *"),
+  /** The teams' time zone: where a day starts and ends. */
+  SNAPSHOT_TZ: z.string().trim().default("Europe/London").refine(isTimeZone, "must be an IANA time zone, e.g. Europe/London"),
 })
 
 export type Env = z.output<typeof envSchema>
@@ -103,11 +109,31 @@ export class EnvError extends Error {
   }
 }
 
+function isTimeZone(zone: string) {
+  try {
+    new Intl.DateTimeFormat("en-GB", { timeZone: zone })
+    return true
+  } catch {
+    return false
+  }
+}
+
 const weakSecret = (value: string) => value === PLACEHOLDER_SECRET || value.length < MIN_SECRET_LENGTH
 
 /** Settings that depend on each other (checked on the raw values, so they're listed with everything else). */
 function providerProblems(raw: Record<string, string>): string[] {
-  return [...crowdProblems(raw), ...pullProblems(raw)]
+  return [...crowdProblems(raw), ...pullProblems(raw), ...snapshotProblems(raw)]
+}
+
+function snapshotProblems(raw: Record<string, string>): string[] {
+  const cron = raw.SNAPSHOT_CRON?.trim()
+  if (!cron || cron === "off") return []
+  try {
+    new Cron(cron, { paused: true }).stop()
+    return []
+  } catch (err) {
+    return [`SNAPSHOT_CRON: ${(err as Error).message} (or "off")`]
+  }
 }
 
 function pullProblems(raw: Record<string, string>): string[] {

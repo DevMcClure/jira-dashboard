@@ -13,7 +13,7 @@ pnpm start             # install, build and preview at http://localhost:4173
 
 For development: `pnpm install` then `pnpm dev` (http://localhost:5173).
 
-Other commands, all from the repo root: `pnpm test` (every package), `pnpm lint`, `pnpm build` (type-checks every package, then builds the web app into `apps/web/dist`), `pnpm mock:data` (regenerate the sample data).
+Other commands, all from the repo root: `pnpm test` (every package), `pnpm lint`, `pnpm build` (type-checks every package, then builds the web app into `apps/web/dist`), `pnpm mock:data` (regenerate the sample data), `pnpm snapshot:backfill --from … --to …` (api mode: rebuild past days' snapshots).
 
 ## Repository layout
 
@@ -58,6 +58,8 @@ Check it with `curl http://localhost:3000/api/health`. The API's routes so far:
 - `GET /api/dataset/meta`: which ingest is current, without the data (signed in only; the web app polls it every minute)
 - `POST /api/ingest`: the Trawler pushes an export, with `Authorization: Bearer <INGEST_TOKEN>` (see `docs/trawler-integration.md`)
 - `POST /api/ingest/upload`: an admin publishes a file from the Import page
+- `GET /api/snapshots?teamId=&from=&to=`, `GET /api/snapshots/:teamId/:date`: stored daily snapshots (signed in only)
+- `POST /api/jobs/snapshot`: an admin snapshots a day now (default yesterday)
 
 Static mode has no sign-in: the GitHub Pages demo is unchanged.
 
@@ -85,6 +87,7 @@ Everything you set lives in a `.env` at the repo root (git-ignored), or in the r
 | `INGEST_TOKEN` | a random string of 32+ characters that the Trawler sends; empty turns push off |
 | `INGEST_MAX_MB` | the largest export accepted |
 | `TRAWLER_PULL_URL` or `TRAWLER_PULL_PATH`, `TRAWLER_PULL_CRON` | only if the dashboard pulls instead of the Trawler pushing |
+| `SNAPSHOT_CRON`, `SNAPSHOT_TZ` | when the daily snapshot runs (or `off`), and your teams' time zone |
 | `VITE_DATA_MODE`, `VITE_API_BASE_URL` | `api`, and where the web app reaches the server (build-time) |
 
 Checklist:
@@ -94,6 +97,7 @@ Checklist:
 - [ ] Build the server (`pnpm build:server`) and start it on your host (`pnpm start:server`, or `node --env-file=.env apps/server/dist/index.js`). It's a plain Node 22 process; deployment is up to you.
 - [ ] Check `GET /api/health`, then sign in with a Crowd account
 - [ ] Point the Trawler at `/api/ingest` with your `INGEST_TOKEN` (`docs/trawler-integration.md` has a ten-line Python snippet), or set up pull
+- [ ] Optionally fill in history from before go-live: `node --env-file=.env apps/server/dist/backfill.js --from 2026-08-31 --to 2026-10-25`
 
 ### Sign-in with Crowd
 
@@ -108,7 +112,17 @@ People sign in with their Crowd username and password. The server checks them wi
 
 The Trawler pushes each run to `POST /api/ingest`, or the dashboard pulls it on a schedule; `docs/trawler-integration.md` covers both. Every export is checked by the same code as the Import page. An invalid one is rejected and recorded, and the current data stays. The server keeps the newest 10 datasets (larger ones in GridFS) and a record of every ingest. Open dashboards check for new data every minute and offer a Refresh that keeps your filters. On the Import page, admins can publish a previewed file to the server.
 
-Snapshots and shared reports arrive in later phases of `docs/plan-backend.md`, each adding its own variables here.
+### Daily snapshots
+
+Every morning (`SNAPSHOT_CRON`, default 06:00 in `SNAPSHOT_TZ`, default Europe/London) the server stores one snapshot per team for the day before. It's the day replayed from the changelog to its end, with the same numbers the dashboard shows: sprint totals and status counts, that day's burndown point, health, activity, objectives, flow (trailing 28 days) and a row per ticket. That builds a history that outlives the Trawler's exports, which only carry open sprints.
+
+- Reruns change nothing: a snapshot with the same content isn't written again.
+- If no new data arrived after a day ended, that day is still recorded from the latest data, marked **stale**.
+- `pnpm snapshot:backfill --from 2026-08-31 --to 2026-10-25` rebuilds past days from the current data's changelog (marked **backfilled**). It never replaces a snapshot taken on the day unless you add `--force`, and it skips days the data doesn't reach yet. In a build, run `node --env-file=.env apps/server/dist/backfill.js` with the same flags.
+- The **History** page shows a team's days from these snapshots: burndown, tickets by status, WIP, cycle time, health and a table of days. Admins can **Take snapshot now**.
+- **As of** in the header (api mode) shows any past day across the whole dashboard. It replays the loaded data in the browser with the same function the snapshot job uses.
+
+Shared reports arrive in the last phase of `docs/plan-backend.md`, adding its own variables here.
 
 ## Deploy to GitHub Pages
 

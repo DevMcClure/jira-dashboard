@@ -6,6 +6,9 @@ import { FilterPopover, type FilterOption } from "./FilterPopover"
 
 export const UNASSIGNED = "__unassigned__"
 
+// Below 1280px the header only has room for each filter's icon and value.
+const TITLE_CLASS = "hidden xl:inline"
+
 /** Header filter bar: Sprints, Teams, Assignees (empty selection = All). */
 export function GlobalFilters({ disabled = false }: { disabled?: boolean }) {
   const { dataset, filters, setFilters } = useData()
@@ -39,6 +42,7 @@ export function GlobalFilters({ disabled = false }: { disabled?: boolean }) {
         selected={filters.sprintIds.map(String)}
         onChange={(v) => setFilters({ ...filters, sprintIds: v.map(Number) })}
         disabled={disabled}
+        titleClassName={TITLE_CLASS}
       />
       <FilterPopover
         title="Teams"
@@ -47,6 +51,7 @@ export function GlobalFilters({ disabled = false }: { disabled?: boolean }) {
         selected={filters.teamIds}
         onChange={(v) => setFilters({ ...filters, teamIds: v })}
         disabled={disabled}
+        titleClassName={TITLE_CLASS}
       />
       <FilterPopover
         title="Assignees"
@@ -55,6 +60,7 @@ export function GlobalFilters({ disabled = false }: { disabled?: boolean }) {
         selected={filters.assigneeIds.map((id) => id ?? UNASSIGNED)}
         onChange={(v) => setFilters({ ...filters, assigneeIds: v.map((id) => (id === UNASSIGNED ? null : id)) })}
         disabled={disabled}
+        titleClassName={TITLE_CLASS}
       />
     </div>
   )

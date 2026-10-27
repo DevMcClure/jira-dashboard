@@ -21,6 +21,10 @@ export function ReportModeProvider({ children, config, id, code, basePath }: Pro
   const value = useMemo<DataContextValue>(
     () => ({
       ...outer,
+      // A report always shows the data as it is, never the dashboard's "As of" day.
+      dataset: outer.liveDataset,
+      asOf: null,
+      setAsOf: null,
       filters: view.filters,
       setFilters: locked,
       scope: view.scope,

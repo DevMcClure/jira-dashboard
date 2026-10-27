@@ -155,17 +155,23 @@ export function burndown(sprint: Sprint, issues: Issue[], now?: Date): BurndownP
   })
 }
 
-/** Points added / removed after the sprint started (new issues + estimate changes). */
-export function scopeChange(sprint: Sprint, issues: Issue[]) {
+/**
+ * Points added / removed after the sprint started (new issues + estimate
+ * changes). `within` narrows it to part of the sprint, e.g. one day.
+ */
+export function scopeChange(sprint: Sprint, issues: Issue[], within?: DateRange) {
   const { startDate: start } = sprint
-  const end = sprint.completeDate ?? sprint.endDate
-  if (!start || !end) return { added: 0, removed: 0, net: 0 }
+  const sprintEnd = sprint.completeDate ?? sprint.endDate
+  if (!start || !sprintEnd) return { added: 0, removed: 0, net: 0 }
+  const from = within && within.start > start ? within.start : null
+  const end = within && within.end < sprintEnd ? within.end : sprintEnd
+  const counts = (t: Date) => t > start && t <= end && (!from || t >= from)
   let added = 0
   let removed = 0
   for (const i of issues.filter(inSprint(sprint))) {
-    if (i.created > start && i.created <= end) added += pointsAt(i, i.created)
+    if (counts(i.created)) added += pointsAt(i, i.created)
     for (const c of i.changelog) {
-      if (c.field !== "storyPoints" || c.at <= start || c.at > end) continue
+      if (c.field !== "storyPoints" || !counts(c.at)) continue
       const delta = toNumber(c.to) - toNumber(c.from)
       if (delta > 0) added += delta
       else removed -= delta

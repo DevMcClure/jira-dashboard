@@ -13,6 +13,8 @@ import { createMongoDatasetStore } from "./dataset-store"
 import { connect, ensureIndexes } from "./db"
 import { EnvError, envWarnings, loadEnv, type Env } from "./env"
 import { createPuller, pullSourceLabel, schedulePull } from "./ingest/pull"
+import { scheduleSnapshots } from "./snapshots/schedule"
+import { createMongoSnapshotStore } from "./snapshots/store"
 import { seedIfEmpty } from "./seed"
 
 function providerFor(env: Env): AuthProvider {
@@ -37,6 +39,8 @@ async function main() {
     }
     throw err
   }
+  // Days start and end in the teams' time zone (SNAPSHOT_TZ), for core's date maths as in the browser.
+  process.env.TZ = env.SNAPSHOT_TZ
 
   let mongo
   try {
@@ -52,6 +56,7 @@ async function main() {
     env,
     store,
     auth: { provider: providerFor(env), store: createMongoAuthStore(mongo.db) },
+    snapshots: createMongoSnapshotStore(mongo.db),
     version: pkg.version,
   })
   for (const warning of envWarnings(env)) app.log.warn(warning)
@@ -64,9 +69,16 @@ async function main() {
   app.log.info(env.INGEST_TOKEN ? "Push ingest: on (POST /api/ingest)" : "Push ingest: off (INGEST_TOKEN not set)")
 
   let pullJob: ReturnType<typeof schedulePull> | null = null
+  const snapshotJob = scheduleSnapshots(env, app.snapshotJob, app.log)
+  app.log.info(
+    snapshotJob
+      ? `Snapshots: "${env.SNAPSHOT_CRON}" in ${env.SNAPSHOT_TZ} (next ${snapshotJob.nextRun()?.toISOString()})`
+      : "Snapshots: schedule off (SNAPSHOT_CRON=off)",
+  )
   const shutdown = async (signal: string) => {
     app.log.info(`${signal} received, shutting down`)
     pullJob?.stop()
+    snapshotJob?.stop()
     await app.close()
     await mongo.client.close()
     process.exit(0)

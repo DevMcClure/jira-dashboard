@@ -16,11 +16,16 @@ import type { DatasetStore } from "./dataset-store"
 import type { Env } from "./env"
 import { createIngestPipeline, type IngestPipeline } from "./ingest/pipeline"
 import { ingestRoutes } from "./ingest/routes"
+import { createSnapshotJob, type SnapshotJob } from "./snapshots/job"
+import { snapshotRoutes } from "./snapshots/routes"
+import type { SnapshotStore } from "./snapshots/store"
 
 declare module "fastify" {
   interface FastifyInstance {
     /** The ingest pipeline, also used by the scheduled pull (index.ts). */
     ingest: IngestPipeline
+    /** The snapshot job, also run by the schedule (index.ts). */
+    snapshotJob: SnapshotJob
   }
 }
 
@@ -28,12 +33,13 @@ type Options = {
   env: Env
   store: DatasetStore
   auth: { provider: AuthProvider; store: AuthStore; now?: () => Date }
+  snapshots: SnapshotStore
   version: string
   /** Turn request logging off in tests. */
   logger?: boolean
 }
 
-export async function buildApp({ env, store, auth, version, logger = true }: Options) {
+export async function buildApp({ env, store, auth, snapshots, version, logger = true }: Options) {
   const app = Fastify({ logger: logger ? { level: env.LOG_LEVEL } : false, trustProxy: env.TRUST_PROXY })
   const startedAt = Date.now()
   const service = createAuthService({
@@ -46,6 +52,8 @@ export async function buildApp({ env, store, auth, version, logger = true }: Opt
   const signedIn = sessionGuard(service)
   const pipeline = createIngestPipeline({ store, log: app.log })
   app.decorate("ingest", pipeline)
+  const snapshotJob = createSnapshotJob({ datasets: store, snapshots, log: app.log, now: auth.now })
+  app.decorate("snapshotJob", snapshotJob)
 
   app.decorateRequest("auth", null)
   await app.register(cors, {
@@ -58,7 +66,7 @@ export async function buildApp({ env, store, auth, version, logger = true }: Opt
   await app.register(rateLimit, { global: false })
 
   /** What this server can do; later phases switch more on. The web app reads it to show or hide features. */
-  const features = { auth: true, ingest: true, snapshots: false, sharedReports: false }
+  const features = { auth: true, ingest: true, snapshots: true, sharedReports: false }
 
   await app.register(
     async (api) => {
@@ -77,6 +85,7 @@ export async function buildApp({ env, store, auth, version, logger = true }: Opt
 
       await authRoutes(api, { service, provider: auth.provider, env })
       await ingestRoutes(api, { pipeline, env, adminOnly: [signedIn, requireRole("admin")] })
+      await snapshotRoutes(api, { store: snapshots, job: snapshotJob, env, signedIn, adminOnly: [signedIn, requireRole("admin")], now: auth.now })
 
       // Signed in only.
       api.get("/dataset", { preHandler: signedIn }, async (req, reply) => {

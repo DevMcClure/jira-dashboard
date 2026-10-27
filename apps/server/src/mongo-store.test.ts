@@ -8,6 +8,8 @@ import { createMongoAuthStore } from "./auth/auth-store"
 import { createMongoDatasetStore } from "./dataset-store"
 import { collections, connect, datasetFiles, ensureIndexes } from "./db"
 import { sha256 } from "./ingest/pipeline"
+import { createSnapshotJob } from "./snapshots/job"
+import { createMongoSnapshotStore } from "./snapshots/store"
 import { SAMPLE_JSON, seedIfEmpty } from "./seed"
 import { CONTRACT_JSON } from "./testkit"
 
@@ -120,5 +122,36 @@ describe.skipIf(!uri)("MongoDB stores", () => {
     expect(await ingests.countDocuments()).toBe(records)
     expect(await ingests.countDocuments({ datasetId: { $ne: null } })).toBe(2)
     expect((await store.current())?.json).toMatch(/^\{/)
+  })
+
+  it("stores one snapshot per team per day, idempotently", async () => {
+    const { db } = await open()
+    await ensureIndexes(db)
+    const { snapshots } = collections(db)
+    expect((await snapshots.indexes()).map((i) => i.name)).toEqual(expect.arrayContaining(["team_date", "sprint_date", "pi_date"]))
+
+    const datasets = createMongoDatasetStore(db)
+    await datasets.insertCurrent({ json: SAMPLE_JSON, source: "seed", generatedAt: new Date("2026-10-19T17:00:00Z"), counts: { teams: 3, people: 0, sprints: 0, issues: 0 }, sha256: sha256(SAMPLE_JSON), bytes: SAMPLE_JSON.length })
+    const store = createMongoSnapshotStore(db)
+    const job = createSnapshotJob({ datasets, snapshots: store, log: { info: () => {}, warn: () => {} } })
+
+    const first = await job.run(["2026-10-14"])
+    expect("teams" in first[0] && first[0].teams.map((t) => t.result)).toEqual(["written", "written", "written"])
+    const takenAt = (await store.get("TEAM-PLAT", "2026-10-14"))!.takenAt
+    const again = await job.run(["2026-10-14"])
+    expect("teams" in again[0] && again[0].teams.map((t) => t.result)).toEqual(["unchanged", "unchanged", "unchanged"])
+    expect(await snapshots.countDocuments()).toBe(3)
+    expect((await store.get("TEAM-PLAT", "2026-10-14"))!.takenAt).toBe(takenAt)
+
+    const kept = await job.run(["2026-10-14"], { backfilled: true })
+    expect("teams" in kept[0] && kept[0].teams.map((t) => t.result)).toEqual(["kept", "kept", "kept"])
+
+    await job.run(["2026-10-13"], { backfilled: true })
+    const list = await store.list("TEAM-PLAT", "2026-10-01", "2026-10-31")
+    expect(list.map((s) => [s.date, s.backfilled])).toEqual([["2026-10-13", true], ["2026-10-14", false]])
+    expect(list[0]).not.toHaveProperty("issues")
+    expect(list[0]).not.toHaveProperty("hash")
+    expect(list[0]).not.toHaveProperty("_id")
+    await expect(snapshots.insertOne({ ...(await snapshots.findOne({ teamId: "TEAM-PLAT", date: "2026-10-13" }, { projection: { _id: 0 } }))! })).rejects.toThrow(/duplicate key/)
   })
 })

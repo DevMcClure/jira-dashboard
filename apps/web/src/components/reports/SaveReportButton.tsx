@@ -10,7 +10,7 @@ import { SaveReportDialog } from "./SaveReportDialog"
 /** Header action: save the current filters, scope and period as a report. Hidden inside a report. */
 export function SaveReportButton() {
   const report = useReportMode()
-  const { dataset, filters, scope, period } = useData()
+  const { dataset, filters, scope, period, asOf } = useData()
   const { range } = usePeriod()
   const [open, setOpen] = useState(false)
   if (report) return null
@@ -18,12 +18,15 @@ export function SaveReportButton() {
     <>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => setOpen(true)} aria-label="Save as report">
-            <BookmarkPlus />
-            <span className="hidden 2xl:inline">Save as report</span>
-          </Button>
+          {/* A disabled button gets no pointer events, so the tooltip hangs on a wrapper. */}
+          <span tabIndex={asOf ? 0 : undefined}>
+            <Button variant="outline" size="sm" className="h-8" onClick={() => setOpen(true)} disabled={asOf !== null} aria-label="Save as report">
+              <BookmarkPlus />
+              <span className="hidden 2xl:inline">Save as report</span>
+            </Button>
+          </span>
         </TooltipTrigger>
-        <TooltipContent>Save this view as a report</TooltipContent>
+        <TooltipContent>{asOf ? "Go back to now to save a report" : "Save this view as a report"}</TooltipContent>
       </Tooltip>
       <SaveReportDialog
         open={open}

@@ -7,6 +7,7 @@ import SavedReportRoute from "@/pages/SavedReportRoute"
 import SharedLinkEntry from "@/pages/SharedLinkEntry"
 import SharedReportRoute from "@/pages/SharedReportRoute"
 import { exploreRoutes } from "@/routes/explore-routes"
+import { HistoryPage } from "@/routes/lazy-pages"
 
 const AboutPage = lazy(() => import("@/pages/AboutPage"))
 const ExportPage = lazy(() => import("@/pages/ExportPage"))
@@ -22,6 +23,7 @@ export default function App() {
           <Route element={<AppLayout />}>
             {exploreRoutes()}
             <Route path="teams" element={<Navigate to="/" replace />} />
+            <Route path="history" element={<HistoryPage />} />
             <Route path="import" element={<ImportPage />} />
             <Route path="export" element={<ExportPage />} />
             <Route path="about" element={<AboutPage />} />

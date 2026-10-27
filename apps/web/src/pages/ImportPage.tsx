@@ -18,7 +18,8 @@ type Outcome =
   | { kind: "error"; fileName: string; problems: string[]; publishing: boolean }
 
 export default function ImportPage() {
-  const { dataset, source, dataMode, rawJson, loadFromFile, resetToSample, publishFile } = useData()
+  // The loaded data itself, even while the dashboard shows an "As of" day.
+  const { liveDataset: dataset, source, dataMode, rawJson, loadFromFile, resetToSample, publishFile } = useData()
   const isAdmin = useCurrentUser()?.roles.includes("admin") ?? false
   const [busy, setBusy] = useState(false)
   const [outcome, setOutcome] = useState<Outcome | null>(null)

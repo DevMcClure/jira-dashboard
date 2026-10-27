@@ -53,7 +53,15 @@ describe("loadEnv", () => {
       TRAWLER_PULL_URL: undefined,
       TRAWLER_PULL_PATH: undefined,
       TRAWLER_PULL_CRON: undefined,
+      SNAPSHOT_CRON: "0 6 * * *",
+      SNAPSHOT_TZ: "Europe/London",
     })
+  })
+
+  it("schedules snapshots in a real time zone, or not at all", () => {
+    expect(loadEnv({ ...valid, SNAPSHOT_CRON: "off", SNAPSHOT_TZ: "America/New_York" })).toMatchObject({ SNAPSHOT_CRON: "off", SNAPSHOT_TZ: "America/New_York" })
+    expect(problems({ ...valid, SNAPSHOT_TZ: "Mars/Olympus" })).toEqual(["SNAPSHOT_TZ: must be an IANA time zone, e.g. Europe/London"])
+    expect(problems({ ...valid, SNAPSHOT_CRON: "at six" })).toEqual([expect.stringMatching(/^SNAPSHOT_CRON: .*\(or "off"\)$/)])
   })
 
   it("normalises a sub-path, a list of origins and a CA file", () => {

@@ -10,6 +10,7 @@
     "build": "pnpm -r --if-present typecheck && pnpm --filter @jira-dashboard/web build",
     "lint": "oxlint",
     "build:server": "pnpm --filter @jira-dashboard/server build",
+    "snapshot:backfill": "pnpm --filter @jira-dashboard/server run snapshot:backfill",
     "start:server": "pnpm --filter @jira-dashboard/server start",
     "preview": "pnpm --filter @jira-dashboard/web preview",
     "test": "pnpm -r --if-present test",

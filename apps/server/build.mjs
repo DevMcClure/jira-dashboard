@@ -6,9 +6,10 @@ import { build } from "esbuild"
 const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"))
 const external = Object.keys(pkg.dependencies ?? {}).filter((d) => !d.startsWith("@jira-dashboard/"))
 
+// dist/index.js is the server; dist/backfill.js the snapshot backfill command.
 await build({
-  entryPoints: ["src/index.ts"],
-  outfile: "dist/index.js",
+  entryPoints: { index: "src/index.ts", backfill: "src/snapshots/backfill-cli.ts" },
+  outdir: "dist",
   bundle: true,
   platform: "node",
   format: "esm",

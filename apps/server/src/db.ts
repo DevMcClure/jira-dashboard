@@ -2,6 +2,7 @@
  * MongoDB connection and indexes. Works with any MongoDB: the connection string,
  * database name and optional TLS CA file all come from env (env.ts).
  */
+import type { Snapshot } from "@jira-dashboard/core/snapshot"
 import { GridFSBucket, MongoClient, type Db, type ObjectId } from "mongodb"
 import type { Env } from "./env"
 
@@ -24,6 +25,7 @@ export function collections(db: Db) {
     datasets: db.collection<DatasetDoc>("datasets"),
     sessions: db.collection<SessionDoc>("sessions"),
     users: db.collection<UserDoc>("users"),
+    snapshots: db.collection<SnapshotDoc>("daily_snapshots"),
   }
 }
 
@@ -32,7 +34,7 @@ export const datasetFiles = (db: Db) => new GridFSBucket(db, { bucketName: "data
 
 /** Idempotent: safe on every startup. */
 export async function ensureIndexes(db: Db) {
-  const { ingests, datasets, sessions, users } = collections(db)
+  const { ingests, datasets, sessions, users, snapshots } = collections(db)
   await ingests.createIndex({ receivedAt: -1 }, { name: "receivedAt_desc" })
   // At most one current dataset at a time.
   await ingests.createIndex({ status: 1 }, { name: "one_current", unique: true, partialFilterExpression: { status: "current" } })
@@ -40,6 +42,10 @@ export async function ensureIndexes(db: Db) {
   // Mongo deletes a session once its expiresAt has passed.
   await sessions.createIndex({ expiresAt: 1 }, { name: "expiresAt_ttl", expireAfterSeconds: 0 })
   await users.createIndex({ email: 1 }, { name: "email" })
+  // One snapshot per team per day; history by team, sprint or PI.
+  await snapshots.createIndex({ teamId: 1, date: 1 }, { name: "team_date", unique: true })
+  await snapshots.createIndex({ "sprint.id": 1, date: 1 }, { name: "sprint_date" })
+  await snapshots.createIndex({ "pi.id": 1, date: 1 }, { name: "pi_date" })
 }
 
 export type IngestSource = "seed" | "push" | "pull" | "upload"
@@ -92,3 +98,6 @@ export type UserDoc = {
   groups: string[]
   lastSeenAt: Date
 }
+
+/** One team on one day (core's `snapshotSchema`), plus a hash of its content for idempotent reruns. */
+export type SnapshotDoc = Snapshot & { hash: string }

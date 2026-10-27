@@ -2,6 +2,7 @@ import {
   ArrowRightLeft,
   FileDown,
   HeartPulse,
+  History,
   Info,
   LayoutDashboard,
   LayoutGrid,
@@ -32,6 +33,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { title: "People", url: "/people", icon: User },
       { title: "Movements", url: "/movements", icon: ArrowRightLeft },
       { title: "Flow", url: "/flow", icon: Waves },
+      { title: "History", url: "/history", icon: History },
     ],
   },
   {

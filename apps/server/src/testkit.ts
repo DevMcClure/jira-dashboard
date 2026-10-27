@@ -10,6 +10,7 @@ import { createMockAuthProvider } from "./auth/mock-provider"
 import type { AuthProvider } from "./auth/provider"
 import { createMemoryDatasetStore } from "./dataset-store"
 import { loadEnv, type Env } from "./env"
+import { createMemorySnapshotStore } from "./snapshots/store"
 import { seedIfEmpty } from "./seed"
 
 /** Placeholder settings only, like .env.example. */
@@ -39,8 +40,9 @@ export async function makeApp(opts: MakeOptions = {}) {
   if (opts.seed !== false) await seedIfEmpty(store)
   const authStore = createMemoryAuthStore()
   const provider = (opts.provider ?? createMockAuthProvider)(env)
-  const app = await buildApp({ env, store, auth: { provider, store: authStore, now: opts.now }, version: "1.2.3", logger: false })
-  return { app, env, store, authStore, provider }
+  const snapshots = createMemorySnapshotStore()
+  const app = await buildApp({ env, store, auth: { provider, store: authStore, now: opts.now }, snapshots, version: "1.2.3", logger: false })
+  return { app, env, store, authStore, provider, snapshots }
 }
 
 /** Sign in and return the Cookie header to send on later requests. */

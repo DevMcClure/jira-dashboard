@@ -1,15 +1,28 @@
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Settings2 } from "lucide-react"
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { FLOW_TIME_BASIS_LABEL, type FlowTimeBasis } from "@jira-dashboard/core/flow"
-import { DEFAULT_FLOW_CONFIG } from "@jira-dashboard/core/flowConfig"
+import { workingHoursLabel, type FlowConfig } from "@jira-dashboard/core/flowConfig"
+import { useFlowConfig } from "@/hooks/useFlowConfig"
+import { useReportMode } from "@/hooks/useReportMode"
 
 type Props = { basis: FlowTimeBasis }
 
+/** "Story / Epic → Feature, Bug → Defect; labels tech-debt → Debt, risk → Risk; anything else is Other", from the settings. */
+function distributionText(cfg: FlowConfig) {
+  const byType = new Map<string, string[]>()
+  for (const [jira, flow] of Object.entries(cfg.typeMap)) byType.set(flow, [...(byType.get(flow) ?? []), jira])
+  const types = [...byType].map(([flow, jira]) => `${jira.join(" / ")} → ${flow}`).join(", ")
+  const labels = Object.entries(cfg.labelTypes).map(([label, flow]) => `${label} → ${flow}`).join(", ")
+  return `Share of items by flow type: ${types || "no types mapped"}${labels ? `; other types labelled ${labels}` : ""}; anything else is Other.`
+}
+
 /** "How these are measured": start and end points, formulas, exclusions and clocks, so the numbers can be trusted and compared. */
 export function MeasurementNotes({ basis }: Props) {
-  const cfg = DEFAULT_FLOW_CONFIG
+  const { config: cfg, isDefault } = useFlowConfig()
+  const inReport = useReportMode() !== null
   const states = (state: string) =>
     Object.entries(cfg.statusStates)
       .filter(([, s]) => s === state)
@@ -26,16 +39,16 @@ export function MeasurementNotes({ basis }: Props) {
     ["Flow load", `Items in an active or waiting status (${states("active")}, ${states("waiting")}) at the end of each day. Age counts from work started.`],
     ["Flow velocity", "Items that first reached Done in the window, counted regardless of size or priority. See “Size of finished items” for the size mix."],
     ["Flow efficiency", "Flow Efficiency = (Active Time ÷ Total Flow Time) × 100, over items finished in the window. Time in Done between a finish and a reopen counts as waiting."],
-    ["Flow distribution", "Share of items by flow type: Story / Epic → Feature, Bug → Defect; Task and Spike count as Debt or Risk only when labelled tech-debt or risk, otherwise Other."],
+    ["Flow distribution", distributionText(cfg)],
     ["Flow predictability", "Actual ÷ planned business value of committed PI objectives; uncommitted objectives add to actual only."],
     [
       "Statuses",
       `Active: ${states("active")}. Waiting: ${states("waiting")}. Not started: ${states("not-started")}. Unknown statuses follow their Jira category.`,
     ],
-    ["Excluded", `${cfg.excludeTypes.join(" and ")} aren't flow items (they contain or belong to other items).`],
+    ["Excluded", cfg.excludeTypes.length ? `${cfg.excludeTypes.join(" and ")} aren't flow items (they contain or belong to other items).` : "Every issue type counts as a flow item."],
     [
       "Clocks",
-      `Working hours: Mon–Fri ${String(hours.start).padStart(2, "0")}:00–${hours.end}:00 ${hours.timeZone.replace("_", " ")}, so a working day is ${hours.end - hours.start} hours. Calendar time counts nights and weekends.`,
+      `Working hours: ${workingHoursLabel(hours)}, so a working day is ${hours.end - hours.start} hours. Calendar time counts nights and weekends.`,
     ],
   ]
   return (
@@ -43,7 +56,10 @@ export function MeasurementNotes({ basis }: Props) {
       <Card className="gap-0">
         <CardHeader>
           <CardTitle>How these are measured</CardTitle>
-          <CardDescription>Start and end points, formulas and exclusions. Flow metrics describe the system, not individuals.</CardDescription>
+          <CardDescription>
+            Start and end points, formulas and exclusions. Flow metrics describe the system, not individuals.
+            {!isDefault && " These use your team's own flow settings."}
+          </CardDescription>
           <CardAction>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm" className="group">
@@ -64,6 +80,14 @@ export function MeasurementNotes({ basis }: Props) {
                 </div>
               ))}
             </dl>
+            {!inReport && (
+              <Button variant="outline" size="sm" className="mt-4" asChild>
+                <Link to="/settings/flow">
+                  <Settings2 />
+                  Change these settings
+                </Link>
+              </Button>
+            )}
           </CardContent>
         </CollapsibleContent>
       </Card>

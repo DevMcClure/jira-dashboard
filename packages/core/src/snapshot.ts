@@ -9,6 +9,7 @@ import { differenceInBusinessDays, endOfDay, format, isSameDay, startOfDay, subD
 import { z } from "zod"
 import { datasetAsOf } from "./asof"
 import { flowItems, flowLoad, teamFlow } from "./flow"
+import { DEFAULT_FLOW_CONFIG, type FlowConfig } from "./flowConfig"
 import {
   activitySummary,
   burndown,
@@ -130,18 +131,24 @@ type Options = {
    * backfill doesn't, since it would only copy the latest state backwards.
    */
   staleAfterNow?: boolean
+  /** The active flow settings; the defaults when left out. */
+  flowConfig?: FlowConfig
 }
 
 /** One snapshot per team for `day`. A day after the data's "now" throws, unless `staleAfterNow`. */
-export function buildSnapshots(dataset: JiraDataset, day: string, { ingestId, takenAt, backfilled, staleAfterNow = false }: Options): Snapshot[] {
+export function buildSnapshots(
+  dataset: JiraDataset,
+  day: string,
+  { ingestId, takenAt, backfilled, staleAfterNow = false, flowConfig: cfg = DEFAULT_FLOW_CONFIG }: Options,
+): Snapshot[] {
   const dayStart = parseDay(day)
   const dayEnd = endOfDay(dayStart)
   const now = dataset.meta.generatedAt
   if (dayStart > now && !staleAfterNow) throw new Error(`${day} is after the data's "now" (${dayKey(now)}).`)
   const at = dayEnd < now ? dayEnd : now
   const past = datasetAsOf(dataset, at)
-  const items = flowItems(past.issues)
-  const flowOpts = { mode: "working" as const, now: at }
+  const items = flowItems(past.issues, cfg)
+  const flowOpts = { mode: "working" as const, now: at, cfg }
   const flowWindow = { start: startOfDay(subDays(dayStart, SNAPSHOT_FLOW_WINDOW_DAYS - 1)), end: at }
   const today = { start: dayStart, end: at }
 

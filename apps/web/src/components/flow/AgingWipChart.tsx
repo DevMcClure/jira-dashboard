@@ -3,6 +3,7 @@ import { CartesianGrid, ReferenceLine, Scatter, ScatterChart, XAxis, YAxis, ZAxi
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart"
 import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
+import { useFlowConfig } from "@/hooks/useFlowConfig"
 import { formatDays } from "@/lib/format"
 import type { AgingItem, Percentiles } from "@jira-dashboard/core/flow"
 import { flowStateOf } from "@jira-dashboard/core/flowConfig"
@@ -25,11 +26,12 @@ const BANDS = [
  */
 export function AgingWipChart({ aging, cycle, finished, mode, windowLabel }: Props) {
   const { dataset } = useData()
+  const { config: cfg } = useFlowConfig()
   const navigate = useNavigate()
   const to = useAppPath()
   const columns = dataset.statuses
     .filter((s) => {
-      const state = flowStateOf(s.name, { status: s.name, statusCategory: s.category })
+      const state = flowStateOf(s.name, { status: s.name, statusCategory: s.category }, cfg)
       return state === "active" || state === "waiting"
     })
     .map((s) => s.name)

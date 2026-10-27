@@ -9,6 +9,8 @@ import { createMongoDatasetStore } from "./dataset-store"
 import { collections, connect, datasetFiles, ensureIndexes } from "./db"
 import { sha256 } from "./ingest/pipeline"
 import { createMongoReportStore } from "./reports/store"
+import { createMongoSettingsStore } from "./settings/store"
+import { DEFAULT_FLOW_CONFIG } from "@jira-dashboard/core/flowConfig"
 import { createSnapshotJob } from "./snapshots/job"
 import { createMongoSnapshotStore } from "./snapshots/store"
 import { SAMPLE_JSON, seedIfEmpty } from "./seed"
@@ -197,5 +199,19 @@ describe.skipIf(!uri)("MongoDB stores", () => {
     await store.prune(2, [pinned.id])
     expect((await store.byIngest(pinned.id))?.json).toBe(`${CONTRACT_JSON}${" ".repeat(100)}`)
     expect(await collections(db).ingests.countDocuments({ datasetId: { $ne: null }, sha256: { $in: ["100", "101", "102", "103", "104"] } })).toBe(3) // newest 2 + pinned
+  })
+
+  it("keeps one shared set of flow settings", async () => {
+    const { db } = await open()
+    const settings = createMongoSettingsStore(db)
+    expect(await settings.getFlow()).toBeNull()
+    const config = { ...DEFAULT_FLOW_CONFIG, excludeTypes: ["Sub-task"] }
+    const at = new Date("2026-10-20T06:00:00Z")
+    await settings.setFlow(config, "ada.admin", at)
+    await settings.setFlow(config, "ada.admin", at)
+    expect(await settings.getFlow()).toEqual({ config, updatedAt: at, updatedBy: "ada.admin" })
+    expect(await collections(db).settings.countDocuments()).toBe(1)
+    await settings.clearFlow()
+    expect(await settings.getFlow()).toBeNull()
   })
 })

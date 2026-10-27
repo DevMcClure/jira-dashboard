@@ -2,6 +2,7 @@
  * MongoDB connection and indexes. Works with any MongoDB: the connection string,
  * database name and optional TLS CA file all come from env (env.ts).
  */
+import type { FlowConfig } from "@jira-dashboard/core/flowConfig"
 import type { ReportConfig } from "@jira-dashboard/core/report-config"
 import type { Snapshot } from "@jira-dashboard/core/snapshot"
 import { GridFSBucket, MongoClient, type Db, type ObjectId } from "mongodb"
@@ -29,6 +30,7 @@ export function collections(db: Db) {
     snapshots: db.collection<SnapshotDoc>("daily_snapshots"),
     reports: db.collection<ReportDoc>("reports"),
     reportReads: db.collection<ReportReadDoc>("report_reads"),
+    settings: db.collection<SettingsDoc>("settings"),
   }
 }
 
@@ -128,3 +130,6 @@ export type ReportDoc = {
 
 /** When a person last opened a report (for "unread" in Shared with me). */
 export type ReportReadDoc = { reportId: string; userId: string; lastReadAt: Date }
+
+/** Shared settings, one document each; so far only `flow` (the flow metric settings, edited by admins). */
+export type SettingsDoc = { _id: "flow"; config: FlowConfig; updatedAt: Date; updatedBy: string }

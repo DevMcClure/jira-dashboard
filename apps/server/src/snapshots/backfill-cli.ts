@@ -8,6 +8,7 @@ import { parseArgs } from "node:util"
 import { connect, ensureIndexes } from "../db"
 import { createMongoDatasetStore } from "../dataset-store"
 import { EnvError, loadEnv } from "../env"
+import { createMongoSettingsStore } from "../settings/store"
 import { createSnapshotJob, daysBetween, NoDataError } from "./job"
 import { createMongoSnapshotStore } from "./store"
 
@@ -51,6 +52,8 @@ async function main() {
       datasets: createMongoDatasetStore(mongo.db),
       snapshots: createMongoSnapshotStore(mongo.db),
       log: { info: () => {}, warn: () => {} },
+      // The same flow settings the server uses.
+      flowConfig: async () => (await createMongoSettingsStore(mongo.db).getFlow())?.config,
     })
     const results = await job.run(days, { backfilled: true, force: values.force })
     const tally = { written: 0, unchanged: 0, kept: 0, skipped: 0 }

@@ -3,6 +3,7 @@ import { useMemo } from "react"
 import { flowItems } from "@jira-dashboard/core/flow"
 import type { DateRange } from "@jira-dashboard/core/types"
 import { useData } from "./useData"
+import { useFlowConfig } from "./useFlowConfig"
 import { useHistoryIssues } from "./useFilteredIssues"
 import { usePeriod } from "./usePeriod"
 import { useHistorySprints } from "./useScopedSprints"
@@ -21,6 +22,7 @@ export function useFlowItems() {
   const sprints = useHistorySprints()
   const { range, label, phrase } = usePeriod()
   const now = dataset.meta.generatedAt
+  const { config: cfg } = useFlowConfig()
 
   return useMemo(() => {
     const ids = new Set(sprints.map((s) => s.id))
@@ -28,6 +30,6 @@ export function useFlowItems() {
     const scoped = dataset.sprints.length ? historyIssues.filter((i) => i.sprintIds.some((id) => ids.has(id))) : historyIssues
     const minStart = startOfDay(subWeeks(now, MIN_CHART_WEEKS))
     const chartRange: DateRange = { start: range.start < minStart ? range.start : minStart, end: now }
-    return { items: flowItems(scoped), sprints, range, chartRange, now, periodLabel: label, periodPhrase: phrase }
-  }, [dataset, historyIssues, sprints, range, label, phrase, now])
+    return { items: flowItems(scoped, cfg), cfg, sprints, range, chartRange, now, periodLabel: label, periodPhrase: phrase }
+  }, [dataset, historyIssues, sprints, range, label, phrase, now, cfg])
 }

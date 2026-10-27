@@ -11,6 +11,7 @@ import { HistoryPage } from "@/routes/lazy-pages"
 
 const AboutPage = lazy(() => import("@/pages/AboutPage"))
 const ExportPage = lazy(() => import("@/pages/ExportPage"))
+const FlowSettingsPage = lazy(() => import("@/pages/FlowSettingsPage"))
 const ImportPage = lazy(() => import("@/pages/ImportPage"))
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
 
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="history" element={<HistoryPage />} />
             <Route path="import" element={<ImportPage />} />
             <Route path="export" element={<ExportPage />} />
+            <Route path="settings/flow" element={<FlowSettingsPage />} />
             <Route path="about" element={<AboutPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

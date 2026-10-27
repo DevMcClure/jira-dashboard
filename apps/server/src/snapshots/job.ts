@@ -5,6 +5,7 @@
  * and the backfill command; docs/decisions/0038.
  */
 import { parseExportText } from "@jira-dashboard/core/adapter"
+import type { FlowConfig } from "@jira-dashboard/core/flowConfig"
 import { buildSnapshots, dayKey, parseDay } from "@jira-dashboard/core/snapshot"
 import { addDays } from "date-fns"
 import type { FastifyBaseLogger } from "fastify"
@@ -42,9 +43,11 @@ type Deps = {
   snapshots: SnapshotStore
   log: Pick<FastifyBaseLogger, "info" | "warn">
   now?: () => Date
+  /** The active flow settings (admins can change them); the defaults when absent. */
+  flowConfig?: () => Promise<FlowConfig | undefined>
 }
 
-export function createSnapshotJob({ datasets, snapshots, log, now = () => new Date() }: Deps) {
+export function createSnapshotJob({ datasets, snapshots, log, now = () => new Date(), flowConfig = async () => undefined }: Deps) {
   return {
     /**
      * Snapshot each day. A day the latest data doesn't reach yet is still
@@ -56,6 +59,7 @@ export function createSnapshotJob({ datasets, snapshots, log, now = () => new Da
       const current = await datasets.current()
       if (!current) throw new NoDataError()
       const dataset = parseExportText(current.json)
+      const cfg = await flowConfig()
       const today = dayKey(now())
       const results: DayResult[] = []
       for (const date of days) {
@@ -65,7 +69,7 @@ export function createSnapshotJob({ datasets, snapshots, log, now = () => new Da
         }
         let built
         try {
-          built = buildSnapshots(dataset, date, { ingestId: current.ingest.id, takenAt: now(), backfilled, staleAfterNow: !backfilled })
+          built = buildSnapshots(dataset, date, { ingestId: current.ingest.id, takenAt: now(), backfilled, staleAfterNow: !backfilled, flowConfig: cfg })
         } catch (err) {
           results.push({ date, error: (err as Error).message })
           continue

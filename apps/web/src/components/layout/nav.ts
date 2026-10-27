@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   Milestone,
+  Settings2,
   Target,
   Ticket,
   Timer,
@@ -41,6 +42,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: "Import", url: "/import", icon: Upload },
       { title: "Export", url: "/export", icon: FileDown },
+      { title: "Flow settings", url: "/settings/flow", icon: Settings2 },
       { title: "About", url: "/about", icon: Info },
     ],
   },

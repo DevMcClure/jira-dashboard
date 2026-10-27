@@ -38,7 +38,7 @@ import {
   teamFlow,
   type Percentiles,
 } from "./flow"
-import { FLOW_TYPES } from "./flowConfig"
+import { DEFAULT_FLOW_CONFIG, FLOW_TYPES, workingHoursLabel, type FlowConfig } from "./flowConfig"
 import { periodLabel as labelForPeriod, periodRange, type DayRange, type Period } from "./period"
 import { resolveScope, type Scope } from "./scope"
 import type { DateRange, Issue, JiraDataset, Objective, Sprint, Transition } from "./types"
@@ -66,6 +66,8 @@ export type ReportOptions = {
   /** The picked days when `period` is "custom". */
   customDates?: DayRange | null
   sections: ReportSection[]
+  /** The active flow settings; the defaults when left out. */
+  flowConfig?: FlowConfig
 }
 
 const HEALTH_LABEL: Record<ObjectiveHealthLevel, string> = {
@@ -112,7 +114,7 @@ export function reportScope(dataset: JiraDataset, options: ReportOptions) {
 export function buildReport(dataset: JiraDataset, options: ReportOptions): string {
   const scope = reportScope(dataset, options)
   const periodLabel = labelForPeriod(options.period, scope.range)
-  const ctx = { dataset, ...scope, periodLabel }
+  const ctx = { dataset, ...scope, periodLabel, cfg: options.flowConfig ?? DEFAULT_FLOW_CONFIG }
   const want = new Set(options.sections)
   const { resolved } = scope
 
@@ -148,7 +150,7 @@ export function buildReport(dataset: JiraDataset, options: ReportOptions): strin
   return `${out.join("\n").trimEnd()}\n`
 }
 
-type Ctx = ReturnType<typeof reportScope> & { dataset: JiraDataset; periodLabel: string }
+type Ctx = ReturnType<typeof reportScope> & { dataset: JiraDataset; periodLabel: string; cfg: FlowConfig }
 
 function summarySection({ issues, transitions, range, periodLabel }: Ctx): string[] {
   const counts = countByStatusCategory(issues)
@@ -271,19 +273,19 @@ function objectivesSection({ resolved, historyIssues, teams, now, pickedSprintId
 const AGING_LISTED = 10
 
 /** Same tickets as the Flow page (scope's PI sprints or picked sprints, team filter), in working hours. */
-function flowSection({ dataset, historyIssues, historySprints, pickedSprintIds, teams, range, now, periodLabel }: Ctx): string[] {
+function flowSection({ dataset, historyIssues, historySprints, pickedSprintIds, teams, range, now, periodLabel, cfg }: Ctx): string[] {
   const sprints = pickedSprintIds.length ? dataset.sprints.filter((s) => pickedSprintIds.includes(s.id)) : historySprints
   const ids = new Set(sprints.map((s) => s.id))
-  const items = flowItems(dataset.sprints.length ? historyIssues.filter((i) => i.sprintIds.some((id) => ids.has(id))) : historyIssues)
-  const opts = { mode: "working" as const, now }
-  const velocity = flowVelocity(items, range)
+  const items = flowItems(dataset.sprints.length ? historyIssues.filter((i) => i.sprintIds.some((id) => ids.has(id))) : historyIssues, cfg)
+  const opts = { mode: "working" as const, now, cfg }
+  const velocity = flowVelocity(items, range, cfg)
   const time = flowTime(items, range, opts)
   const load = flowLoad(items, range, opts)
   const efficiency = flowEfficiency(items, range, opts)
   const dist = flowDistribution(items, sprints, range, opts)
   const predictability = flowPredictability(dataset.programIncrements)
-  const size = sizeMix(items, range)
-  const history = historyCoverage(items, now)
+  const size = sizeMix(items, range, cfg)
+  const history = historyCoverage(items, now, cfg)
   const n = time.points.length
   const quality = sampleQuality(n)
   const members = teams.reduce((sum, t) => sum + t.memberIds.length, 0)
@@ -293,7 +295,7 @@ function flowSection({ dataset, historyIssues, historySprints, pickedSprintIds, 
   const out = [
     "## Flow",
     "",
-    `_Items, not points. Period: ${periodLabel}. Times are in working hours (Mon–Fri 09:00–18:00 London; a working day is 9 hours). History: ${history.weeks} weeks, ${HISTORY_LEVEL_LABEL[history.level].toLowerCase()}._`,
+    `_Items, not points. Period: ${periodLabel}. Times are in working hours (${workingHoursLabel(cfg.workingHours)}; a working day is ${cfg.workingHours.end - cfg.workingHours.start} hours). History: ${history.weeks} weeks, ${HISTORY_LEVEL_LABEL[history.level].toLowerCase()}._`,
     "",
     ...(quality.note && quality.level !== "none" ? [`> ${quality.note}`, ""] : []),
     table(

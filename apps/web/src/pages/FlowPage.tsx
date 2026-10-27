@@ -60,37 +60,37 @@ function Section({ title, description, children }: { title: string; description:
 export default function FlowPage() {
   const { dataset } = useData()
   const { teamIds } = useEffectiveFilters()
-  const { items, sprints, range, chartRange, now, periodPhrase } = useFlowItems()
+  const { items, cfg, sprints, range, chartRange, now, periodPhrase } = useFlowItems()
   const [mode, setMode] = useTimeMode()
   const [basis, setBasis] = useFlowTimeBasis()
   const teams = useMemo(() => (teamIds.length ? dataset.teams.filter((t) => teamIds.includes(t.id)) : dataset.teams), [dataset, teamIds])
 
   const m = useMemo(() => {
-    const opts = { mode, now }
+    const opts = { mode, now, cfg }
     const time = flowTime(items, range, opts)
     const chartTime = flowTime(items, chartRange, opts)
     const load = flowLoad(items, chartRange, opts)
     return {
       period: {
-        velocity: flowVelocity(items, range),
+        velocity: flowVelocity(items, range, cfg),
         time,
         efficiency: flowEfficiency(items, range, opts),
         distribution: flowDistribution(items, sprints, range, opts),
-        size: sizeMix(items, range),
+        size: sizeMix(items, range, cfg),
         teams: teamFlow(items, teams, range, opts, basis),
       },
       chart: {
-        velocity: flowVelocity(items, chartRange),
+        velocity: flowVelocity(items, chartRange, cfg),
         time: chartTime,
         load,
         efficiency: flowEfficiency(items, chartRange, opts),
         byWeek: flowTimeByWeek(items, chartRange, opts, basis),
         weekly: weeklyLoad(items, chartRange, opts, basis),
       },
-      coverage: historyCoverage(items, now),
+      coverage: historyCoverage(items, now, cfg),
       predictability: flowPredictability(dataset.programIncrements),
     }
-  }, [items, sprints, teams, range, chartRange, now, mode, basis, dataset])
+  }, [items, cfg, sprints, teams, range, chartRange, now, mode, basis, dataset])
 
   const windowLabel = `since ${format(chartRange.start, "d MMM")}`
   const members = teams.reduce((n, t) => n + t.memberIds.length, 0)

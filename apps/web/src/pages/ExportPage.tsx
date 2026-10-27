@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useData } from "@/hooks/useData"
+import { useFlowConfig } from "@/hooks/useFlowConfig"
 import { PERIODS, periodRange, type DayRange, type Period } from "@jira-dashboard/core/period"
 import { buildReport, REPORT_SECTIONS, reportScope, reportSprints, type ReportSection } from "@jira-dashboard/core/report"
 import { configFromView, DEFAULT_REPORT_PAGES, PI_PAGES, type DashboardView } from "@jira-dashboard/core/report-config"
@@ -25,6 +26,7 @@ const SPRINT = "__sprint__"
 
 export default function ExportPage() {
   const { dataset, filters, period: headerPeriod, customDates: headerDates, scope: headerScope } = useData()
+  const { config: flowConfig } = useFlowConfig()
   // Start from whatever the header is showing; changes here don't touch the dashboard.
   const [scope, setScope] = useState<Scope>(headerScope)
   const [teamIds, setTeamIds] = useState(filters.teamIds)
@@ -62,8 +64,8 @@ export default function ExportPage() {
     setSections((prev) => sectionChoices.map((s) => s.value).filter((v) => (v === value ? on : prev.includes(v))))
 
   const markdown = useMemo(
-    () => buildReport(dataset, { scope, teamIds, sprintIds, period, customDates, sections }),
-    [dataset, scope, teamIds, sprintIds, period, customDates, sections],
+    () => buildReport(dataset, { scope, teamIds, sprintIds, period, customDates, sections, flowConfig }),
+    [dataset, scope, teamIds, sprintIds, period, customDates, sections, flowConfig],
   )
 
   const fileName = `sprint-report-${format(dataset.meta.generatedAt, "yyyy-MM-dd")}.md`

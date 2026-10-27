@@ -9,6 +9,7 @@ import { FlowPrimaryTiles } from "@/components/flow/FlowPrimaryTiles"
 import { FlowTimeScatter } from "@/components/flow/FlowTimeScatter"
 import { HistoryMeter } from "@/components/flow/HistoryMeter"
 import { MeasurementNotes } from "@/components/flow/MeasurementNotes"
+import { MoreDetail } from "@/components/flow/MoreDetail"
 import { PredictabilityChart } from "@/components/flow/PredictabilityChart"
 import { SizeMixChart } from "@/components/flow/SizeMixChart"
 import { SpeedVsThroughput } from "@/components/flow/SpeedVsThroughput"
@@ -54,7 +55,8 @@ function Section({ title, description, children }: { title: string; description:
 
 /**
  * The six SAFe flow metrics, in items and time rather than points. Flow Time
- * and Flow Load lead as the primary targets (decision 0024). KPIs use the
+ * and Flow Load lead as the primary targets (decision 0024); one view per
+ * question, with charts that repeat them folded into More detail (0044). KPIs use the
  * header period; charts use it too but cover at least the last 8 weeks.
  */
 export default function FlowPage() {
@@ -137,9 +139,7 @@ export default function FlowPage() {
           </div>
         }
       />
-      <MeasurementNotes basis={basis} />
-
-      <Section title="Primary targets" description="Start with flow time and flow load: how long work takes, and how much is in progress at once.">
+      <Section title="Primary targets" description="How long work takes, and how much is in progress at once.">
         <FlowPrimaryTiles
           flowTime={flowTimePercentiles(m.period.time, basis)}
           finished={m.period.time.points.length}
@@ -160,24 +160,9 @@ export default function FlowPage() {
           finished={m.chart.time.points.length}
         />
         <AgingWipChart aging={load.aging} cycle={m.chart.time.cycle} finished={m.chart.time.points.length} mode={mode} windowLabel={windowLabel} />
-        <FlowTimeScatter
-          points={m.chart.time.points}
-          percentiles={flowTimePercentiles(m.chart.time, basis)}
-          basis={basis}
-          mode={mode}
-          windowLabel={windowLabel}
-        />
       </Section>
 
-      <Section title="Load" description="There's no universal right amount of work in progress; find it by experiment, watching throughput and flow time.">
-        <div className="grid gap-4 lg:grid-cols-2">
-          <WipChart daily={load.daily} windowLabel={windowLabel} />
-          <WipExperimentChart weeks={m.chart.weekly} mode={mode} windowLabel={windowLabel} />
-        </div>
-        <TeamFlowTable rows={m.period.teams} basis={basis} mode={mode} periodPhrase={periodPhrase} />
-      </Section>
-
-      <Section title="Supporting metrics" description="Velocity, efficiency, distribution and predictability explain why flow time and load move.">
+      <Section title="Why they move" description="How much is waiting, where the time goes, and the supporting metrics, overall and per team.">
         <FlowKpiRow
           velocity={m.period.velocity}
           size={m.period.size}
@@ -186,17 +171,36 @@ export default function FlowPage() {
           predictability={m.predictability}
           periodPhrase={periodPhrase}
         />
+        {/* Side by side only where both have room; "Where the time goes" needs ~400px for its labels. */}
+        <div className="grid gap-4 xl:grid-cols-2">
+          <WipChart daily={load.daily} windowLabel={windowLabel} />
+          <TimeByStatusBar byStatus={m.chart.efficiency.byStatus} mode={mode} windowLabel={windowLabel} />
+        </div>
+        <TeamFlowTable rows={m.period.teams} basis={basis} mode={mode} periodPhrase={periodPhrase} />
+      </Section>
+
+      <MoreDetail>
+        <FlowTimeScatter
+          points={m.chart.time.points}
+          percentiles={flowTimePercentiles(m.chart.time, basis)}
+          basis={basis}
+          mode={mode}
+          windowLabel={windowLabel}
+        />
         <div className="grid gap-4 lg:grid-cols-2">
-          <SizeMixChart mix={m.period.size} periodPhrase={periodPhrase} />
+          <WipExperimentChart weeks={m.chart.weekly} mode={mode} windowLabel={windowLabel} />
           <EfficiencyChart efficiency={m.chart.efficiency} mode={mode} windowLabel={windowLabel} />
         </div>
-        <TimeByStatusBar byStatus={m.chart.efficiency.byStatus} mode={mode} windowLabel={windowLabel} />
         <div className="grid gap-4 lg:grid-cols-2">
           <DistributionNow wip={m.period.distribution.wip} finished={m.period.distribution.finished} periodPhrase={periodPhrase} />
           <DistributionChart perSprint={m.period.distribution.perSprint} />
         </div>
-        <PredictabilityChart rows={m.predictability} />
-      </Section>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <SizeMixChart mix={m.period.size} periodPhrase={periodPhrase} />
+          <PredictabilityChart rows={m.predictability} />
+        </div>
+      </MoreDetail>
+      <MeasurementNotes basis={basis} />
     </>
   )
 }

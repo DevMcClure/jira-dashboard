@@ -4,10 +4,26 @@
  */
 import pkg from "../package.json" with { type: "json" }
 import { buildApp } from "./app"
+import { createMongoAuthStore } from "./auth/auth-store"
+import { createCrowdAuthProvider } from "./auth/crowd-provider"
+import { createMockAuthProvider } from "./auth/mock-provider"
+import { createOidcAuthProvider } from "./auth/oidc-provider"
+import type { AuthProvider } from "./auth/provider"
 import { createMongoDatasetStore } from "./dataset-store"
 import { connect, ensureIndexes } from "./db"
-import { EnvError, loadEnv } from "./env"
+import { EnvError, envWarnings, loadEnv, type Env } from "./env"
 import { seedIfEmpty } from "./seed"
+
+function providerFor(env: Env): AuthProvider {
+  switch (env.AUTH_PROVIDER) {
+    case "crowd":
+      return createCrowdAuthProvider(env)
+    case "oidc":
+      return createOidcAuthProvider()
+    case "mock":
+      return createMockAuthProvider(env)
+  }
+}
 
 async function main() {
   let env
@@ -31,7 +47,14 @@ async function main() {
   await ensureIndexes(mongo.db)
   const store = createMongoDatasetStore(mongo.db)
 
-  const app = await buildApp({ env, store, version: pkg.version })
+  const app = await buildApp({
+    env,
+    store,
+    auth: { provider: providerFor(env), store: createMongoAuthStore(mongo.db) },
+    version: pkg.version,
+  })
+  for (const warning of envWarnings(env)) app.log.warn(warning)
+  app.log.info(`Sign-in: ${env.AUTH_PROVIDER}`)
   if (env.SEED_MOCK) {
     const seeded = await seedIfEmpty(store)
     app.log.info(seeded ? `Seeded the mock dataset (ingest ${seeded.id})` : "Data already present; not seeding")

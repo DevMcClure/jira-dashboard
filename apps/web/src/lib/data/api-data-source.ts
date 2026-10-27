@@ -1,4 +1,5 @@
 import { parseExportText } from "@jira-dashboard/core/adapter"
+import { notifyUnauthorized } from "@/lib/auth/auth-client"
 import type { DataSource, FileLike, LoadedData } from "./data-source"
 
 type Options = {
@@ -19,6 +20,10 @@ export function createApiDataSource({ baseUrl, fetch = globalThis.fetch }: Optio
       res = await fetch(`${baseUrl}/dataset`, { credentials: "include", headers: { accept: "application/json" } })
     } catch {
       throw new Error(`Couldn't reach the dashboard server at ${baseUrl}. Is it running?`)
+    }
+    if (res.status === 401) {
+      notifyUnauthorized()
+      throw new Error("Your session has ended. Sign in again.")
     }
     if (res.status === 404) throw new Error("The server has no data yet. Send it a Trawler export, or start it with SEED_MOCK=true.")
     if (!res.ok) throw new Error(`The server couldn't send the data (${res.status} ${res.statusText}).`)

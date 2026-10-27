@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { useData } from "@/hooks/useData"
 import { periodLabel } from "@jira-dashboard/core/period"
 import {
@@ -57,12 +58,15 @@ export function SaveReportDialog({ open, onOpenChange, view, defaultTitle = "" }
 
 function SaveReportForm({ view, defaultTitle, onDone }: { view: DashboardView; defaultTitle: string; onDone: () => void }) {
   const { dataset } = useData()
+  // Signed in (api mode): reports are by that user. The static build asks for a name.
+  const current = useCurrentUser()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const available = REPORT_PAGES.filter((p) => dataset.programIncrements.length || !PI_PAGES.includes(p.id))
   const [title, setTitle] = useState(defaultTitle)
   const [note, setNote] = useState("")
-  const [author, setAuthor] = useState(readAuthor)
+  const [typedAuthor, setAuthor] = useState(readAuthor)
+  const author = current ? current.user.id : typedAuthor
   const [kind, setKind] = useState<ReportKind>("live")
   const [pages, setPages] = useState<ReportPageId[]>(() => DEFAULT_REPORT_PAGES.filter((id) => available.some((p) => p.id === id)))
   const [landing, setLanding] = useState<ReportPageId>(pages[0] ?? "overview")
@@ -94,10 +98,12 @@ function SaveReportForm({ view, defaultTitle, onDone }: { view: DashboardView; d
     try {
       const config = configFromView(view, { title, note, author, kind, pages, landingPage: landing })
       const saved = await saveReport({ config })
-      try {
-        localStorage.setItem(AUTHOR_KEY, author.trim())
-      } catch {
-        // Not remembered; fine.
+      if (!current) {
+        try {
+          localStorage.setItem(AUTHOR_KEY, author.trim())
+        } catch {
+          // Not remembered; fine.
+        }
       }
       toast.success(`Saved “${config.title}”`, {
         description: "It's in My Reports in the sidebar.",
@@ -129,10 +135,16 @@ function SaveReportForm({ view, defaultTitle, onDone }: { view: DashboardView; d
           <Label htmlFor="report-note">Note (optional)</Label>
           <Textarea id="report-note" value={note} maxLength={2000} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="What should readers look at?" />
         </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="report-author">Your name (optional)</Label>
-          <Input id="report-author" value={author} maxLength={80} onChange={(e) => setAuthor(e.target.value)} />
-        </div>
+        {current ? (
+          <p className="text-xs text-muted-foreground">
+            Saved as <span className="font-medium text-foreground">{current.user.displayName}</span> ({current.user.id})
+          </p>
+        ) : (
+          <div className="grid gap-1.5">
+            <Label htmlFor="report-author">Your name (optional)</Label>
+            <Input id="report-author" value={typedAuthor} maxLength={80} onChange={(e) => setAuthor(e.target.value)} />
+          </div>
+        )}
 
         <div className="grid gap-1.5">
           <Label>Kind</Label>

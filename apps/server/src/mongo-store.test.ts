@@ -4,13 +4,14 @@
  */
 import { randomUUID } from "node:crypto"
 import { afterAll, describe, expect, it } from "vitest"
+import { createMongoAuthStore } from "./auth/auth-store"
 import { createMongoDatasetStore } from "./dataset-store"
 import { collections, connect, ensureIndexes } from "./db"
 import { SAMPLE_JSON, seedIfEmpty } from "./seed"
 
 const uri = process.env.MONGO_TEST_URI
 
-describe.skipIf(!uri)("MongoDB dataset store", () => {
+describe.skipIf(!uri)("MongoDB stores", () => {
   const dbName = `jira_dashboard_test_${randomUUID().slice(0, 8)}`
   const opened: Awaited<ReturnType<typeof connect>>[] = []
   const open = async () => {
@@ -27,8 +28,11 @@ describe.skipIf(!uri)("MongoDB dataset store", () => {
     const { db } = await open()
     await ensureIndexes(db)
     await ensureIndexes(db)
-    const names = (await collections(db).ingests.indexes()).map((i) => i.name)
-    expect(names).toEqual(expect.arrayContaining(["receivedAt_desc", "one_current"]))
+    const { ingests, sessions, users } = collections(db)
+    expect((await ingests.indexes()).map((i) => i.name)).toEqual(expect.arrayContaining(["receivedAt_desc", "one_current"]))
+    const ttl = (await sessions.indexes()).find((i) => i.name === "expiresAt_ttl")
+    expect(ttl).toMatchObject({ key: { expiresAt: 1 }, expireAfterSeconds: 0 })
+    expect((await users.indexes()).map((i) => i.name)).toContain("email")
   })
 
   it("seeds once, then a new dataset supersedes the old one", async () => {
@@ -57,5 +61,24 @@ describe.skipIf(!uri)("MongoDB dataset store", () => {
     const { db } = await open()
     const current = await createMongoDatasetStore(db).current()
     expect(current?.json).toBe("{}")
+  })
+
+  it("keeps sessions and the user cache", async () => {
+    const { db } = await open()
+    const store = createMongoAuthStore(db)
+    const at = new Date("2026-03-02T09:00:00Z")
+    await store.upsertUser({ id: "sam.scrum", displayName: "Sam Rivers", email: "sam@example.com", groups: ["a"] }, at)
+    await store.upsertUser({ id: "sam.scrum", displayName: "Sam Rivers", email: "sam@example.com", groups: ["b"] }, at)
+    expect(await store.getUser("sam.scrum")).toEqual({ _id: "sam.scrum", displayName: "Sam Rivers", email: "sam@example.com", groups: ["b"], lastSeenAt: at })
+    expect(await collections(db).users.countDocuments()).toBe(1)
+
+    const session = { _id: "s1", userId: "sam.scrum", roles: ["viewer" as const], crowdToken: "v1.sealed", expiresAt: new Date(at.getTime() + 3_600_000), lastValidatedAt: at, createdAt: at }
+    await store.createSession(session)
+    expect(await store.getSession("s1")).toEqual(session)
+    const later = new Date(at.getTime() + 60_000)
+    await store.updateSession("s1", { roles: ["author", "viewer"], lastValidatedAt: later })
+    expect(await store.getSession("s1")).toMatchObject({ roles: ["author", "viewer"], lastValidatedAt: later, crowdToken: "v1.sealed" })
+    await store.deleteSession("s1")
+    expect(await store.getSession("s1")).toBeNull()
   })
 })

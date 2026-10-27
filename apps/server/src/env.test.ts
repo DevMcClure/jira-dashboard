@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { EnvError, loadEnv } from "./env"
+import { EnvError, envWarnings, loadEnv } from "./env"
 
 // Placeholders only, like .env.example.
 const valid = {
@@ -12,6 +12,8 @@ const valid = {
   MONGO_DB_NAME: "jira_dashboard",
   MONGO_TLS_CA_FILE: "",
   SEED_MOCK: "true",
+  AUTH_PROVIDER: "mock",
+  SESSION_SECRET: "change-me",
 }
 
 const problems = (env: Record<string, string | undefined>) => {
@@ -32,10 +34,20 @@ describe("loadEnv", () => {
       BASE_PATH: "",
       CORS_ORIGIN: ["http://localhost:5173"],
       LOG_LEVEL: "info",
+      TRUST_PROXY: false,
       MONGO_URI: "mongodb://localhost:27017",
       MONGO_DB_NAME: "jira_dashboard",
       MONGO_TLS_CA_FILE: undefined,
       SEED_MOCK: true,
+      AUTH_PROVIDER: "mock",
+      SESSION_SECRET: "change-me",
+      SESSION_TTL_HOURS: 12,
+      CROWD_URL: undefined,
+      CROWD_APP_NAME: undefined,
+      CROWD_APP_PASSWORD: undefined,
+      CROWD_REVALIDATE_MINUTES: 15,
+      ROLE_GROUPS_ADMIN: ["jira-dashboard-admins"],
+      ROLE_GROUPS_AUTHOR: ["jira-dashboard-authors"],
     })
   })
 
@@ -51,6 +63,7 @@ describe("loadEnv", () => {
       "CORS_ORIGIN is required",
       "MONGO_URI is required",
       "MONGO_DB_NAME is required",
+      "SESSION_SECRET is required",
     ])
   })
 
@@ -65,7 +78,40 @@ describe("loadEnv", () => {
   })
 
   it("defaults optional settings", () => {
-    const { BASE_PATH: _b, LOG_LEVEL: _l, SEED_MOCK: _s, ...rest } = valid
-    expect(loadEnv(rest)).toMatchObject({ BASE_PATH: "", LOG_LEVEL: "info", SEED_MOCK: false })
+    const { BASE_PATH: _b, LOG_LEVEL: _l, SEED_MOCK: _s, AUTH_PROVIDER: _a, ...rest } = valid
+    expect(loadEnv(rest)).toMatchObject({ BASE_PATH: "", LOG_LEVEL: "info", SEED_MOCK: false, AUTH_PROVIDER: "mock", TRUST_PROXY: false })
+  })
+
+  it("needs the Crowd settings, and a strong secret, only with AUTH_PROVIDER=crowd", () => {
+    expect(problems({ ...valid, AUTH_PROVIDER: "crowd" })).toEqual([
+      "CROWD_URL is required when AUTH_PROVIDER=crowd",
+      "CROWD_APP_NAME is required when AUTH_PROVIDER=crowd",
+      "CROWD_APP_PASSWORD is required when AUTH_PROVIDER=crowd",
+      "SESSION_SECRET: use a random string of at least 32 characters with AUTH_PROVIDER=crowd",
+    ])
+    const crowd = {
+      ...valid,
+      AUTH_PROVIDER: "crowd",
+      CROWD_URL: "https://crowd.example.com/crowd",
+      CROWD_APP_NAME: "jira-dashboard",
+      CROWD_APP_PASSWORD: "change-me",
+      SESSION_SECRET: "x".repeat(40),
+    }
+    expect(loadEnv(crowd)).toMatchObject({ AUTH_PROVIDER: "crowd", CROWD_URL: "https://crowd.example.com/crowd" })
+    expect(problems({ ...crowd, CROWD_URL: "crowd.example.com" })).toEqual(["CROWD_URL: must be an http(s) URL"])
+    expect(problems({ ...valid, AUTH_PROVIDER: "saml" })).toEqual(["AUTH_PROVIDER: must be mock, crowd or oidc"])
+  })
+
+  it("parses role groups and session timings", () => {
+    const env = loadEnv({ ...valid, ROLE_GROUPS_ADMIN: "ops, leads", ROLE_GROUPS_AUTHOR: "sm", SESSION_TTL_HOURS: "8", CROWD_REVALIDATE_MINUTES: "5", TRUST_PROXY: "true" })
+    expect([env.ROLE_GROUPS_ADMIN, env.ROLE_GROUPS_AUTHOR, env.SESSION_TTL_HOURS, env.CROWD_REVALIDATE_MINUTES, env.TRUST_PROXY]).toEqual([
+      ["ops", "leads"], ["sm"], 8, 5, true,
+    ])
+    expect(problems({ ...valid, SESSION_TTL_HOURS: "0" })).toEqual(["SESSION_TTL_HOURS: must be more than 0"])
+  })
+
+  it("warns about mock sign-in and a placeholder secret without refusing to start", () => {
+    expect(envWarnings(loadEnv(valid))).toHaveLength(2)
+    expect(envWarnings(loadEnv({ ...valid, SESSION_SECRET: "y".repeat(40) }))).toHaveLength(1)
   })
 })

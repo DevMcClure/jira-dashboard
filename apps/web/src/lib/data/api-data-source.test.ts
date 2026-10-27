@@ -1,6 +1,7 @@
 import fixture from "@jira-dashboard/core/__fixtures__/small-export.json"
 import { JiraExportError } from "@jira-dashboard/core/adapter"
 import { describe, expect, it, vi } from "vitest"
+import { authEvents, UNAUTHORIZED_EVENT } from "@/lib/auth/auth-client"
 import { createApiDataSource } from "./api-data-source"
 
 const SAMPLE = JSON.stringify(fixture)
@@ -26,6 +27,15 @@ describe("createApiDataSource", () => {
       throw new TypeError("fetch failed")
     })
     await expect(createApiDataSource({ baseUrl: "https://x.example/api", fetch: down }).load()).rejects.toThrow(/Couldn't reach the dashboard server at https:\/\/x\.example\/api/)
+  })
+
+  it("signals sign-in when the session has ended", async () => {
+    const heard = vi.fn()
+    authEvents.addEventListener(UNAUTHORIZED_EVENT, heard)
+    const expired = vi.fn<typeof globalThis.fetch>(async () => new Response('{"error":"Sign in to continue."}', { status: 401 }))
+    await expect(createApiDataSource({ baseUrl: "/api", fetch: expired }).load()).rejects.toThrow(/session has ended/)
+    authEvents.removeEventListener(UNAUTHORIZED_EVENT, heard)
+    expect(heard).toHaveBeenCalledTimes(1)
   })
 
   it("rejects a server response that isn't a valid export", async () => {

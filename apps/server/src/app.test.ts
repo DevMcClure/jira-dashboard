@@ -1,16 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest"
-import { buildApp } from "./app"
-import { createMemoryDatasetStore } from "./dataset-store"
-import { seedIfEmpty } from "./seed"
+import { makeApp, signIn } from "./testkit"
 
-const env = { BASE_PATH: "", CORS_ORIGIN: ["http://localhost:5173"], LOG_LEVEL: "silent" as const }
-const apps: Awaited<ReturnType<typeof buildApp>>[] = []
+const apps: Awaited<ReturnType<typeof makeApp>>["app"][] = []
 const make = async (opts: { basePath?: string; failPing?: boolean; seed?: boolean } = {}) => {
-  const store = createMemoryDatasetStore({ failPing: opts.failPing })
-  if (opts.seed !== false) await seedIfEmpty(store)
-  const app = await buildApp({ env: { ...env, BASE_PATH: opts.basePath ?? "" }, store, version: "1.2.3", logger: false })
-  apps.push(app)
-  return { app, store }
+  const made = await makeApp({ env: opts.basePath ? { BASE_PATH: opts.basePath } : {}, failPing: opts.failPing, seed: opts.seed })
+  apps.push(made.app)
+  return made
 }
 afterEach(async () => {
   await Promise.all(apps.splice(0).map((a) => a.close()))
@@ -33,12 +28,13 @@ describe("GET /api/health", () => {
 })
 
 describe("GET /api/config", () => {
-  it("reports api mode with every later-phase feature off", async () => {
+  it("reports api mode, the sign-in provider, and which features are on", async () => {
     const { app } = await make()
     expect((await app.inject({ url: "/api/config" })).json()).toEqual({
       mode: "api",
       version: "1.2.3",
-      features: { auth: false, ingest: false, snapshots: false, sharedReports: false },
+      authProvider: "mock",
+      features: { auth: true, ingest: false, snapshots: false, sharedReports: false },
     })
   })
 })
@@ -46,8 +42,9 @@ describe("GET /api/config", () => {
 describe("GET /api/dataset", () => {
   it("serves the current dataset's exact text, tagged with its ingest", async () => {
     const { app, store } = await make()
+    const cookie = await signIn(app)
     const current = (await store.current())!
-    const res = await app.inject({ url: "/api/dataset" })
+    const res = await app.inject({ url: "/api/dataset", headers: { cookie } })
     expect(res.statusCode).toBe(200)
     expect(res.headers["content-type"]).toContain("application/json")
     expect(res.headers.etag).toBe(`"${current.ingest.id}"`)
@@ -57,15 +54,16 @@ describe("GET /api/dataset", () => {
 
   it("answers 304 when the browser already has that ingest", async () => {
     const { app } = await make()
-    const first = await app.inject({ url: "/api/dataset" })
-    const again = await app.inject({ url: "/api/dataset", headers: { "if-none-match": first.headers.etag as string } })
+    const cookie = await signIn(app)
+    const first = await app.inject({ url: "/api/dataset", headers: { cookie } })
+    const again = await app.inject({ url: "/api/dataset", headers: { cookie, "if-none-match": first.headers.etag as string } })
     expect(again.statusCode).toBe(304)
     expect(again.body).toBe("")
   })
 
   it("is a readable 404 before any data arrives", async () => {
     const { app } = await make({ seed: false })
-    const res = await app.inject({ url: "/api/dataset" })
+    const res = await app.inject({ url: "/api/dataset", headers: { cookie: await signIn(app) } })
     expect(res.statusCode).toBe(404)
     expect(res.json().error).toMatch(/No data yet/)
   })
@@ -80,10 +78,10 @@ describe("BASE_PATH and CORS", () => {
 
   it("allows the configured origin and exposes the ingest headers", async () => {
     const { app } = await make()
-    const ok = await app.inject({ url: "/api/dataset", headers: { origin: "http://localhost:5173" } })
+    const ok = await app.inject({ url: "/api/health", headers: { origin: "http://localhost:5173" } })
     expect(ok.headers["access-control-allow-origin"]).toBe("http://localhost:5173")
     expect(ok.headers["access-control-expose-headers"]).toContain("X-Ingest-Id")
-    const other = await app.inject({ url: "/api/dataset", headers: { origin: "https://elsewhere.example" } })
+    const other = await app.inject({ url: "/api/health", headers: { origin: "https://elsewhere.example" } })
     expect(other.headers["access-control-allow-origin"]).toBeUndefined()
   })
 })

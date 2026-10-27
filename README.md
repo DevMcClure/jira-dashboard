@@ -45,11 +45,16 @@ For trying the server template on your machine:
 1. Start a MongoDB: `pnpm db:dev` starts a throwaway one in Docker (`docker-compose.dev.yml`), or run your own `mongod`.
 2. `cp .env.example .env`; the placeholders work for local testing as they are.
 3. `pnpm dev:api` starts the API (on `PORT`, default 3000, with `SEED_MOCK=true` loading the mock data into an empty database) and the web app in `api` mode at http://localhost:5173. The dev server forwards `/api` to the API.
+4. Sign in as one of the demo personas (`AUTH_PROVIDER=mock`): Sam Rivers (Scrum Master, an author), Morgan Lee (Manager, a viewer) or Ada Park (Admin).
 
-Check it with `curl http://localhost:3000/api/health`. The API has three routes so far:
-- `GET /api/health`: the server and database status
-- `GET /api/config`: the mode, and which features are on
-- `GET /api/dataset`: the current dataset, with an `ETag` per ingest
+Check it with `curl http://localhost:3000/api/health`. The API's routes so far:
+- `GET /api/health`: the server and database status (public)
+- `GET /api/config`: the mode, the sign-in provider, and which features are on (public)
+- `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`: sign-in (login is limited to 10 attempts a minute per client)
+- `GET /api/auth/personas`: the demo personas, with `AUTH_PROVIDER=mock` only
+- `GET /api/dataset`: the current dataset, with an `ETag` per ingest (signed in only)
+
+Static mode has no sign-in: the GitHub Pages demo is unchanged.
 
 ## Porting to your environment
 
@@ -64,6 +69,14 @@ Everything you set lives in a `.env` at the repo root (git-ignored), or in the r
 | `MONGO_URI`, `MONGO_DB_NAME` | your Mongo connection string and database name |
 | `MONGO_TLS_CA_FILE` | path to a CA file, if your Mongo uses TLS with a private CA |
 | `SEED_MOCK` | `false` once real data flows |
+| `TRUST_PROXY` | `true` behind a proxy that terminates TLS, so the session cookie is marked `Secure` |
+| `AUTH_PROVIDER` | `crowd` (`mock` is for development only) |
+| `SESSION_SECRET` | a random string of 32+ characters (the server refuses a weak one with `crowd`) |
+| `SESSION_TTL_HOURS` | how long a sign-in lasts |
+| `CROWD_URL` | your Crowd base URL, e.g. `https://crowd.example.com/crowd` |
+| `CROWD_APP_NAME`, `CROWD_APP_PASSWORD` | the application you register for the dashboard in Crowd |
+| `CROWD_REVALIDATE_MINUTES` | how often a session is re-checked with Crowd |
+| `ROLE_GROUPS_ADMIN`, `ROLE_GROUPS_AUTHOR` | your Crowd groups for admins and report authors, comma-separated |
 | `VITE_DATA_MODE`, `VITE_API_BASE_URL` | `api`, and where the web app reaches the server (build-time) |
 
 Checklist:
@@ -71,9 +84,18 @@ Checklist:
 - [ ] Copy `.env.example` to `.env` and fill in every value
 - [ ] Build the web app with `VITE_DATA_MODE=api` and your `VITE_API_BASE_URL` (`pnpm build`)
 - [ ] Build the server (`pnpm build:server`) and start it on your host (`pnpm start:server`, or `node --env-file=.env apps/server/dist/index.js`). It's a plain Node 22 process; deployment is up to you.
-- [ ] Check `GET /api/health`
+- [ ] Check `GET /api/health`, then sign in with a Crowd account
 
-Sign-in, the live Trawler feed, snapshots and shared reports arrive in later phases of `docs/plan-backend.md`, each adding its own variables here.
+### Sign-in with Crowd
+
+1. In Crowd, add an application for the dashboard (a generic application). Its name and password go in `CROWD_APP_NAME` and `CROWD_APP_PASSWORD`. Allow the dashboard server's address under the application's remote addresses, and give it the directories your users are in.
+2. Set `AUTH_PROVIDER=crowd`, `CROWD_URL`, and a long random `SESSION_SECRET`: `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`.
+3. Put your Crowd group names in `ROLE_GROUPS_ADMIN` and `ROLE_GROUPS_AUTHOR`. Everyone else who can sign in is a viewer.
+4. Serve the web app and the API from the same site (ideally the same origin, with the API under `/api`). The session cookie is `SameSite=Lax`, so a web app on another site can't send it.
+
+People sign in with their Crowd username and password. The server checks them with Crowd, keeps the Crowd token encrypted in its own session (MongoDB, expiring after `SESSION_TTL_HOURS`), and gives the browser only a signed, httpOnly session cookie. Every `CROWD_REVALIDATE_MINUTES` it re-checks the session with Crowd and refreshes the user's groups. If Crowd is down, sign-in answers 503 and existing sessions carry on until their next check.
+
+The live Trawler feed, snapshots and shared reports arrive in later phases of `docs/plan-backend.md`, each adding its own variables here.
 
 ## Deploy to GitHub Pages
 

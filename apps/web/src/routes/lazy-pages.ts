@@ -4,7 +4,6 @@ import { lazy } from "react"
 export const DetailsPage = lazy(() => import("@/pages/DetailsPage"))
 export const FlowPage = lazy(() => import("@/pages/FlowPage"))
 export const HealthPage = lazy(() => import("@/pages/HealthPage"))
-export const HistoryPage = lazy(() => import("@/pages/HistoryPage"))
 export const MovementsPage = lazy(() => import("@/pages/MovementsPage"))
 export const ObjectivesPage = lazy(() => import("@/pages/ObjectivesPage"))
 export const OverviewPage = lazy(() => import("@/pages/OverviewPage"))

@@ -173,13 +173,6 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
 
   // Replayed with the same core function as the server's snapshot job.
   const shown = useMemo(() => (data && asOf ? datasetAsOf(data.dataset, asOfMoment(asOf)) : (data?.dataset ?? null)), [data, asOf])
-  const history = useMemo(
-    () =>
-      dataSource.snapshots && dataSource.takeSnapshot
-        ? { list: dataSource.snapshots.bind(dataSource), takeNow: dataSource.takeSnapshot.bind(dataSource) }
-        : null,
-    [dataSource],
-  )
 
   const value = useMemo(
     () =>
@@ -189,7 +182,6 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
         liveDataset: data.dataset,
         asOf,
         setAsOf: DATA_MODE === "api" ? setAsOfState : null,
-        history,
         source: data.origin,
         dataMode: DATA_MODE,
         rawJson: data.rawJson,
@@ -209,7 +201,7 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
         setScope,
         fixedRange: null,
       },
-    [data, shown, asOf, history, loadFromFile, resetToSample, refresh, publish, publishFile, filters, burndownSprintId, period, customDates, scope],
+    [data, shown, asOf, loadFromFile, resetToSample, refresh, publish, publishFile, filters, burndownSprintId, period, customDates, scope],
   )
 
   if (!value) {

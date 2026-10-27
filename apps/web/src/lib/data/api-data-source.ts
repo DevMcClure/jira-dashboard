@@ -1,7 +1,6 @@
 import { JiraExportError, parseExportText } from "@jira-dashboard/core/adapter"
-import { parseSnapshotList } from "@jira-dashboard/core/snapshot"
 import { notifyUnauthorized } from "@/lib/auth/auth-client"
-import type { DataSource, FileLike, LoadedData, ServerSource, SnapshotRun } from "./data-source"
+import type { DataSource, FileLike, LoadedData, ServerSource } from "./data-source"
 
 type Options = {
   /** The API root, e.g. "/api" or "https://dashboard.example.com/api". */
@@ -24,16 +23,6 @@ export function createApiDataSource({ baseUrl, fetch = globalThis.fetch }: Optio
     } catch {
       throw new Error(`Couldn't reach the dashboard server at ${baseUrl}. Is it running?`)
     }
-  }
-
-  /** The server's error message, or a fallback; a 401 also ends the session here. */
-  const failure = async (res: Response, fallback: string) => {
-    if (res.status === 401) {
-      notifyUnauthorized()
-      return new Error(SESSION_ENDED)
-    }
-    const body = (await res.json().catch(() => null)) as { error?: string } | null
-    return new Error(body?.error ?? `${fallback} (${res.status}).`)
   }
 
   const fromServer = async (): Promise<LoadedData> => {
@@ -97,23 +86,6 @@ export function createApiDataSource({ baseUrl, fetch = globalThis.fetch }: Optio
       if (res.status === 413) throw new Error("The file is larger than the server accepts (INGEST_MAX_MB).")
       if (!res.ok) throw new Error(body?.error ?? `The server couldn't publish the file (${res.status}).`)
       return fromServer()
-    },
-
-    async snapshots(teamId, from, to) {
-      const query = new URLSearchParams({ teamId, from, to })
-      const res = await call(`/snapshots?${query}`)
-      if (!res.ok) throw await failure(res, "The server couldn't send the snapshots")
-      return parseSnapshotList(await res.json())
-    },
-
-    async takeSnapshot(date) {
-      const res = await call("/jobs/snapshot", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(date ? { date } : {}),
-      })
-      if (!res.ok) throw await failure(res, "The snapshot didn't run")
-      return (await res.json()) as SnapshotRun
     },
   }
 }

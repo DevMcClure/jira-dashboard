@@ -3,7 +3,6 @@
  * interface, so a server-backed source (live Trawler feed) can replace the
  * static one without any page changing. See docs/decisions/0003.
  */
-import type { SnapshotSummary } from "@jira-dashboard/core/snapshot"
 import type { JiraDataset } from "@jira-dashboard/core/types"
 
 /** How the server's current dataset arrived (api mode): seeded mock data, a Trawler push or pull, or a file an admin published. */
@@ -21,11 +20,6 @@ export type LoadedData = {
   /** The raw text as loaded (for "Download current data"). */
   rawJson: string
 }
-
-export type { SnapshotSummary }
-
-/** What one snapshot run did, per team. */
-export type SnapshotRun = { date: string; stale: boolean; teams: { teamId: string; result: "written" | "unchanged" | "kept" }[] }
 
 /** The parts of a `File` a source needs (so tests don't need a DOM). */
 export type FileLike = Pick<File, "name" | "text">
@@ -48,8 +42,4 @@ export interface DataSource {
    * Rejects with `JiraExportError` (the server's problems) when the file isn't valid.
    */
   publishFile?(file: FileLike): Promise<LoadedData>
-  /** api mode: one team's daily snapshots between two days (yyyy-MM-dd), oldest first. */
-  snapshots?(teamId: string, from: string, to: string): Promise<SnapshotSummary[]>
-  /** api mode, admins: snapshot a day now (default yesterday). */
-  takeSnapshot?(date?: string): Promise<SnapshotRun>
 }

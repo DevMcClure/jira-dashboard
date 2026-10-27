@@ -33,7 +33,8 @@ export function TimeByStatusBar({ byStatus, mode, windowLabel }: Props) {
             />
           ))}
         </div>
-        <ul className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+        {/* Two columns at full width; one when the card sits beside another (xl). */}
+        <ul className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2 xl:grid-cols-1">
           {byStatus.map((b) => (
             <li key={b.status} className="flex items-center gap-2 tabular-nums">
               <StatusDot colorVar={info(b.status).colorVar} />

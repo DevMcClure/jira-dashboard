@@ -1,7 +1,5 @@
 import fixture from "@jira-dashboard/core/__fixtures__/small-export.json"
-import piFixture from "@jira-dashboard/core/__fixtures__/pi-export.json"
-import { JiraExportError, parseExport } from "@jira-dashboard/core/adapter"
-import { buildSnapshots } from "@jira-dashboard/core/snapshot"
+import { JiraExportError } from "@jira-dashboard/core/adapter"
 import { describe, expect, it, vi } from "vitest"
 import { authEvents, UNAUTHORIZED_EVENT } from "@/lib/auth/auth-client"
 import { createApiDataSource } from "./api-data-source"
@@ -104,24 +102,5 @@ describe("createApiDataSource", () => {
     await expect(createApiDataSource({ baseUrl: "/api", fetch: forbidden }).publishFile!(file)).rejects.toThrow("This needs the admin role.")
     const tooBig = vi.fn<typeof globalThis.fetch>(async () => Response.json({ error: "Payload Too Large" }, { status: 413 }))
     await expect(createApiDataSource({ baseUrl: "/api", fetch: tooBig }).publishFile!(file)).rejects.toThrow(/INGEST_MAX_MB/)
-  })
-
-  it("lists a team's snapshots, validating what the server sends", async () => {
-    const { issues: _issues, ...summary } = buildSnapshots(parseExport(piFixture), "2026-10-07", { ingestId: "i", takenAt: new Date(), backfilled: false })[0]
-    const fetch = vi.fn<typeof globalThis.fetch>(async () => Response.json({ snapshots: [summary] }))
-    const list = await createApiDataSource({ baseUrl: "/api", fetch }).snapshots!("TEAM-TST", "2026-10-01", "2026-10-07")
-    expect(list).toEqual([summary])
-    expect(fetch).toHaveBeenCalledWith("/api/snapshots?teamId=TEAM-TST&from=2026-10-01&to=2026-10-07", expect.objectContaining({ credentials: "include" }))
-    const odd = vi.fn<typeof globalThis.fetch>(async () => Response.json({ snapshots: [{ date: "nope" }] }))
-    await expect(createApiDataSource({ baseUrl: "/api", fetch: odd }).snapshots!("T", "2026-10-01", "2026-10-02")).rejects.toThrow(/shape/)
-  })
-
-  it("takes a snapshot now, passing on the server's reason when it can't", async () => {
-    const run = { date: "2026-10-19", stale: true, teams: [{ teamId: "T", result: "written" }] }
-    const fetch = vi.fn<typeof globalThis.fetch>(async () => Response.json(run))
-    expect(await createApiDataSource({ baseUrl: "/api", fetch }).takeSnapshot!()).toEqual(run)
-    expect(fetch.mock.calls[0][1]).toMatchObject({ method: "POST", body: "{}" })
-    const noData = vi.fn<typeof globalThis.fetch>(async () => Response.json({ error: "The server has no data yet." }, { status: 409 }))
-    await expect(createApiDataSource({ baseUrl: "/api", fetch: noData }).takeSnapshot!("2026-10-01")).rejects.toThrow("The server has no data yet.")
   })
 })

@@ -60,6 +60,9 @@ Check it with `curl http://localhost:3000/api/health`. The API's routes so far:
 - `POST /api/ingest/upload`: an admin publishes a file from the Import page
 - `GET /api/snapshots?teamId=&from=&to=`, `GET /api/snapshots/:teamId/:date`: stored daily snapshots (signed in only)
 - `POST /api/jobs/snapshot`: an admin snapshots a day now (default yesterday)
+- `GET /api/reports?box=mine|shared`, `GET /api/reports/:id` (`/data` for a frozen report's own data): reports you own or that are shared with you; anything else is 403
+- `POST /api/reports` (authors), `PATCH` / `DELETE /api/reports/:id` (the owner): save, share and delete reports
+- `GET /api/directory/search?q=`: people and groups to share with (Crowd's directory, or the personas)
 
 Static mode has no sign-in: the GitHub Pages demo is unchanged.
 
@@ -122,7 +125,16 @@ Every morning (`SNAPSHOT_CRON`, default 06:00 in `SNAPSHOT_TZ`, default Europe/L
 - The **History** page shows a team's days from these snapshots: burndown, tickets by status, WIP, cycle time, health and a table of days. Admins can **Take snapshot now**.
 - **As of** in the header (api mode) shows any past day across the whole dashboard. It replays the loaded data in the browser with the same function the snapshot job uses.
 
-Shared reports arrive in the last phase of `docs/plan-backend.md`, adding its own variables here.
+### Shared reports
+
+With the server, reports are saved in MongoDB, not the browser:
+- **Who can do what:** authors save them (Save as report), and the owner shares each one with people or Crowd groups (Share…), changes it or deletes it.
+- **Finding them:** recipients find a report under **Shared with me** when they sign in. It's marked unread until they open it, and again after the owner changes it.
+- **Access:** the server checks it on every request, so a report that isn't shared with you is a 403. **Copy link** gives the report's own page, which needs sign-in and access.
+- **Frozen reports** keep the exact data they were made from, even after later Trawler runs.
+- **Local reports:** reports saved in a browser before the server can be moved over once, with **Import from this browser**.
+
+For sharing search with Crowd, the dashboard's Crowd application needs permission to search the directories its users are in. No new settings are needed.
 
 ## Deploy to GitHub Pages
 
@@ -164,7 +176,7 @@ The **Export** page builds a Markdown report of the dashboard. Pick the scope (c
 
 ## Reports
 
-**Save as report** (in the header, or on the Export page) saves the current filters, scope and period as a named report, either **live** (re-applied to the newest data) or **frozen** (pinned dates). Reports appear under **My Reports** in the sidebar. Opening one shows the dashboard set up that way, with the filters locked and only the chosen pages. **Copy link** gives a `/r?c=…` link that carries the whole report, so it opens in any browser without saving anything. **Explore from here** copies the report's filters into your own view to keep exploring. Reports are kept in this browser for now; a backend will store them later without changing the screens.
+**Save as report** (in the header, or on the Export page) saves the current filters, scope and period as a named report, either **live** (re-applied to the newest data) or **frozen** (pinned dates). Reports appear under **My Reports** in the sidebar. Opening one shows the dashboard set up that way, with the filters locked and only the chosen pages. **Copy link** gives a `/r?c=…` link that carries the whole report, so it opens in any browser without saving anything. **Explore from here** copies the report's filters into your own view to keep exploring. In the static build reports are kept in this browser; with the server they're stored and shared there (see Shared reports above).
 
 ## Project docs
 

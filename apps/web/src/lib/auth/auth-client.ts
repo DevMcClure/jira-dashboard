@@ -8,6 +8,8 @@ export type Role = "viewer" | "author" | "admin"
 export type CurrentUser = { id: string; displayName: string; email: string | null }
 export type Session = { user: CurrentUser; roles: Role[] }
 export type Persona = { username: string; displayName: string; title: string }
+/** People and groups to share a report with. */
+export type DirectoryResults = { users: { id: string; displayName: string; email: string | null }[]; groups: string[] }
 
 /** What GET /config says about the server. */
 export type ServerConfig = {
@@ -77,6 +79,14 @@ export function createAuthClient({ baseUrl, fetch = globalThis.fetch }: Options)
     async logout(): Promise<void> {
       const res = await call("/auth/logout", { method: "POST" })
       if (!res.ok) throw await errorFrom(res, `Sign-out failed (${res.status}).`)
+    },
+
+    /** People and groups whose names start with (or, with mock sign-in, contain) `query`. */
+    async searchDirectory(query: string): Promise<DirectoryResults> {
+      const res = await call(`/directory/search?q=${encodeURIComponent(query)}`)
+      if (res.status === 401) notifyUnauthorized()
+      if (!res.ok) throw await errorFrom(res, `Search failed (${res.status}).`)
+      return res.json()
     },
 
     /** Demo personas (AUTH_PROVIDER=mock); empty otherwise. */

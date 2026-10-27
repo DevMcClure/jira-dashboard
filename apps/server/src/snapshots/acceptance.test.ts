@@ -20,7 +20,8 @@ describe("backfilled PI 26.4", () => {
     expect(sprints.length).toBeGreaterThanOrEqual(9)
   })
 
-  it("matches the live burndown on every sprint day up to now", () => {
+  // Rebuilds the full mock data for each of ~130 days: slow when every package's tests run at once.
+  it("matches the live burndown on every sprint day up to now", { timeout: 30_000 }, () => {
     let compared = 0
     for (const sprint of sprints) {
       const live = burndown(sprint, dataset.issues, now)

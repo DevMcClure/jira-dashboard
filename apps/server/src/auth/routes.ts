@@ -29,7 +29,7 @@ const loginBody = z.object({
 
 type Deps = { service: AuthService; provider: AuthProvider; env: Pick<Env, "BASE_PATH" | "SESSION_TTL_HOURS"> }
 
-function sendAuthError(err: unknown, reply: FastifyReply, request: FastifyRequest) {
+export function sendAuthError(err: unknown, reply: FastifyReply, request: FastifyRequest) {
   if (err instanceof InvalidCredentials) return reply.code(401).send({ error: err.message })
   if (err instanceof ProviderUnavailable) {
     request.log.warn({ err: err.message }, "identity provider unavailable")

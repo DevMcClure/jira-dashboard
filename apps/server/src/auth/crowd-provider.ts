@@ -100,5 +100,23 @@ export function createCrowdAuthProvider({ CROWD_URL, CROWD_APP_NAME, CROWD_APP_P
     },
 
     groupsFor,
+
+    /** Crowd's CQL search: users whose username, display name or email starts with the query; groups by name. */
+    async search(query) {
+      // Quotes, backslashes and wildcards can't appear in names; dropping them keeps the CQL string intact and the search a prefix match.
+      const q = query.replace(/["\\*]/g, "").trim().slice(0, 100)
+      if (!q) return { users: [], groups: [] }
+      const restriction = (cql: string) => `restriction=${encodeURIComponent(cql)}`
+      const usersRes = await call("GET", `/search?entity-type=user&expand=user&max-results=10&${restriction(`name = "${q}*" or displayName = "${q}*" or email = "${q}*"`)}`)
+      if (!usersRes.ok) throw unexpected(usersRes, "user search")
+      const groupsRes = await call("GET", `/search?entity-type=group&max-results=10&${restriction(`name = "${q}*"`)}`)
+      if (!groupsRes.ok) throw unexpected(groupsRes, "group search")
+      const users = ((await usersRes.json()) as { users?: { name: string; "display-name"?: string; email?: string }[] }).users ?? []
+      const groups = ((await groupsRes.json()) as { groups?: { name: string }[] }).groups ?? []
+      return {
+        users: users.map((u) => ({ id: u.name, displayName: u["display-name"] || u.name, email: u.email || null })),
+        groups: groups.map((g) => g.name),
+      }
+    },
   }
 }

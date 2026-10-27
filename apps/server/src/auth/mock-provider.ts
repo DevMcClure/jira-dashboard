@@ -32,6 +32,14 @@ export function createMockAuthProvider(env: Pick<Env, "ROLE_GROUPS_ADMIN" | "ROL
       const persona = find(username)
       return persona ? persona.groups(env) : []
     },
+    async search(query) {
+      const q = query.trim().toLowerCase()
+      const groups = [...new Set([...env.ROLE_GROUPS_ADMIN, ...env.ROLE_GROUPS_AUTHOR])]
+      return {
+        users: PERSONAS.filter((p) => p.username.includes(q) || p.displayName.toLowerCase().includes(q)).map((p) => ({ id: p.username, displayName: p.displayName, email: p.email })),
+        groups: groups.filter((g) => g.toLowerCase().includes(q)),
+      }
+    },
     personas: () => PERSONAS.map(({ username, displayName, title }) => ({ username, displayName, title })),
   }
 }

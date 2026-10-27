@@ -2,6 +2,7 @@
  * MongoDB connection and indexes. Works with any MongoDB: the connection string,
  * database name and optional TLS CA file all come from env (env.ts).
  */
+import type { ReportConfig } from "@jira-dashboard/core/report-config"
 import type { Snapshot } from "@jira-dashboard/core/snapshot"
 import { GridFSBucket, MongoClient, type Db, type ObjectId } from "mongodb"
 import type { Env } from "./env"
@@ -26,6 +27,8 @@ export function collections(db: Db) {
     sessions: db.collection<SessionDoc>("sessions"),
     users: db.collection<UserDoc>("users"),
     snapshots: db.collection<SnapshotDoc>("daily_snapshots"),
+    reports: db.collection<ReportDoc>("reports"),
+    reportReads: db.collection<ReportReadDoc>("report_reads"),
   }
 }
 
@@ -34,7 +37,7 @@ export const datasetFiles = (db: Db) => new GridFSBucket(db, { bucketName: "data
 
 /** Idempotent: safe on every startup. */
 export async function ensureIndexes(db: Db) {
-  const { ingests, datasets, sessions, users, snapshots } = collections(db)
+  const { ingests, datasets, sessions, users, snapshots, reports, reportReads } = collections(db)
   await ingests.createIndex({ receivedAt: -1 }, { name: "receivedAt_desc" })
   // At most one current dataset at a time.
   await ingests.createIndex({ status: 1 }, { name: "one_current", unique: true, partialFilterExpression: { status: "current" } })
@@ -46,6 +49,12 @@ export async function ensureIndexes(db: Db) {
   await snapshots.createIndex({ teamId: 1, date: 1 }, { name: "team_date", unique: true })
   await snapshots.createIndex({ "sprint.id": 1, date: 1 }, { name: "sprint_date" })
   await snapshots.createIndex({ "pi.id": 1, date: 1 }, { name: "pi_date" })
+  // Created by me / shared with me (by user or group), and which frozen reports pin an ingest.
+  await reports.createIndex({ ownerId: 1 }, { name: "owner" })
+  await reports.createIndex({ "recipients.users.id": 1 }, { name: "recipient_users" })
+  await reports.createIndex({ "recipients.groups": 1 }, { name: "recipient_groups" })
+  await reports.createIndex({ "frozen.ingestId": 1 }, { name: "frozen_ingest", sparse: true })
+  await reportReads.createIndex({ reportId: 1, userId: 1 }, { name: "report_user", unique: true })
 }
 
 export type IngestSource = "seed" | "push" | "pull" | "upload"
@@ -101,3 +110,21 @@ export type UserDoc = {
 
 /** One team on one day (core's `snapshotSchema`), plus a hash of its content for idempotent reruns. */
 export type SnapshotDoc = Snapshot & { hash: string }
+
+/** A person a report is shared with; the name is kept from when it was shared, for people who haven't signed in yet. */
+export type Recipient = { id: string; displayName: string }
+
+/** A saved report (B5): the frontend's `ReportConfig`, an owner and who it's shared with. */
+export type ReportDoc = {
+  _id: string
+  ownerId: string
+  config: ReportConfig
+  recipients: { users: Recipient[]; groups: string[] }
+  /** Frozen reports: the ingest whose data they show (kept by retention while pinned). */
+  frozen?: { ingestId: string }
+  createdAt: Date
+  updatedAt: Date
+}
+
+/** When a person last opened a report (for "unread" in Shared with me). */
+export type ReportReadDoc = { reportId: string; userId: string; lastReadAt: Date }

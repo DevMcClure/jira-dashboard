@@ -91,6 +91,9 @@ export function AuthProvider({ children, client = defaultClient, enabled = DATA_
     setAttempt((n) => n + 1)
   }, [])
 
-  const value = useMemo(() => ({ state, signIn, signOut, personas: client.personas, retry }), [state, signIn, signOut, client, retry])
+  const value = useMemo(
+    () => ({ state, signIn, signOut, personas: client.personas, searchDirectory: client.searchDirectory, retry }),
+    [state, signIn, signOut, client, retry],
+  )
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

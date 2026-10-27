@@ -17,6 +17,9 @@ export type ProviderSession = { userId: string; token: string | null }
 
 export type Persona = { username: string; displayName: string; title: string }
 
+/** People and groups matching a search, for sharing reports. */
+export type DirectoryResults = { users: { id: string; displayName: string; email: string | null }[]; groups: string[] }
+
 export interface AuthProvider {
   readonly kind: "mock" | "crowd" | "oidc"
   /** Check credentials. Returns the user and the provider's own session token (if it has one). */
@@ -25,6 +28,8 @@ export interface AuthProvider {
   validate(session: ProviderSession): Promise<boolean>
   logout(session: ProviderSession): Promise<void>
   groupsFor(username: string): Promise<string[]>
+  /** People and groups whose name starts with (or contains, for mock) `query`; a handful of each. */
+  search(query: string): Promise<DirectoryResults>
   /** Mock only: the personas offered on the sign-in page. */
   personas?(): Persona[]
 }

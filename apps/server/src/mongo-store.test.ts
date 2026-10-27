@@ -8,6 +8,7 @@ import { createMongoAuthStore } from "./auth/auth-store"
 import { createMongoDatasetStore } from "./dataset-store"
 import { collections, connect, datasetFiles, ensureIndexes } from "./db"
 import { sha256 } from "./ingest/pipeline"
+import { createMongoReportStore } from "./reports/store"
 import { createSnapshotJob } from "./snapshots/job"
 import { createMongoSnapshotStore } from "./snapshots/store"
 import { SAMPLE_JSON, seedIfEmpty } from "./seed"
@@ -153,5 +154,48 @@ describe.skipIf(!uri)("MongoDB stores", () => {
     expect(list[0]).not.toHaveProperty("hash")
     expect(list[0]).not.toHaveProperty("_id")
     await expect(snapshots.insertOne({ ...(await snapshots.findOne({ teamId: "TEAM-PLAT", date: "2026-10-13" }, { projection: { _id: 0 } }))! })).rejects.toThrow(/duplicate key/)
+  })
+
+  it("stores reports, finds those shared by user or group, tracks reads, and pins frozen data", async () => {
+    const { db } = await open()
+    await ensureIndexes(db)
+    const { reports: reportsCol, reportReads } = collections(db)
+    expect((await reportsCol.indexes()).map((i) => i.name)).toEqual(expect.arrayContaining(["owner", "recipient_users", "recipient_groups", "frozen_ingest"]))
+    expect((await reportReads.indexes()).map((i) => i.name)).toContain("report_user")
+
+    const reports = createMongoReportStore(db)
+    const config = { title: "R" } as never
+    const at = new Date("2026-10-20T09:00:00Z")
+    const direct = await reports.create({ ownerId: "sam", config, recipients: { users: [{ id: "morgan", displayName: "Morgan" }], groups: [] } }, at)
+    const byGroup = await reports.create({ ownerId: "ada", config, recipients: { users: [], groups: ["authors"] }, frozen: { ingestId: "ing-pinned" } }, new Date(at.getTime() + 1000))
+    await reports.create({ ownerId: "ada", config, recipients: { users: [], groups: [] } }, at)
+
+    expect((await reports.listSharedWith("morgan", [])).map((r) => r._id)).toEqual([direct._id])
+    expect((await reports.listSharedWith("sam", ["authors"])).map((r) => r._id)).toEqual([byGroup._id])
+    expect((await reports.listSharedWith("ada", ["authors"])).map((r) => r._id)).toEqual([]) // not your own
+    expect((await reports.listOwned("ada")).map((r) => r._id)[0]).toBe(byGroup._id) // newest first
+    expect(await reports.pinnedIngestIds()).toEqual(["ing-pinned"])
+
+    await reports.markRead(direct._id, "morgan", at)
+    await reports.markRead(direct._id, "morgan", new Date(at.getTime() + 5000))
+    expect(await reportReads.countDocuments({ reportId: direct._id })).toBe(1)
+    expect((await reports.lastReads("morgan", [direct._id])).get(direct._id)).toEqual(new Date(at.getTime() + 5000))
+
+    const updated = await reports.update(byGroup._id, { frozen: null }, new Date(at.getTime() + 9000))
+    expect(updated?.frozen).toBeUndefined()
+    expect(await reports.pinnedIngestIds()).toEqual([])
+    await reports.delete(direct._id)
+    expect(await reportReads.countDocuments({ reportId: direct._id })).toBe(0)
+  })
+
+  it("never prunes the data of a pinned ingest", async () => {
+    const { db } = await open()
+    const store = createMongoDatasetStore(db)
+    const add = (n: number) => store.insertCurrent({ json: `${CONTRACT_JSON}${" ".repeat(n)}`, source: "push", generatedAt: null, counts: { teams: 1, people: 0, sprints: 0, issues: 3 }, sha256: String(n), bytes: 1 })
+    const pinned = await add(100)
+    for (let i = 1; i <= 4; i++) await add(100 + i)
+    await store.prune(2, [pinned.id])
+    expect((await store.byIngest(pinned.id))?.json).toBe(`${CONTRACT_JSON}${" ".repeat(100)}`)
+    expect(await collections(db).ingests.countDocuments({ datasetId: { $ne: null }, sha256: { $in: ["100", "101", "102", "103", "104"] } })).toBe(3) // newest 2 + pinned
   })
 })

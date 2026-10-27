@@ -1,14 +1,19 @@
 import { format } from "date-fns"
-import { BookmarkPlus, Compass, Link2, LogOut, Snowflake, TriangleAlert, Zap } from "lucide-react"
+import { BookmarkPlus, Compass, Link2, LogOut, Share2, Snowflake, TriangleAlert, Zap } from "lucide-react"
+import { useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { REPORT_RETURN_KEY } from "@/context/report-mode"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { useData } from "@/hooks/useData"
+import { DATA_MODE } from "@/lib/data/data-mode"
 import { useReportMode } from "@/hooks/useReportMode"
-import { pageForPath, pagePath, reportLink } from "@jira-dashboard/core/report-config"
+import { pageForPath, pagePath } from "@jira-dashboard/core/report-config"
 import { saveReport } from "@/lib/reports/store"
+import { shareableLink } from "./report-links"
+import { ShareDialog } from "./ShareDialog"
 
 const AS_OF = "d MMM yyyy, HH:mm"
 
@@ -18,8 +23,14 @@ export function ReportBanner() {
   const { dataset } = useData()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const isAuthor = useCurrentUser()?.roles.includes("author") ?? false
+  const [sharing, setSharing] = useState(false)
   if (!report) return null
-  const { config, id, basePath } = report
+  const { config, id, basePath, stored } = report
+  const server = DATA_MODE === "api"
+  // With the server only authors save reports; in the static build anyone can, in their browser.
+  const canSave = !server || isAuthor
+  const byline = stored?.owner?.displayName ?? config.author
   const frozen = config.kind === "frozen"
   const generatedAt = dataset.meta.generatedAt
   const mismatch = generatedAt.toISOString() !== config.dataStamp
@@ -28,8 +39,13 @@ export function ReportBanner() {
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(reportLink(config, window.location.origin, import.meta.env.BASE_URL))
-      toast.success("Report link copied", { description: "Anyone with the link sees this view. It works in any browser." })
+      await navigator.clipboard.writeText(shareableLink({ id, config }))
+      toast.success("Report link copied", {
+        description:
+          server && id
+            ? "People need access to open it: the owner can share it with them."
+            : "Anyone with the link sees this view. It works in any browser.",
+      })
     } catch {
       toast.error("Couldn't copy to the clipboard")
     }
@@ -40,8 +56,8 @@ export function ReportBanner() {
       const saved = await saveReport({ config })
       toast.success(`Saved “${config.title}” to My Reports`)
       navigate(`/reports/${saved.id}${inner === "/" ? "" : inner}`, { replace: true })
-    } catch {
-      toast.error("Couldn't save the report", { description: "This browser's storage is blocked or full." })
+    } catch (err) {
+      toast.error("Couldn't save the report", { description: server ? (err as Error).message : "This browser's storage is blocked or full." })
     }
   }
 
@@ -75,7 +91,7 @@ export function ReportBanner() {
             </Badge>
           </p>
           <p className="text-xs text-muted-foreground tabular-nums">
-            {config.author ? `By ${config.author} · ` : ""}
+            {byline ? `By ${byline} · ` : ""}
             {frozen && config.from && config.to
               ? `Pinned to ${format(new Date(config.from), "d MMM")} – ${format(new Date(config.to), "d MMM yyyy")} · `
               : ""}
@@ -87,7 +103,13 @@ export function ReportBanner() {
             <Link2 />
             Copy link
           </Button>
-          {id === null && (
+          {server && stored?.canEdit && (
+            <Button variant="outline" size="sm" onClick={() => setSharing(true)}>
+              <Share2 />
+              Share…
+            </Button>
+          )}
+          {id === null && canSave && (
             <Button variant="outline" size="sm" onClick={saveHere}>
               <BookmarkPlus />
               Save to My Reports
@@ -104,6 +126,7 @@ export function ReportBanner() {
         </div>
       </div>
       {config.note && <p className="text-sm whitespace-pre-wrap">{config.note}</p>}
+      <ShareDialog report={sharing ? stored : null} onOpenChange={setSharing} />
       {mismatch && (
         <p className="flex items-start gap-2 text-xs text-muted-foreground">
           <TriangleAlert className="mt-px size-3.5 shrink-0 text-status-qa" />

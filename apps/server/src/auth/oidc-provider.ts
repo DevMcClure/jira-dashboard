@@ -14,5 +14,5 @@ export function createOidcAuthProvider(): AuthProvider {
   const fail = async (): Promise<never> => {
     throw new NotImplementedProvider(TODO)
   }
-  return { kind: "oidc", login: fail, validate: fail, logout: fail, groupsFor: fail }
+  return { kind: "oidc", login: fail, validate: fail, logout: fail, groupsFor: fail, search: fail }
 }

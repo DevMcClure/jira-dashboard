@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { useData } from "@/hooks/useData"
+import { DATA_MODE } from "@/lib/data/data-mode"
 import { periodLabel } from "@jira-dashboard/core/period"
 import {
   configFromView,
@@ -23,6 +24,7 @@ import {
   type ReportKind,
   type ReportPageId,
 } from "@jira-dashboard/core/report-config"
+import { ReportStoreError } from "@/lib/reports/report-store"
 import { saveReport } from "@/lib/reports/store"
 import { openReport } from "./open-report"
 
@@ -106,12 +108,14 @@ function SaveReportForm({ view, defaultTitle, onDone }: { view: DashboardView; d
         }
       }
       toast.success(`Saved “${config.title}”`, {
-        description: "It's in My Reports in the sidebar.",
+        description: DATA_MODE === "api" ? "It's under Created by me in the sidebar. Use Share… to send it to people." : "It's in My Reports in the sidebar.",
         action: { label: "Open", onClick: () => openReport(navigate, saved.id, config.landingPage, pathname) },
       })
       onDone()
-    } catch {
-      toast.error("Couldn't save the report", { description: "Check the title and pages, or this browser's storage may be full." })
+    } catch (err) {
+      toast.error("Couldn't save the report", {
+        description: err instanceof ReportStoreError ? err.message : "Check the title and pages, or this browser's storage may be full.",
+      })
     } finally {
       setBusy(false)
     }

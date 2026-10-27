@@ -11,11 +11,14 @@ import type { AuthStore } from "./auth/auth-store"
 import { createTokenCipher } from "./auth/crypto"
 import type { AuthProvider } from "./auth/provider"
 import { authRoutes, requireRole, sessionGuard } from "./auth/routes"
+import { directoryRoutes } from "./directory"
 import { createAuthService } from "./auth/service"
 import type { DatasetStore } from "./dataset-store"
 import type { Env } from "./env"
 import { createIngestPipeline, type IngestPipeline } from "./ingest/pipeline"
 import { ingestRoutes } from "./ingest/routes"
+import { reportRoutes } from "./reports/routes"
+import type { ReportStore } from "./reports/store"
 import { createSnapshotJob, type SnapshotJob } from "./snapshots/job"
 import { snapshotRoutes } from "./snapshots/routes"
 import type { SnapshotStore } from "./snapshots/store"
@@ -34,12 +37,13 @@ type Options = {
   store: DatasetStore
   auth: { provider: AuthProvider; store: AuthStore; now?: () => Date }
   snapshots: SnapshotStore
+  reports: ReportStore
   version: string
   /** Turn request logging off in tests. */
   logger?: boolean
 }
 
-export async function buildApp({ env, store, auth, snapshots, version, logger = true }: Options) {
+export async function buildApp({ env, store, auth, snapshots, reports, version, logger = true }: Options) {
   const app = Fastify({ logger: logger ? { level: env.LOG_LEVEL } : false, trustProxy: env.TRUST_PROXY })
   const startedAt = Date.now()
   const service = createAuthService({
@@ -50,7 +54,8 @@ export async function buildApp({ env, store, auth, snapshots, version, logger = 
     now: auth.now,
   })
   const signedIn = sessionGuard(service)
-  const pipeline = createIngestPipeline({ store, log: app.log })
+  // Frozen reports pin their ingest's data, so retention keeps it.
+  const pipeline = createIngestPipeline({ store, log: app.log, pinned: () => reports.pinnedIngestIds() })
   app.decorate("ingest", pipeline)
   const snapshotJob = createSnapshotJob({ datasets: store, snapshots, log: app.log, now: auth.now })
   app.decorate("snapshotJob", snapshotJob)
@@ -66,7 +71,7 @@ export async function buildApp({ env, store, auth, snapshots, version, logger = 
   await app.register(rateLimit, { global: false })
 
   /** What this server can do; later phases switch more on. The web app reads it to show or hide features. */
-  const features = { auth: true, ingest: true, snapshots: true, sharedReports: false }
+  const features = { auth: true, ingest: true, snapshots: true, sharedReports: true }
 
   await app.register(
     async (api) => {
@@ -86,6 +91,16 @@ export async function buildApp({ env, store, auth, snapshots, version, logger = 
       await authRoutes(api, { service, provider: auth.provider, env })
       await ingestRoutes(api, { pipeline, env, adminOnly: [signedIn, requireRole("admin")] })
       await snapshotRoutes(api, { store: snapshots, job: snapshotJob, env, signedIn, adminOnly: [signedIn, requireRole("admin")], now: auth.now })
+      await directoryRoutes(api, { provider: auth.provider, signedIn })
+      await reportRoutes(api, {
+        store: reports,
+        datasets: store,
+        signedIn,
+        authorOnly: [signedIn, requireRole("author")],
+        groupsOf: async (id) => (await auth.store.getUser(id))?.groups ?? [],
+        displayNameOf: async (id) => (await auth.store.getUser(id))?.displayName ?? id,
+        now: auth.now,
+      })
 
       // Signed in only.
       api.get("/dataset", { preHandler: signedIn }, async (req, reply) => {

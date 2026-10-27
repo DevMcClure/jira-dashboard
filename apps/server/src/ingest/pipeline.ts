@@ -50,9 +50,11 @@ type Deps = {
   store: DatasetStore
   log: Pick<FastifyBaseLogger, "info" | "warn" | "error">
   keep?: number
+  /** Ingests whose data must outlive retention (frozen reports, B5). */
+  pinned?: () => Promise<string[]>
 }
 
-export function createIngestPipeline({ store, log, keep = KEEP_DATASETS }: Deps) {
+export function createIngestPipeline({ store, log, keep = KEEP_DATASETS, pinned = async () => [] }: Deps) {
   // One at a time, so two ingests can't race for "current".
   let queue: Promise<unknown> = Promise.resolve()
   const serial = <T>(task: () => Promise<T>): Promise<T> => {
@@ -83,7 +85,7 @@ export function createIngestPipeline({ store, log, keep = KEEP_DATASETS }: Deps)
         const ingest = await store.insertCurrent({ ...recorded, json: text, generatedAt: described.generatedAt, counts: described.counts })
         log.info({ ingestId: ingest.id, source, bytes: recorded.bytes, ...described.counts }, "ingest is now current")
         try {
-          await store.prune(keep)
+          await store.prune(keep, await pinned())
         } catch (err) {
           // The new data is live; old texts are tidied up after the next ingest instead.
           log.error({ err }, "couldn't remove old dataset texts")

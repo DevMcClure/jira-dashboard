@@ -20,6 +20,8 @@ const json = async (req: IncomingMessage) => {
 export async function startMockCrowd({ app, users }: Options) {
   const sessions = new Map<string, string>() // token → username
   const calls: string[] = []
+  /** The CQL restrictions /search received, newest last. */
+  const searches: string[] = []
   const expected = `Basic ${Buffer.from(`${app.name}:${app.password}`).toString("base64")}`
 
   const server = createServer(async (req, res) => {
@@ -59,6 +61,19 @@ export async function startMockCrowd({ app, users }: Options) {
       const user = users[url.searchParams.get("username") ?? ""]
       return user ? send(200, { groups: user.groups.map((name) => ({ name })) }) : send(404, { reason: "USER_NOT_FOUND" })
     }
+    if (req.method === "GET" && path === "/search") {
+      // Understands the restrictions crowd-provider sends: `field = "prefix*"` clauses joined by "or".
+      const restriction = url.searchParams.get("restriction") ?? ""
+      searches.push(restriction)
+      const prefix = (/"([^"]*)\*"/.exec(restriction)?.[1] ?? "").toLowerCase()
+      const starts = (v: string | undefined) => (v ?? "").toLowerCase().startsWith(prefix)
+      if (url.searchParams.get("entity-type") === "user") {
+        const found = Object.entries(users).filter(([name, u]) => starts(name) || starts(u.displayName) || starts(u.email))
+        return send(200, { users: found.map(([name, u]) => ({ name, "display-name": u.displayName, email: u.email })) })
+      }
+      const groups = [...new Set(Object.values(users).flatMap((u) => u.groups))].filter((g) => starts(g))
+      return send(200, { groups: groups.map((name) => ({ name })) })
+    }
     send(404, { reason: "NOT_FOUND" })
   })
 
@@ -69,6 +84,7 @@ export async function startMockCrowd({ app, users }: Options) {
     url: `http://127.0.0.1:${port}/crowd`,
     sessions,
     calls,
+    searches,
     close: () => new Promise<void>((resolve) => server.close(() => resolve())),
   }
 }

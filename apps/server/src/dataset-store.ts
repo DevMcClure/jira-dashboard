@@ -22,12 +22,17 @@ export interface DatasetStore {
   current(): Promise<CurrentDataset | null>
   /** The current ingest without its text (cheap; for polling). */
   meta(): Promise<Ingest | null>
+  /** Any ingest's data, while its text is still kept (frozen reports). */
+  byIngest(ingestId: string): Promise<CurrentDataset | null>
   /** Store a dataset and make it current (the previous one becomes superseded). */
   insertCurrent(dataset: NewDataset): Promise<Ingest>
   /** Keep a record of an ingest that failed validation. The current dataset is untouched. */
   recordRejected(rejected: RejectedIngest): Promise<Ingest>
-  /** Delete the texts of all but the newest `keep` stored datasets (their ingest records stay). Returns how many went. */
-  prune(keep: number): Promise<number>
+  /**
+   * Delete the texts of all but the newest `keep` stored datasets (their ingest
+   * records stay), never those of `pinned` ingests. Returns how many went.
+   */
+  prune(keep: number, pinned?: string[]): Promise<number>
   /** Throws if the database can't be reached. */
   ping(): Promise<void>
 }
@@ -54,14 +59,21 @@ export function createMongoDatasetStore(db: Db, { inlineLimitBytes = INLINE_LIMI
       upload.end(Buffer.from(json, "utf8"))
     })
 
+  const withText = async (ingest: IngestDoc | null): Promise<CurrentDataset | null> => {
+    if (!ingest?.datasetId) return null
+    const dataset = await datasets.findOne({ _id: ingest.datasetId })
+    if (!dataset) return null
+    const json = dataset.fileId ? await readText(dataset.fileId) : (dataset.json ?? "")
+    return { ingest: toIngest(ingest), json }
+  }
+
   return {
     async current() {
-      const ingest = await ingests.findOne({ status: "current" })
-      if (!ingest?.datasetId) return null
-      const dataset = await datasets.findOne({ _id: ingest.datasetId })
-      if (!dataset) return null
-      const json = dataset.fileId ? await readText(dataset.fileId) : (dataset.json ?? "")
-      return { ingest: toIngest(ingest), json }
+      return withText(await ingests.findOne({ status: "current" }))
+    },
+
+    async byIngest(ingestId) {
+      return withText(await ingests.findOne({ _id: ingestId }))
     },
 
     async meta() {
@@ -92,9 +104,9 @@ export function createMongoDatasetStore(db: Db, { inlineLimitBytes = INLINE_LIMI
       return toIngest(doc)
     },
 
-    async prune(keep) {
+    async prune(keep, pinned = []) {
       const old = await ingests
-        .find({ datasetId: { $ne: null }, status: { $ne: "current" } }, { projection: { datasetId: 1 } })
+        .find({ datasetId: { $ne: null }, status: { $ne: "current" }, _id: { $nin: pinned } }, { projection: { datasetId: 1 } })
         .sort({ receivedAt: -1 })
         .skip(Math.max(0, keep - 1)) // the current one counts towards `keep`
         .toArray()
@@ -127,6 +139,10 @@ export function createMemoryDatasetStore(opts: { failPing?: boolean } = {}): Dat
     async meta() {
       return ingests.find((i) => i.status === "current") ?? null
     },
+    async byIngest(ingestId) {
+      const ingest = ingests.find((i) => i.id === ingestId)
+      return ingest?.datasetId ? { ingest, json: texts.get(ingest.datasetId)! } : null
+    },
     async insertCurrent({ json, generatedAt, counts, ...recorded }) {
       for (const i of ingests) if (i.status === "current") i.status = "superseded"
       const ingest: Ingest = { ...recorded, id: randomUUID(), receivedAt: new Date(), generatedAt, counts, status: "current", datasetId: randomUUID() }
@@ -139,8 +155,11 @@ export function createMemoryDatasetStore(opts: { failPing?: boolean } = {}): Dat
       ingests.push(ingest)
       return ingest
     },
-    async prune(keep) {
-      const old = ingests.filter((i) => i.datasetId && i.status !== "current").reverse().slice(Math.max(0, keep - 1))
+    async prune(keep, pinned = []) {
+      const old = ingests
+        .filter((i) => i.datasetId && i.status !== "current" && !pinned.includes(i.id))
+        .reverse()
+        .slice(Math.max(0, keep - 1))
       for (const i of old) {
         texts.delete(i.datasetId!)
         i.datasetId = null

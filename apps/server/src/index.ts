@@ -14,6 +14,7 @@ import { connect, ensureIndexes } from "./db"
 import { EnvError, envWarnings, loadEnv, type Env } from "./env"
 import { createPuller, pullSourceLabel, schedulePull } from "./ingest/pull"
 import { scheduleSnapshots } from "./snapshots/schedule"
+import { createMongoReportStore } from "./reports/store"
 import { createMongoSnapshotStore } from "./snapshots/store"
 import { seedIfEmpty } from "./seed"
 
@@ -57,6 +58,7 @@ async function main() {
     store,
     auth: { provider: providerFor(env), store: createMongoAuthStore(mongo.db) },
     snapshots: createMongoSnapshotStore(mongo.db),
+    reports: createMongoReportStore(mongo.db),
     version: pkg.version,
   })
   for (const warning of envWarnings(env)) app.log.warn(warning)

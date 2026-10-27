@@ -1,5 +1,5 @@
 import { createContext } from "react"
-import type { CurrentUser, Persona, Role, ServerConfig } from "@/lib/auth/auth-client"
+import type { CurrentUser, DirectoryResults, Persona, Role, ServerConfig } from "@/lib/auth/auth-client"
 
 /**
  * - disabled: no sign-in (the static build, or a server with auth off)
@@ -20,6 +20,8 @@ export type AuthContextValue = {
   /** Throws if the server couldn't end the session (you stay signed in). */
   signOut: () => Promise<void>
   personas: () => Promise<Persona[]>
+  /** People and groups to share a report with. */
+  searchDirectory: (query: string) => Promise<DirectoryResults>
   retry: () => void
 }
 

@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Recharts' type definitions import "react", but pnpm doesn't link @types/react
+# next to them; TypeScript finds it by walking up to the root node_modules.
+# Before the workspace that's where it lived, so hoist it there again, or
+# chart props silently type as `any`.
+publicHoistPattern:
+  - "@types/react"
+  - "@types/react-dom"

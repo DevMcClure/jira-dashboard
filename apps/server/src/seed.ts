@@ -1,0 +1,17 @@
+/**
+ * Puts the mock data in an empty database, so a fresh install has something to
+ * show (SEED_MOCK=true). The sample is bundled into the server build, so this
+ * works from any working directory.
+ */
+import sample from "../../web/public/sample/jira-export.json" with { type: "json" }
+import type { DatasetStore, Ingest } from "./dataset-store"
+import { describeExport } from "./ingest/pipeline"
+
+/** The sample exactly as the mock generator writes it (2-space JSON plus a newline). */
+export const SAMPLE_JSON = `${JSON.stringify(sample, null, 2)}\n`
+
+/** Store `json` as the current dataset if there's none yet. Validates it first (throws on bad data). */
+export async function seedIfEmpty(store: DatasetStore, json: string = SAMPLE_JSON): Promise<Ingest | null> {
+  if (await store.meta()) return null
+  return store.insertCurrent({ json, source: "seed", ...describeExport(json) })
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@jira-dashboard/core",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Jira data contract, adapters and every dashboard metric, as pure TypeScript shared by the web app and the server.",
+  "exports": {
+    "./*": "./src/*.ts",
+    "./__fixtures__/*": "./src/__fixtures__/*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "date-fns": "^4.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

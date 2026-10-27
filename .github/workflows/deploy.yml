@@ -30,6 +30,15 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      # Template-only repo: real settings live in an uncommitted .env.
+      - name: No .env files committed
+        run: |
+          if git ls-files | grep -E '(^|/)\.env(\..+)?$' | grep -v -E '(^|/)\.env\.example$'; then
+            echo "::error::A .env file is committed. Remove it; only .env.example belongs in the repo."
+            exit 1
+          fi
+
       - run: pnpm lint
       - run: pnpm test
 
@@ -41,7 +50,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: apps/web/dist
 
   deploy:
     needs: build

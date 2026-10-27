@@ -31,7 +31,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Template-only repo: real settings live in an uncommitted .env (docs/plan-backend.md).
+      # Template-only repo: real settings live in an uncommitted .env.
       - name: No .env files committed
         run: |
           if git ls-files | grep -E '(^|/)\.env(\..+)?$' | grep -v -E '(^|/)\.env\.example$'; then

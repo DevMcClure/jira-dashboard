@@ -97,7 +97,7 @@ export default function HistoryPage() {
           <CardContent>
             <EmptyState className="h-40">
               No snapshots for this team between {range.from} and {range.to} yet. They're taken every morning; admins can take one now, or fill in past days
-              with the backfill command (see the README).
+              with <code className="font-mono">pnpm snapshot:backfill</code>.
             </EmptyState>
           </CardContent>
         </Card>

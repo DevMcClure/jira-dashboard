@@ -45,12 +45,7 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/settings.local.json
-# Instructional / planning docs (kept locally, not published)
+# Docs are kept locally, never published; the repo's only doc is the root README.
 CLAUDE.md
-docs/01-BUILD_PLAN.md
-docs/02-DATA_CONTRACT.md
-docs/03-UI_SPEC.md
-# Working docs kept on the developer's machine (restored after the 26 Oct docs clear-out)
-docs/PROJECT_CONTEXT.md
-docs/plan-frontend.md
-docs/decisions/
+docs/
+apps/server/README.md

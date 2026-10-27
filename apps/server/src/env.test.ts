@@ -48,6 +48,11 @@ describe("loadEnv", () => {
       CROWD_REVALIDATE_MINUTES: 15,
       ROLE_GROUPS_ADMIN: ["jira-dashboard-admins"],
       ROLE_GROUPS_AUTHOR: ["jira-dashboard-authors"],
+      INGEST_TOKEN: undefined,
+      INGEST_MAX_MB: 50,
+      TRAWLER_PULL_URL: undefined,
+      TRAWLER_PULL_PATH: undefined,
+      TRAWLER_PULL_CRON: undefined,
     })
   })
 
@@ -110,8 +115,35 @@ describe("loadEnv", () => {
     expect(problems({ ...valid, SESSION_TTL_HOURS: "0" })).toEqual(["SESSION_TTL_HOURS: must be more than 0"])
   })
 
-  it("warns about mock sign-in and a placeholder secret without refusing to start", () => {
+  it("warns about mock sign-in and placeholder secrets without refusing to start", () => {
     expect(envWarnings(loadEnv(valid))).toHaveLength(2)
     expect(envWarnings(loadEnv({ ...valid, SESSION_SECRET: "y".repeat(40) }))).toHaveLength(1)
+    expect(envWarnings(loadEnv({ ...valid, INGEST_TOKEN: "change-me" })).at(-1)).toMatch(/^INGEST_TOKEN is a placeholder/)
+  })
+
+  it("needs a strong INGEST_TOKEN with AUTH_PROVIDER=crowd, and none at all to turn push off", () => {
+    const crowd = { ...valid, AUTH_PROVIDER: "crowd", CROWD_URL: "https://crowd.example.com", CROWD_APP_NAME: "a", CROWD_APP_PASSWORD: "b", SESSION_SECRET: "x".repeat(40) }
+    expect(problems({ ...crowd, INGEST_TOKEN: "change-me" })).toEqual([
+      "INGEST_TOKEN: use a random string of at least 32 characters with AUTH_PROVIDER=crowd (or leave it unset to turn push off)",
+    ])
+    expect(loadEnv({ ...crowd, INGEST_TOKEN: "t".repeat(32) }).INGEST_TOKEN).toBe("t".repeat(32))
+    expect(loadEnv(crowd).INGEST_TOKEN).toBeUndefined()
+    expect(loadEnv({ ...valid, INGEST_MAX_MB: "200" }).INGEST_MAX_MB).toBe(200)
+  })
+
+  it("takes a pull source and a schedule together, or neither", () => {
+    const pull = loadEnv({ ...valid, TRAWLER_PULL_PATH: "/data/trawler/latest.json", TRAWLER_PULL_CRON: "*/15 * * * *" })
+    expect([pull.TRAWLER_PULL_PATH, pull.TRAWLER_PULL_CRON]).toEqual(["/data/trawler/latest.json", "*/15 * * * *"])
+    expect(problems({ ...valid, TRAWLER_PULL_URL: "https://files.example.com/x.json" })).toEqual([
+      "TRAWLER_PULL_CRON is required with TRAWLER_PULL_URL or TRAWLER_PULL_PATH",
+    ])
+    expect(problems({ ...valid, TRAWLER_PULL_CRON: "0 * * * *" })).toEqual(["TRAWLER_PULL_CRON needs TRAWLER_PULL_URL or TRAWLER_PULL_PATH"])
+    expect(problems({ ...valid, TRAWLER_PULL_URL: "ftp://x", TRAWLER_PULL_PATH: "/x", TRAWLER_PULL_CRON: "0 * * * *" })).toEqual([
+      "Set TRAWLER_PULL_URL or TRAWLER_PULL_PATH, not both",
+      "TRAWLER_PULL_URL: must be an http(s) URL",
+    ])
+    expect(problems({ ...valid, TRAWLER_PULL_PATH: "/x", TRAWLER_PULL_CRON: "every hour" })).toEqual([
+      expect.stringMatching(/^TRAWLER_PULL_CRON: /),
+    ])
   })
 })

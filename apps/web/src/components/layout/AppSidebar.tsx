@@ -1,4 +1,3 @@
-import { format } from "date-fns"
 import { Fragment } from "react"
 import { ChevronsUpDown, Layers, RotateCcw, Upload } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
@@ -26,7 +25,7 @@ import {
 import { MyReportsNav } from "@/components/reports/MyReportsNav"
 import { useAppPath, useInnerPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
-import { originLabel } from "@/lib/data/origin-label"
+import { dataLineLabel, originLabel } from "@/lib/data/origin-label"
 import { useReportMode } from "@/hooks/useReportMode"
 import { pageForPath } from "@jira-dashboard/core/report-config"
 import { NAV_GROUPS, navItemFor } from "./nav"
@@ -129,13 +128,12 @@ function AppSwitcher() {
 
 function DataSourceLine() {
   const { source, dataset } = useData()
-  const name = originLabel(source).short
   return (
     <p
       className="truncate px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden"
-      title={name}
+      title={originLabel(source).long}
     >
-      Data: {name} · generated {format(dataset.meta.generatedAt, "d MMM yyyy")}
+      {dataLineLabel(source, dataset.meta.generatedAt)}
     </p>
   )
 }

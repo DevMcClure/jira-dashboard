@@ -2,7 +2,7 @@
  * MongoDB connection and indexes. Works with any MongoDB: the connection string,
  * database name and optional TLS CA file all come from env (env.ts).
  */
-import { MongoClient, type Db } from "mongodb"
+import { GridFSBucket, MongoClient, type Db, type ObjectId } from "mongodb"
 import type { Env } from "./env"
 
 export type Collections = ReturnType<typeof collections>
@@ -27,6 +27,9 @@ export function collections(db: Db) {
   }
 }
 
+/** Dataset texts too large for one document (over ~15 MB) live here. */
+export const datasetFiles = (db: Db) => new GridFSBucket(db, { bucketName: "dataset_files" })
+
 /** Idempotent: safe on every startup. */
 export async function ensureIndexes(db: Db) {
   const { ingests, datasets, sessions, users } = collections(db)
@@ -42,7 +45,7 @@ export async function ensureIndexes(db: Db) {
 export type IngestSource = "seed" | "push" | "pull" | "upload"
 export type IngestStatus = "current" | "superseded" | "rejected"
 
-/** One Trawler run, upload or seed. */
+/** One Trawler run, published upload or seed; also kept when it was rejected. */
 export type IngestDoc = {
   _id: string
   receivedAt: Date
@@ -50,15 +53,24 @@ export type IngestDoc = {
   generatedAt: Date | null
   counts: { teams: number; people: number; sprints: number; issues: number }
   status: IngestStatus
+  /** Why it was rejected (the first 50 problems). */
   errors?: string[]
-  datasetId: string
+  /** Its text; null when rejected, or once retention has removed the text. */
+  datasetId: string | null
+  /** SHA-256 of the text, hex. */
+  sha256: string
+  bytes: number
+  /** Published uploads: who and which file. */
+  uploadedBy?: string
+  fileName?: string
 }
 
-/** The exact JSON text of one ingest (contract or raw Trawler shape). */
+/** The exact text of one ingest (contract JSON, raw Trawler JSON or an audit log): inline, or in GridFS when large. */
 export type DatasetDoc = {
   _id: string
   ingestId: string
-  json: string
+  json?: string
+  fileId?: ObjectId
 }
 
 /** One signed-in browser. The provider token is encrypted (auth/crypto.ts). */

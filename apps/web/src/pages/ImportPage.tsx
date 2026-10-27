@@ -3,27 +3,45 @@ import { ChevronDown, CircleCheck, Download, RotateCcw, TriangleAlert } from "lu
 import { useState } from "react"
 import { DropZone } from "@/components/import/DropZone"
 import { EXAMPLE_EXPORT, REQUIRED_FIELDS } from "@/components/import/example-export"
+import { PublishCard } from "@/components/import/PublishCard"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { useData } from "@/hooks/useData"
 import { originLabel } from "@/lib/data/origin-label"
 
-type Outcome = { kind: "ok"; fileName: string } | { kind: "error"; fileName: string; problems: string[] }
+type Outcome =
+  | { kind: "ok"; fileName: string; published: boolean }
+  | { kind: "error"; fileName: string; problems: string[]; publishing: boolean }
 
 export default function ImportPage() {
-  const { dataset, source, dataMode, rawJson, loadFromFile, resetToSample } = useData()
+  const { dataset, source, dataMode, rawJson, loadFromFile, resetToSample, publishFile } = useData()
+  const isAdmin = useCurrentUser()?.roles.includes("admin") ?? false
   const [busy, setBusy] = useState(false)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
+  /** api mode: the file being previewed, which an admin can publish. */
+  const [previewFile, setPreviewFile] = useState<File | null>(null)
 
   const onFile = async (file: File) => {
     setBusy(true)
     const result = await loadFromFile(file)
     setBusy(false)
-    setOutcome(result.ok ? { kind: "ok", fileName: file.name } : { kind: "error", fileName: file.name, problems: result.problems })
+    if (result.ok) setPreviewFile(file)
+    setOutcome(result.ok ? { kind: "ok", fileName: file.name, published: false } : { kind: "error", fileName: file.name, problems: result.problems, publishing: false })
   }
+
+  const publish = async (file: File) => {
+    if (!publishFile) return
+    setBusy(true)
+    const result = await publishFile(file)
+    setBusy(false)
+    if (result.ok) setPreviewFile(null)
+    setOutcome(result.ok ? { kind: "ok", fileName: file.name, published: true } : { kind: "error", fileName: file.name, problems: result.problems, publishing: true })
+  }
+  const previewing = source.kind === "upload" && previewFile !== null && publishFile !== null
 
   const download = () => {
     const blob = new Blob([rawJson], { type: "application/json" })
@@ -51,7 +69,9 @@ export default function ImportPage() {
         title="Import"
         description={
           dataMode === "api"
-            ? "Preview a Jira Trawler export in this browser. The server's data isn't changed."
+            ? isAdmin
+              ? "Preview a Jira Trawler export in this browser, then publish it to the server if it looks right."
+              : "Preview a Jira Trawler export in this browser. The server's data isn't changed."
             : "Load a Jira Trawler JSON export to replace the sample data."
         }
         actions={
@@ -68,17 +88,24 @@ export default function ImportPage() {
         }
       />
 
-      <DropZone onFile={onFile} busy={busy} />
+      <DropZone onFile={onFile} busy={busy} prompt={dataMode === "api" ? "Preview locally: drop a Jira Trawler export" : undefined} />
+
+      {previewing &&
+        (isAdmin ? (
+          <PublishCard fileName={previewFile.name} dataset={dataset} busy={busy} onPublish={() => publish(previewFile)} />
+        ) : (
+          <p className="text-sm text-muted-foreground">Only admins can publish a file to the server; this preview stays in your browser.</p>
+        ))}
 
       {outcome?.kind === "error" && (
         <Card className="border-destructive/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TriangleAlert className="size-4 text-destructive" />
-              Couldn't load {outcome.fileName}
+              Couldn't {outcome.publishing ? "publish" : "load"} {outcome.fileName}
             </CardTitle>
             <CardDescription>
-              The previous data is still loaded. Fix {outcome.problems.length === 1 ? "this problem" : `these ${outcome.problems.length} problems`} and try again.
+              {outcome.publishing ? "The server's data is unchanged." : "The previous data is still loaded."} Fix {outcome.problems.length === 1 ? "this problem" : `these ${outcome.problems.length} problems`} and try again.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -103,7 +130,7 @@ export default function ImportPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {outcome?.kind === "ok" && <CircleCheck className="size-4 text-status-done" />}
-            {outcome?.kind === "ok" ? `Loaded ${outcome.fileName}` : "Current data"}
+            {outcome?.kind === "ok" ? `${outcome.published ? "Published" : "Loaded"} ${outcome.fileName}` : "Current data"}
           </CardTitle>
           <CardDescription>What the dashboard is showing right now.</CardDescription>
         </CardHeader>

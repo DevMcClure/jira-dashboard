@@ -26,6 +26,10 @@ export type DataContextValue = {
   rawJson: string
   loadFromFile: (file: File) => Promise<LoadResult>
   resetToSample: () => void
+  /** api mode: load the server's newest data, keeping filters, scope and period where they still apply. */
+  refresh: () => Promise<void>
+  /** api mode: make a file the server's current data (admins only; the server checks). Null in the static build. */
+  publishFile: ((file: File) => Promise<LoadResult>) | null
   filters: Filters
   setFilters: (next: Filters) => void
   /** Sprint shown in the Overview burndown; null = pick automatically. */

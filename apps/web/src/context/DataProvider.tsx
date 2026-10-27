@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import { AppLoading } from "@/components/common/AppLoading"
+import { LIVE_UPDATE_TOAST, useLiveUpdates } from "@/hooks/useLiveUpdates"
 import { createApiDataSource } from "@/lib/data/api-data-source"
 import { API_BASE_URL, DATA_MODE } from "@/lib/data/data-mode"
 import type { DataSource, LoadedData } from "@/lib/data/data-source"
@@ -9,6 +10,7 @@ import { JiraExportError } from "@jira-dashboard/core/adapter"
 import type { DayRange, Period } from "@jira-dashboard/core/period"
 import { SPRINT_SCOPE, type Scope } from "@jira-dashboard/core/scope"
 import { DataContext, EMPTY_FILTERS, type Filters, type LoadResult } from "./data-context"
+import { keepFilters, keepPeriod, keepScope, keepSprintId } from "./reconcile-view"
 
 /**
  * The build's data source: the server in api mode, otherwise the sample served
@@ -36,7 +38,13 @@ type Props = {
 }
 
 export function DataProvider({ children, dataSource = defaultSource }: Props) {
-  const [data, setData] = useState<LoadedData | null>(null)
+  const [data, setDataState] = useState<LoadedData | null>(null)
+  /** The server ingest last loaded (api mode), kept while a local file is previewed. */
+  const [serverIngestId, setServerIngestId] = useState<string | null>(null)
+  const setData = useCallback((loaded: LoadedData) => {
+    setDataState(loaded)
+    if (loaded.origin.kind === "server") setServerIngestId(loaded.origin.ingestId)
+  }, [])
   /** Set when the first load failed and there's nothing to show yet. */
   const [bootError, setBootError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
@@ -64,12 +72,20 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
     return () => {
       cancelled = true
     }
-  }, [dataSource])
+  }, [dataSource, setData])
 
   const retryBoot = useCallback(() => {
     setBootError(null)
     dataSource.load().then(setData, (err) => setBootError(summarise(problemsFrom(err))))
-  }, [dataSource])
+  }, [dataSource, setData])
+
+  /** New data from the same source: keep what the reader picked wherever it still applies. */
+  const keepView = useCallback((dataset: LoadedData["dataset"]) => {
+    setFilters((f) => keepFilters(f, dataset))
+    setScope((s) => keepScope(s, dataset))
+    setPeriod((p) => keepPeriod(p, dataset))
+    setBurndownSprintId((id) => keepSprintId(id, dataset))
+  }, [])
 
   const loadFromFile = useCallback(
     async (file: File): Promise<LoadResult> => {
@@ -92,7 +108,7 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
         return { ok: false, problems }
       }
     },
-    [dataSource, resetView],
+    [dataSource, resetView, setData],
   )
 
   const resetToSample = useCallback(() => {
@@ -107,7 +123,48 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
           description: summarise(problemsFrom(err)),
         }),
     )
-  }, [dataSource, resetView])
+  }, [dataSource, resetView, setData])
+
+  const refresh = useCallback(async () => {
+    toast.dismiss(LIVE_UPDATE_TOAST)
+    try {
+      const loaded = await dataSource.reset()
+      setData(loaded)
+      keepView(loaded.dataset)
+      toast.success("Showing the newest data")
+    } catch (err) {
+      toast.error("Couldn't load the new data", { description: summarise(problemsFrom(err)) })
+    }
+  }, [dataSource, setData, keepView])
+
+  // Stable per source, so the poll and the context value don't change on every render.
+  const publish = useMemo(() => dataSource.publishFile?.bind(dataSource), [dataSource])
+  const checkLatest = useMemo(() => dataSource.latestVersion?.bind(dataSource), [dataSource])
+  const publishFile = useCallback(
+    async (file: File): Promise<LoadResult> => {
+      if (!publish) return { ok: false, problems: ["This build can't publish to a server."] }
+      try {
+        const loaded = await publish(file)
+        setData(loaded)
+        keepView(loaded.dataset)
+        toast.dismiss(LIVE_UPDATE_TOAST)
+        toast.success(`Published ${file.name}`, { description: "It's now the server's data for everyone." })
+        return { ok: true, dataset: loaded.dataset }
+      } catch (err) {
+        const problems = problemsFrom(err)
+        toast.error(`Couldn't publish ${file.name}`, { description: summarise(problems) })
+        return { ok: false, problems }
+      }
+    },
+    [publish, setData, keepView],
+  )
+
+  useLiveUpdates({
+    check: checkLatest,
+    knownId: serverIngestId,
+    previewing: data?.origin.kind === "upload",
+    onRefresh: refresh,
+  })
 
   const value = useMemo(
     () =>
@@ -118,6 +175,8 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
         rawJson: data.rawJson,
         loadFromFile,
         resetToSample,
+        refresh,
+        publishFile: publish ? publishFile : null,
         filters,
         setFilters,
         burndownSprintId,
@@ -130,7 +189,7 @@ export function DataProvider({ children, dataSource = defaultSource }: Props) {
         setScope,
         fixedRange: null,
       },
-    [data, loadFromFile, resetToSample, filters, burndownSprintId, period, customDates, scope],
+    [data, loadFromFile, resetToSample, refresh, publish, publishFile, filters, burndownSprintId, period, customDates, scope],
   )
 
   if (!value) {

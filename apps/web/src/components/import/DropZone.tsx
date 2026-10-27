@@ -3,7 +3,12 @@ import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-type Props = { onFile: (file: File) => void; busy?: boolean }
+type Props = {
+  onFile: (file: File) => void
+  busy?: boolean
+  /** The first words of the prompt; "… here or browse" follows. */
+  prompt?: string
+}
 
 const hasFiles = (e: DragEvent) => e.dataTransfer?.types.includes("Files") ?? false
 
@@ -12,7 +17,7 @@ const hasFiles = (e: DragEvent) => e.dataTransfer?.types.includes("Files") ?? fa
  * While mounted, the whole window accepts the drop — otherwise a file released
  * just outside the box makes the browser open it in the tab instead.
  */
-export function DropZone({ onFile, busy }: Props) {
+export function DropZone({ onFile, busy, prompt = "Drop a Jira Trawler JSON export" }: Props) {
   const input = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const onFileRef = useRef(onFile)
@@ -78,7 +83,7 @@ export function DropZone({ onFile, busy }: Props) {
       </div>
       <div className="space-y-1">
         <p className="font-medium">
-          Drop a Jira Trawler JSON export here or{" "}
+          {prompt} here or{" "}
           <button
             type="button"
             className="text-primary underline underline-offset-4 hover:no-underline"

@@ -46,6 +46,8 @@ For trying the server template on your machine:
 2. `cp .env.example .env`; the placeholders work for local testing as they are.
 3. `pnpm dev:api` starts the API (on `PORT`, default 3000, with `SEED_MOCK=true` loading the mock data into an empty database) and the web app in `api` mode at http://localhost:5173. The dev server forwards `/api` to the API.
 4. Sign in as one of the demo personas (`AUTH_PROVIDER=mock`): Sam Rivers (Scrum Master, an author), Morgan Lee (Manager, a viewer) or Ada Park (Admin).
+5. Push an export like the Trawler would, and the open dashboard offers a Refresh within a minute:
+   `curl -X POST localhost:3000/api/ingest -H "Authorization: Bearer change-me" --data-binary @apps/web/public/sample/jira-export.json`
 
 Check it with `curl http://localhost:3000/api/health`. The API's routes so far:
 - `GET /api/health`: the server and database status (public)
@@ -53,6 +55,9 @@ Check it with `curl http://localhost:3000/api/health`. The API's routes so far:
 - `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`: sign-in (login is limited to 10 attempts a minute per client)
 - `GET /api/auth/personas`: the demo personas, with `AUTH_PROVIDER=mock` only
 - `GET /api/dataset`: the current dataset, with an `ETag` per ingest (signed in only)
+- `GET /api/dataset/meta`: which ingest is current, without the data (signed in only; the web app polls it every minute)
+- `POST /api/ingest`: the Trawler pushes an export, with `Authorization: Bearer <INGEST_TOKEN>` (see `docs/trawler-integration.md`)
+- `POST /api/ingest/upload`: an admin publishes a file from the Import page
 
 Static mode has no sign-in: the GitHub Pages demo is unchanged.
 
@@ -77,6 +82,9 @@ Everything you set lives in a `.env` at the repo root (git-ignored), or in the r
 | `CROWD_APP_NAME`, `CROWD_APP_PASSWORD` | the application you register for the dashboard in Crowd |
 | `CROWD_REVALIDATE_MINUTES` | how often a session is re-checked with Crowd |
 | `ROLE_GROUPS_ADMIN`, `ROLE_GROUPS_AUTHOR` | your Crowd groups for admins and report authors, comma-separated |
+| `INGEST_TOKEN` | a random string of 32+ characters that the Trawler sends; empty turns push off |
+| `INGEST_MAX_MB` | the largest export accepted |
+| `TRAWLER_PULL_URL` or `TRAWLER_PULL_PATH`, `TRAWLER_PULL_CRON` | only if the dashboard pulls instead of the Trawler pushing |
 | `VITE_DATA_MODE`, `VITE_API_BASE_URL` | `api`, and where the web app reaches the server (build-time) |
 
 Checklist:
@@ -85,6 +93,7 @@ Checklist:
 - [ ] Build the web app with `VITE_DATA_MODE=api` and your `VITE_API_BASE_URL` (`pnpm build`)
 - [ ] Build the server (`pnpm build:server`) and start it on your host (`pnpm start:server`, or `node --env-file=.env apps/server/dist/index.js`). It's a plain Node 22 process; deployment is up to you.
 - [ ] Check `GET /api/health`, then sign in with a Crowd account
+- [ ] Point the Trawler at `/api/ingest` with your `INGEST_TOKEN` (`docs/trawler-integration.md` has a ten-line Python snippet), or set up pull
 
 ### Sign-in with Crowd
 
@@ -95,7 +104,11 @@ Checklist:
 
 People sign in with their Crowd username and password. The server checks them with Crowd, keeps the Crowd token encrypted in its own session (MongoDB, expiring after `SESSION_TTL_HOURS`), and gives the browser only a signed, httpOnly session cookie. Every `CROWD_REVALIDATE_MINUTES` it re-checks the session with Crowd and refreshes the user's groups. If Crowd is down, sign-in answers 503 and existing sessions carry on until their next check.
 
-The live Trawler feed, snapshots and shared reports arrive in later phases of `docs/plan-backend.md`, each adding its own variables here.
+### The live Trawler feed
+
+The Trawler pushes each run to `POST /api/ingest`, or the dashboard pulls it on a schedule; `docs/trawler-integration.md` covers both. Every export is checked by the same code as the Import page. An invalid one is rejected and recorded, and the current data stays. The server keeps the newest 10 datasets (larger ones in GridFS) and a record of every ingest. Open dashboards check for new data every minute and offer a Refresh that keeps your filters. On the Import page, admins can publish a previewed file to the server.
+
+Snapshots and shared reports arrive in later phases of `docs/plan-backend.md`, each adding its own variables here.
 
 ## Deploy to GitHub Pages
 
@@ -142,6 +155,7 @@ The **Export** page builds a Markdown report of the dashboard. Pick the scope (c
 ## Project docs
 
 - `docs/plan-backend.md`: the current iteration plan (API, Crowd sign-in, live Trawler feed, MongoDB snapshots, server-side reports).
+- `docs/trawler-integration.md`: how the Trawler sends its runs to the dashboard.
 - Working notes (project context, earlier plans and decision records) are kept locally and aren't published.
 
 ## Built with

@@ -3,6 +3,7 @@
  * the environment (a root .env in development); none are hard-coded. See
  * .env.example and docs/plan-backend.md → "Configuration template".
  */
+import { Cron } from "croner"
 import { z } from "zod"
 
 const bool = z
@@ -77,6 +78,14 @@ const envSchema = z.object({
   CROWD_REVALIDATE_MINUTES: positiveNumber("15"),
   ROLE_GROUPS_ADMIN: list("jira-dashboard-admins"),
   ROLE_GROUPS_AUTHOR: list("jira-dashboard-authors"),
+
+  // --- Live Trawler feed (B3)
+  /** The Trawler's bearer token for POST /api/ingest; unset turns push off. */
+  INGEST_TOKEN: z.string().trim().optional(),
+  INGEST_MAX_MB: positiveNumber("50"),
+  TRAWLER_PULL_URL: z.string().trim().optional(),
+  TRAWLER_PULL_PATH: z.string().trim().optional(),
+  TRAWLER_PULL_CRON: z.string().trim().optional(),
 })
 
 export type Env = z.output<typeof envSchema>
@@ -94,8 +103,31 @@ export class EnvError extends Error {
   }
 }
 
-/** Settings that only matter for one provider (checked on the raw values, so they're listed with everything else). */
+const weakSecret = (value: string) => value === PLACEHOLDER_SECRET || value.length < MIN_SECRET_LENGTH
+
+/** Settings that depend on each other (checked on the raw values, so they're listed with everything else). */
 function providerProblems(raw: Record<string, string>): string[] {
+  return [...crowdProblems(raw), ...pullProblems(raw)]
+}
+
+function pullProblems(raw: Record<string, string>): string[] {
+  const { TRAWLER_PULL_URL: url, TRAWLER_PULL_PATH: path, TRAWLER_PULL_CRON: cron } = raw
+  const problems: string[] = []
+  if (url && path) problems.push("Set TRAWLER_PULL_URL or TRAWLER_PULL_PATH, not both")
+  if ((url || path) && !cron) problems.push("TRAWLER_PULL_CRON is required with TRAWLER_PULL_URL or TRAWLER_PULL_PATH")
+  if (cron && !url && !path) problems.push("TRAWLER_PULL_CRON needs TRAWLER_PULL_URL or TRAWLER_PULL_PATH")
+  if (url && !/^https?:\/\/\S+$/.test(url)) problems.push("TRAWLER_PULL_URL: must be an http(s) URL")
+  if (cron) {
+    try {
+      new Cron(cron, { paused: true }).stop()
+    } catch (err) {
+      problems.push(`TRAWLER_PULL_CRON: ${(err as Error).message}`)
+    }
+  }
+  return problems
+}
+
+function crowdProblems(raw: Record<string, string>): string[] {
   if (raw.AUTH_PROVIDER !== "crowd") return []
   const problems: string[] = []
   if (!raw.CROWD_URL) problems.push("CROWD_URL is required when AUTH_PROVIDER=crowd")
@@ -103,8 +135,11 @@ function providerProblems(raw: Record<string, string>): string[] {
   if (!raw.CROWD_APP_NAME) problems.push("CROWD_APP_NAME is required when AUTH_PROVIDER=crowd")
   if (!raw.CROWD_APP_PASSWORD) problems.push("CROWD_APP_PASSWORD is required when AUTH_PROVIDER=crowd")
   const secret = raw.SESSION_SECRET ?? ""
-  if (secret && (secret === PLACEHOLDER_SECRET || secret.length < MIN_SECRET_LENGTH)) {
+  if (secret && weakSecret(secret)) {
     problems.push(`SESSION_SECRET: use a random string of at least ${MIN_SECRET_LENGTH} characters with AUTH_PROVIDER=crowd`)
+  }
+  if (raw.INGEST_TOKEN && weakSecret(raw.INGEST_TOKEN)) {
+    problems.push(`INGEST_TOKEN: use a random string of at least ${MIN_SECRET_LENGTH} characters with AUTH_PROVIDER=crowd (or leave it unset to turn push off)`)
   }
   return problems
 }
@@ -131,8 +166,11 @@ export function envWarnings(env: Env): string[] {
   if (env.AUTH_PROVIDER === "mock") {
     warnings.push("AUTH_PROVIDER=mock: anyone can sign in as a demo persona. Use crowd for real users.")
   }
-  if (env.SESSION_SECRET === PLACEHOLDER_SECRET || env.SESSION_SECRET.length < MIN_SECRET_LENGTH) {
+  if (weakSecret(env.SESSION_SECRET)) {
     warnings.push(`SESSION_SECRET is a placeholder or shorter than ${MIN_SECRET_LENGTH} characters; set a long random value before real use.`)
+  }
+  if (env.INGEST_TOKEN && weakSecret(env.INGEST_TOKEN)) {
+    warnings.push(`INGEST_TOKEN is a placeholder or shorter than ${MIN_SECRET_LENGTH} characters; anyone who guesses it can replace the data.`)
   }
   return warnings
 }

@@ -6,8 +6,10 @@ import { randomUUID } from "node:crypto"
 import { afterAll, describe, expect, it } from "vitest"
 import { createMongoAuthStore } from "./auth/auth-store"
 import { createMongoDatasetStore } from "./dataset-store"
-import { collections, connect, ensureIndexes } from "./db"
+import { collections, connect, datasetFiles, ensureIndexes } from "./db"
+import { sha256 } from "./ingest/pipeline"
 import { SAMPLE_JSON, seedIfEmpty } from "./seed"
+import { CONTRACT_JSON } from "./testkit"
 
 const uri = process.env.MONGO_TEST_URI
 
@@ -43,7 +45,7 @@ describe.skipIf(!uri)("MongoDB stores", () => {
     expect(await seedIfEmpty(store)).toBeNull()
     expect((await store.current())?.json).toBe(SAMPLE_JSON)
 
-    const next = await store.insertCurrent({ json: "{}", source: "upload", generatedAt: null, counts: { teams: 0, people: 0, sprints: 0, issues: 0 } })
+    const next = await store.insertCurrent({ json: "{}", source: "upload", generatedAt: null, counts: { teams: 0, people: 0, sprints: 0, issues: 0 }, sha256: sha256("{}"), bytes: 2 })
     expect((await store.current())?.ingest.id).toBe(next.id)
     const statuses = await collections(db).ingests.find({}, { projection: { status: 1 } }).toArray()
     expect(statuses.map((s) => s.status).sort()).toEqual(["current", "superseded"])
@@ -53,7 +55,7 @@ describe.skipIf(!uri)("MongoDB stores", () => {
     const { db } = await open()
     const { ingests } = collections(db)
     await expect(
-      ingests.insertOne({ _id: randomUUID(), receivedAt: new Date(), source: "push", generatedAt: null, counts: { teams: 0, people: 0, sprints: 0, issues: 0 }, status: "current", datasetId: "x" }),
+      ingests.insertOne({ _id: randomUUID(), receivedAt: new Date(), source: "push", generatedAt: null, counts: { teams: 0, people: 0, sprints: 0, issues: 0 }, status: "current", datasetId: "x", sha256: "", bytes: 0 }),
     ).rejects.toThrow(/duplicate key/)
   })
 
@@ -80,5 +82,43 @@ describe.skipIf(!uri)("MongoDB stores", () => {
     expect(await store.getSession("s1")).toMatchObject({ roles: ["author", "viewer"], lastValidatedAt: later, crowdToken: "v1.sealed" })
     await store.deleteSession("s1")
     expect(await store.getSession("s1")).toBeNull()
+  })
+
+  it("keeps large texts in GridFS and returns them byte for byte", async () => {
+    const { db } = await open()
+    const store = createMongoDatasetStore(db, { inlineLimitBytes: 1000 })
+    const text = `${CONTRACT_JSON}\n${"é".repeat(600)}` // over the limit, with multi-byte characters
+    const ingest = await store.insertCurrent({ json: text, source: "push", generatedAt: null, counts: { teams: 1, people: 0, sprints: 0, issues: 3 }, sha256: sha256(text), bytes: Buffer.byteLength(text) })
+    const doc = await collections(db).datasets.findOne({ _id: ingest.datasetId! })
+    expect(doc?.json).toBeUndefined()
+    expect(doc?.fileId).toBeDefined()
+    expect((await store.current())?.json).toBe(text)
+    expect((await store.meta())?.id).toBe(ingest.id)
+  })
+
+  it("records rejected ingests without touching the current one", async () => {
+    const { db } = await open()
+    const store = createMongoDatasetStore(db)
+    const before = (await store.meta())!.id
+    const rejected = await store.recordRejected({ source: "push", sha256: "abc", bytes: 3, errors: ["issues: Required"] })
+    expect(await collections(db).ingests.findOne({ _id: rejected.id })).toMatchObject({ status: "rejected", datasetId: null, errors: ["issues: Required"] })
+    expect((await store.meta())!.id).toBe(before)
+  })
+
+  it("prunes old texts, GridFS files included, and keeps every ingest record", async () => {
+    const { db } = await open()
+    const store = createMongoDatasetStore(db, { inlineLimitBytes: 1000 })
+    for (let i = 0; i < 3; i++) {
+      const text = `${CONTRACT_JSON}${" ".repeat(1000 + i)}`
+      await store.insertCurrent({ json: text, source: "push", generatedAt: null, counts: { teams: 1, people: 0, sprints: 0, issues: 3 }, sha256: sha256(text), bytes: text.length })
+    }
+    const { ingests, datasets } = collections(db)
+    const records = await ingests.countDocuments()
+    await store.prune(2)
+    expect(await datasets.countDocuments()).toBe(2)
+    expect(await datasetFiles(db).find().toArray()).toHaveLength(2)
+    expect(await ingests.countDocuments()).toBe(records)
+    expect(await ingests.countDocuments({ datasetId: { $ne: null } })).toBe(2)
+    expect((await store.current())?.json).toMatch(/^\{/)
   })
 })

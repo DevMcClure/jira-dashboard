@@ -5,7 +5,7 @@
 // Type-only: brings in the request.cookies / reply.setCookie and route rateLimit typings.
 import type {} from "@fastify/cookie"
 import type {} from "@fastify/rate-limit"
-import type { FastifyInstance, FastifyReply, FastifyRequest, preHandlerHookHandler } from "fastify"
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify"
 import { z } from "zod"
 import type { Env } from "../env"
 import { InvalidCredentials, NotImplementedProvider, ProviderUnavailable, type AuthProvider } from "./provider"
@@ -39,8 +39,11 @@ function sendAuthError(err: unknown, reply: FastifyReply, request: FastifyReques
   throw err
 }
 
+/** A route check; works as an onRequest or preHandler hook. */
+export type Guard = (request: FastifyRequest, reply: FastifyReply) => Promise<unknown>
+
 /** Reads the session cookie and attaches `request.auth`; 401 without a live session. */
-export function sessionGuard(service: AuthService): preHandlerHookHandler {
+export function sessionGuard(service: AuthService): Guard {
   return async (request, reply) => {
     const raw = request.cookies[SESSION_COOKIE]
     const unsigned = raw ? request.unsignCookie(raw) : null
@@ -55,7 +58,7 @@ export function sessionGuard(service: AuthService): preHandlerHookHandler {
 }
 
 /** For routes that need a capability, after sessionGuard. */
-export function requireRole(role: Role): preHandlerHookHandler {
+export function requireRole(role: Role): Guard {
   return async (request, reply) => {
     if (!request.auth?.roles.includes(role)) return reply.code(403).send({ error: `This needs the ${role} role.` })
   }

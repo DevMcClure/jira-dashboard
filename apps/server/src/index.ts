@@ -12,6 +12,7 @@ import type { AuthProvider } from "./auth/provider"
 import { createMongoDatasetStore } from "./dataset-store"
 import { connect, ensureIndexes } from "./db"
 import { EnvError, envWarnings, loadEnv, type Env } from "./env"
+import { createPuller, pullSourceLabel, schedulePull } from "./ingest/pull"
 import { seedIfEmpty } from "./seed"
 
 function providerFor(env: Env): AuthProvider {
@@ -60,8 +61,12 @@ async function main() {
     app.log.info(seeded ? `Seeded the mock dataset (ingest ${seeded.id})` : "Data already present; not seeding")
   }
 
+  app.log.info(env.INGEST_TOKEN ? "Push ingest: on (POST /api/ingest)" : "Push ingest: off (INGEST_TOKEN not set)")
+
+  let pullJob: ReturnType<typeof schedulePull> | null = null
   const shutdown = async (signal: string) => {
     app.log.info(`${signal} received, shutting down`)
+    pullJob?.stop()
     await app.close()
     await mongo.client.close()
     process.exit(0)
@@ -70,6 +75,12 @@ async function main() {
   process.once("SIGTERM", () => void shutdown("SIGTERM"))
 
   await app.listen({ host: env.HOST, port: env.PORT })
+
+  // Optional pull, once listening (env.ts has checked the settings belong together).
+  if (env.TRAWLER_PULL_CRON) {
+    pullJob = schedulePull(env.TRAWLER_PULL_CRON, createPuller({ pipeline: app.ingest, env, log: app.log }).run)
+    app.log.info(`Pull: ${pullSourceLabel(env)} on "${env.TRAWLER_PULL_CRON}" (next ${pullJob.nextRun()?.toISOString()})`)
+  }
 }
 
 await main()

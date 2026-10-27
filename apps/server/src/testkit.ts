@@ -2,6 +2,7 @@
  * Shared test setup: placeholder settings, an app on in-memory stores, and a
  * sign-in helper. (Not a test file itself; only imported by tests.)
  */
+import small from "@jira-dashboard/core/__fixtures__/small-export.json" with { type: "json" }
 import type { FastifyInstance } from "fastify"
 import { buildApp } from "./app"
 import { createMemoryAuthStore } from "./auth/auth-store"
@@ -49,3 +50,39 @@ export async function signIn(app: FastifyInstance, username = "sam.scrum", passw
   const setCookie = String(res.headers["set-cookie"])
   return setCookie.split(";")[0]
 }
+
+// --- Export fixtures, one of each shape the pipeline accepts (made-up data).
+
+/** The contract shape (core's small fixture: 1 team, 3 issues). */
+export const CONTRACT_JSON = JSON.stringify(small)
+
+const ticket = (key: string, status: string, statusCategory: string) => ({
+  id: key.replace(/\D/g, ""),
+  key,
+  project: "PLAT",
+  summary: `Ticket ${key}`,
+  issuetype: "Story",
+  status,
+  statusCategory,
+  assignee: { name: "pshah", key: "JIRAUSER1", displayName: "Priya Shah" },
+  reporter: null,
+  creator: null,
+  created: "2026-10-01T09:00:00.000+0000",
+  updated: "2026-10-15T12:30:00.000+0000",
+  resolutiondate: null,
+})
+const project = { id: "10000", key: "PLAT", name: "Platform" }
+
+/** Raw Trawler JSON (Jira's own field names). */
+export const TRAWLER_JSON = JSON.stringify({ projects: [project], tickets: [ticket("PLAT-1", "In Progress", "In Progress"), ticket("PLAT-2", "To Do", "To Do")] })
+
+/** The Trawler's audit log. */
+export const TRAWLER_LOG = [
+  "2026-10-20 08:15:00,123 INFO Connecting to https://jira.example.com",
+  `2026-10-20 08:15:01,100 INFO PROJECT ${JSON.stringify(project)}`,
+  `2026-10-20 08:15:02,000 INFO TICKET ${JSON.stringify(ticket("PLAT-1", "In Progress", "In Progress"))}`,
+  "2026-10-20 08:15:03,500 INFO Done. projects=1 with_tickets=1",
+].join("\n")
+
+/** Valid JSON, but not an export. */
+export const NOT_AN_EXPORT = JSON.stringify({ issues: [{ key: 42 }] })

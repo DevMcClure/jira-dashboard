@@ -5,11 +5,14 @@
  */
 import type { JiraDataset } from "@jira-dashboard/core/types"
 
+/** How the server's current dataset arrived (api mode): seeded mock data, a Trawler push or pull, or a file an admin published. */
+export type ServerSource = "seed" | "push" | "pull" | "upload"
+
 /** What the loaded data is: the bundled sample, a file the user uploaded, or the server's current dataset (api mode). */
 export type DataOrigin =
   | { kind: "sample" }
   | { kind: "upload"; fileName: string; loadedAt: string }
-  | { kind: "server"; ingestId: string }
+  | { kind: "server"; ingestId: string; source: ServerSource | null }
 
 export type LoadedData = {
   dataset: JiraDataset
@@ -30,6 +33,13 @@ export interface DataSource {
    * `remembered` is false when it couldn't be kept for the next visit (e.g. too large).
    */
   loadFile(file: FileLike): Promise<{ data: LoadedData; remembered: boolean }>
-  /** Forget any upload and return the sample. */
+  /** Forget any upload and return the sample (api mode: the server's current data). */
   reset(): Promise<LoadedData>
+  /** api mode: the server's current ingest id, polled to notice new data (null if it has none or can't say). */
+  latestVersion?(): Promise<string | null>
+  /**
+   * api mode, admins: make a file the server's current data for everyone, then return it.
+   * Rejects with `JiraExportError` (the server's problems) when the file isn't valid.
+   */
+  publishFile?(file: FileLike): Promise<LoadedData>
 }

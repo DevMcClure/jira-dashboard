@@ -1,28 +1,21 @@
 import { StatCard, type Delta } from "@/components/dashboard/StatCard"
-import type { flowDistribution, flowEfficiency, flowPredictability, flowVelocity, sizeMix } from "@jira-dashboard/core/flow"
-import { FLOW_TYPES } from "@jira-dashboard/core/flowConfig"
+import type { flowPredictability, flowVelocity, sizeMix } from "@jira-dashboard/core/flow"
 
 type Props = {
   velocity: ReturnType<typeof flowVelocity>
   size: ReturnType<typeof sizeMix>
-  efficiency: ReturnType<typeof flowEfficiency>
-  distribution: ReturnType<typeof flowDistribution>
   predictability: ReturnType<typeof flowPredictability>
-  /** Completes "… in the last 7 days". */
-  periodPhrase: string
 }
 
 const neutral = (text: string): Delta => ({ text, direction: "flat", tone: "neutral" })
 
-/** The supporting flow metrics (Flow Time and Flow Load lead the page as the primary targets). */
-export function FlowKpiRow({ velocity, size, efficiency, distribution, predictability, periodPhrase }: Props) {
-  const finished = FLOW_TYPES.reduce((n, t) => n + distribution.finished[t], 0)
-  const featureShare = finished ? Math.round((distribution.finished.Feature / finished) * 100) : null
+/** The supporting flow metrics; distribution, efficiency, flow time and load have their own sections (decision 0047). */
+export function FlowKpiRow({ velocity, size, predictability }: Props) {
   const assessed = predictability.filter((p) => p.pct !== null).at(-1)
   const sign = velocity.delta >= 0 ? "+" : ""
 
   return (
-    <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4">
       <StatCard
         label="Velocity"
         value={velocity.total}
@@ -33,23 +26,6 @@ export function FlowKpiRow({ velocity, size, efficiency, distribution, predictab
           tone: "neutral",
         }}
         trend={velocity.perWeek.map((w) => w.count)}
-      />
-      <StatCard
-        label="Efficiency"
-        value={efficiency.pct === null ? "—" : `${efficiency.pct}%`}
-        delta={neutral(`active ÷ total flow time, ${periodPhrase}`)}
-        trend={efficiency.perWeek.map((w) => w.pct ?? 0)}
-      />
-      <StatCard
-        label="Distribution"
-        value={featureShare === null ? "—" : `${featureShare}%`}
-        unit="features"
-        delta={neutral(
-          finished
-            ? `${distribution.finished.Defect} defects · ${distribution.finished.Debt} debt · ${distribution.finished.Risk} risk`
-            : `nothing finished ${periodPhrase}`,
-        )}
-        trend={[]}
       />
       <StatCard
         label="Predictability"

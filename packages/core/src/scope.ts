@@ -60,3 +60,14 @@ export function resolveScope(dataset: JiraDataset, scope: Scope): ResolvedScope 
 export function inScope(issue: Issue, scopeSprintIds: Set<number>): boolean {
   return scopeSprintIds.size === 0 || issue.sprintIds.some((id) => scopeSprintIds.has(id))
 }
+
+/**
+ * Issues plus the Epics they belong to. Epics sit in no sprint, so sprint
+ * scope alone never picks them; they come in through their in-scope stories.
+ * Epics are added after the issues, in dataset order, without duplicates.
+ */
+export function withEpics(issues: Issue[], dataset: JiraDataset): Issue[] {
+  const keys = new Set(issues.map((i) => i.key))
+  const epicKeys = new Set(issues.flatMap((i) => (i.epicKey && !keys.has(i.epicKey) ? [i.epicKey] : [])))
+  return [...issues, ...dataset.issues.filter((i) => i.type === "Epic" && epicKeys.has(i.key))]
+}

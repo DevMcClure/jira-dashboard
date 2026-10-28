@@ -11,14 +11,14 @@ import type { DateRange } from "./types"
 /** The pages a report can include: the "Explore the Sprints" group. */
 export const REPORT_PAGES = [
   { id: "overview", path: "/", title: "Overview" },
-  { id: "pi", path: "/pi", title: "PI" },
-  { id: "objectives", path: "/objectives", title: "Objectives" },
   { id: "details", path: "/details", title: "Details" },
-  { id: "health", path: "/health", title: "Health" },
-  { id: "tickets", path: "/tickets", title: "Tickets" },
+  { id: "tickets", path: "/tickets", title: "Issues" },
   { id: "sprints", path: "/sprints", title: "Sprints" },
-  { id: "people", path: "/people", title: "People" },
+  { id: "objectives", path: "/objectives", title: "Objectives" },
+  { id: "pi", path: "/pi", title: "PI" },
+  { id: "health", path: "/health", title: "Health" },
   { id: "movements", path: "/movements", title: "Movements" },
+  { id: "people", path: "/people", title: "People" },
   { id: "flow", path: "/flow", title: "Flow" },
 ] as const
 

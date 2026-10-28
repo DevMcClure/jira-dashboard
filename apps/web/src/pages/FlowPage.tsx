@@ -1,6 +1,7 @@
 import { format } from "date-fns"
 import { useMemo, type ReactNode } from "react"
 import { AgingWipChart } from "@/components/flow/AgingWipChart"
+import { DefectDebtInOut } from "@/components/flow/DefectDebtInOut"
 import { DistributionChart } from "@/components/flow/DistributionChart"
 import { DistributionNow } from "@/components/flow/DistributionNow"
 import { EfficiencyChart } from "@/components/flow/EfficiencyChart"
@@ -15,6 +16,7 @@ import { SizeMixChart } from "@/components/flow/SizeMixChart"
 import { SpeedVsThroughput } from "@/components/flow/SpeedVsThroughput"
 import { TeamFlowTable } from "@/components/flow/TeamFlowTable"
 import { TimeByStatusBar } from "@/components/flow/TimeByStatusBar"
+import { WaitingNow } from "@/components/flow/WaitingNow"
 import { WipChart } from "@/components/flow/WipChart"
 import { WipExperimentChart } from "@/components/flow/WipExperimentChart"
 import { PageHeader } from "@/components/layout/PageHeader"
@@ -27,6 +29,7 @@ import { useTimeMode } from "@/hooks/useTimeMode"
 import {
   flowDistribution,
   flowEfficiency,
+  flowInOut,
   flowLoad,
   flowPredictability,
   flowTime,
@@ -36,6 +39,7 @@ import {
   historyCoverage,
   sizeMix,
   teamFlow,
+  waitingNow,
   weeklyLoad,
   type FlowTimeBasis,
 } from "@jira-dashboard/core/flow"
@@ -54,10 +58,11 @@ function Section({ title, description, children }: { title: string; description:
 }
 
 /**
- * The six SAFe flow metrics, in items and time rather than points. Flow Time
- * and Flow Load lead as the primary targets (decision 0024); one view per
- * question, with charts that repeat them folded into More detail (0044). KPIs use the
- * header period; charts use it too but cover at least the last 8 weeks.
+ * The six SAFe flow metrics, in items and time rather than points. Work mix
+ * (distribution) and wait states (efficiency) lead, then speed and load
+ * (decision 0047); one view per question, with charts that repeat them folded
+ * into More detail (0044). KPIs use the header period; charts use it too but
+ * cover at least the last 8 weeks.
  */
 export default function FlowPage() {
   const { dataset } = useData()
@@ -86,9 +91,12 @@ export default function FlowPage() {
         time: chartTime,
         load,
         efficiency: flowEfficiency(items, chartRange, opts),
+        defect: flowInOut(items, "Defect", chartRange, opts),
+        debt: flowInOut(items, "Debt", chartRange, opts),
         byWeek: flowTimeByWeek(items, chartRange, opts, basis),
         weekly: weeklyLoad(items, chartRange, opts, basis),
       },
+      waiting: waitingNow(items, opts),
       coverage: historyCoverage(items, now, cfg),
       predictability: flowPredictability(dataset.programIncrements),
     }
@@ -102,7 +110,7 @@ export default function FlowPage() {
     <>
       <PageHeader
         title="Flow"
-        description="How work flows through the system: how long it takes, how much is in progress, and where the time goes. Counts items, not points."
+        description="How work flows through the system: what kind of work it is, where it waits, how long it takes and how much is in progress. Counts items, not points."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <HistoryMeter coverage={m.coverage} />
@@ -139,7 +147,24 @@ export default function FlowPage() {
           </div>
         }
       />
-      <Section title="Primary targets" description="How long work takes, and how much is in progress at once.">
+      <Section title="Work mix" description="What kind of work is flowing: features, defects, risk and debt, and whether defects and debt are piling up.">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <DistributionNow wip={m.period.distribution.wip} finished={m.period.distribution.finished} periodPhrase={periodPhrase} />
+          <DistributionChart perSprint={m.period.distribution.perSprint} />
+        </div>
+        <DefectDebtInOut defect={m.chart.defect} debt={m.chart.debt} windowLabel={windowLabel} />
+      </Section>
+
+      <Section title="Wait states" description="How much of the time work is actively worked, which statuses it waits in, and what is waiting right now.">
+        {/* Side by side only where both have room; "Where the time goes" needs ~400px for its labels. */}
+        <div className="grid gap-4 xl:grid-cols-2">
+          <EfficiencyChart efficiency={m.chart.efficiency} mode={mode} windowLabel={windowLabel} />
+          <TimeByStatusBar byStatus={m.chart.efficiency.byStatus} mode={mode} windowLabel={windowLabel} />
+        </div>
+        <WaitingNow queues={m.waiting} mode={mode} />
+      </Section>
+
+      <Section title="Speed and load" description="How long work takes, and how much is in progress at once.">
         <FlowPrimaryTiles
           flowTime={flowTimePercentiles(m.period.time, basis)}
           finished={m.period.time.points.length}
@@ -160,22 +185,11 @@ export default function FlowPage() {
           finished={m.chart.time.points.length}
         />
         <AgingWipChart aging={load.aging} cycle={m.chart.time.cycle} finished={m.chart.time.points.length} mode={mode} windowLabel={windowLabel} />
+        <WipChart daily={load.daily} windowLabel={windowLabel} />
       </Section>
 
-      <Section title="Why they move" description="How much is waiting, where the time goes, and the supporting metrics, overall and per team.">
-        <FlowKpiRow
-          velocity={m.period.velocity}
-          size={m.period.size}
-          efficiency={m.period.efficiency}
-          distribution={m.period.distribution}
-          predictability={m.predictability}
-          periodPhrase={periodPhrase}
-        />
-        {/* Side by side only where both have room; "Where the time goes" needs ~400px for its labels. */}
-        <div className="grid gap-4 xl:grid-cols-2">
-          <WipChart daily={load.daily} windowLabel={windowLabel} />
-          <TimeByStatusBar byStatus={m.chart.efficiency.byStatus} mode={mode} windowLabel={windowLabel} />
-        </div>
+      <Section title="Supporting" description="Velocity and predictability, and every flow metric per team.">
+        <FlowKpiRow velocity={m.period.velocity} size={m.period.size} predictability={m.predictability} />
         <TeamFlowTable rows={m.period.teams} basis={basis} mode={mode} periodPhrase={periodPhrase} />
       </Section>
 
@@ -189,16 +203,9 @@ export default function FlowPage() {
         />
         <div className="grid gap-4 lg:grid-cols-2">
           <WipExperimentChart weeks={m.chart.weekly} mode={mode} windowLabel={windowLabel} />
-          <EfficiencyChart efficiency={m.chart.efficiency} mode={mode} windowLabel={windowLabel} />
-        </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <DistributionNow wip={m.period.distribution.wip} finished={m.period.distribution.finished} periodPhrase={periodPhrase} />
-          <DistributionChart perSprint={m.period.distribution.perSprint} />
-        </div>
-        <div className="grid gap-4 lg:grid-cols-2">
           <SizeMixChart mix={m.period.size} periodPhrase={periodPhrase} />
-          <PredictabilityChart rows={m.predictability} />
         </div>
+        <PredictabilityChart rows={m.predictability} />
       </MoreDetail>
       <MeasurementNotes basis={basis} />
     </>

@@ -105,7 +105,7 @@ export function SprintCard({ sprint, teamName, stats, onOpen }: Props) {
           )}
         </span>
         <span className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-          Tickets <ArrowRight className="size-3" />
+          Issues <ArrowRight className="size-3" />
         </span>
       </CardFooter>
     </Card>

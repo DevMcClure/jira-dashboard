@@ -24,14 +24,14 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Explore the Sprints",
     items: [
       { title: "Overview", url: "/", icon: LayoutGrid },
-      { title: "PI", url: "/pi", icon: Milestone },
-      { title: "Objectives", url: "/objectives", icon: Target },
       { title: "Details", url: "/details", icon: LayoutDashboard },
-      { title: "Health", url: "/health", icon: HeartPulse },
-      { title: "Tickets", url: "/tickets", icon: Ticket },
+      { title: "Issues", url: "/tickets", icon: Ticket },
       { title: "Sprints", url: "/sprints", icon: Timer },
-      { title: "People", url: "/people", icon: User },
+      { title: "Objectives", url: "/objectives", icon: Target },
+      { title: "PI", url: "/pi", icon: Milestone },
+      { title: "Health", url: "/health", icon: HeartPulse },
       { title: "Movements", url: "/movements", icon: ArrowRightLeft },
+      { title: "People", url: "/people", icon: User },
       { title: "Flow", url: "/flow", icon: Waves },
     ],
   },
@@ -48,7 +48,7 @@ export const NAV_GROUPS: NavGroup[] = [
 
 const ALL_ITEMS = NAV_GROUPS.flatMap((g) => g.items)
 
-/** The nav item a pathname belongs to ("/tickets/PLAT-1" → Tickets, "/teams/X" → Overview). */
+/** The nav item a pathname belongs to ("/tickets/PLAT-1" → Issues, "/teams/X" → Overview). */
 export function navItemFor(pathname: string): NavItem | undefined {
   if (pathname === "/" || pathname.startsWith("/teams/")) return ALL_ITEMS[0]
   return ALL_ITEMS.find((i) => i.url !== "/" && (pathname === i.url || pathname.startsWith(`${i.url}/`)))

@@ -17,7 +17,7 @@ import {
 /**
  * The "Explore the Sprints" pages as relative routes, shared by the normal app
  * and report mode (which passes `include` to keep only the report's pages).
- * A page's detail routes come with it: Overview → team pages, Tickets → a ticket.
+ * A page's detail routes come with it: Overview → team pages, Issues → an issue.
  */
 export function exploreRoutes(include: (id: ReportPageId) => boolean = () => true) {
   return (

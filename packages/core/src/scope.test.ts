@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import piFixture from "./__fixtures__/pi-export.json"
 import smallFixture from "./__fixtures__/small-export.json"
 import { parseExport } from "./adapter"
-import { currentPi, currentSprints, inScope, resolveScope, SPRINT_SCOPE } from "./scope"
+import { currentPi, currentSprints, inScope, resolveScope, SPRINT_SCOPE, withEpics } from "./scope"
 
 const ds = parseExport(piFixture)
 const ids = (xs: { id: number }[]) => xs.map((x) => x.id)
@@ -63,5 +63,19 @@ describe("inScope", () => {
 
   it("lets everything through when the scope has no sprints", () => {
     expect(inScope(issue, new Set())).toBe(true)
+  })
+})
+
+describe("withEpics", () => {
+  const keys = (xs: { key: string }[]) => xs.map((x) => x.key)
+  const pick = (...k: string[]) => k.map((key) => ds.byKey.get(key)!)
+
+  it("adds each issue's epic once, after the issues", () => {
+    expect(keys(withEpics(pick("TST-2", "TST-3", "TST-4"), ds))).toEqual(["TST-2", "TST-3", "TST-4", "TST-E1"])
+  })
+
+  it("skips epics already listed and keys missing from the export", () => {
+    expect(keys(withEpics(pick("TST-E1", "TST-2"), ds))).toEqual(["TST-E1", "TST-2"])
+    expect(keys(withEpics(pick("TST-5"), ds))).toEqual(["TST-5"])
   })
 })

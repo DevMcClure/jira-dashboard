@@ -12,7 +12,7 @@ export function MoreDetail({ children }: { children: ReactNode }) {
         <CardHeader>
           <CardTitle>More detail</CardTitle>
           <CardDescription>
-            Per-item flow time, WIP against throughput, weekly efficiency, work mix, item sizes and predictability per PI.
+            Per-item flow time, WIP against throughput, item sizes and predictability per PI.
           </CardDescription>
           <CardAction>
             <CollapsibleTrigger asChild>

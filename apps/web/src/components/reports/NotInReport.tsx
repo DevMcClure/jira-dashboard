@@ -5,7 +5,7 @@ import { useAppPath } from "@/hooks/useAppPath"
 import { useReportMode } from "@/hooks/useReportMode"
 import { pagePath, REPORT_PAGES } from "@jira-dashboard/core/report-config"
 
-/** Shown for any path inside a report that isn't one of its pages (e.g. a link to the Tickets page). */
+/** Shown for any path inside a report that isn't one of its pages (e.g. a link to the Issues page). */
 export function NotInReport() {
   const report = useReportMode()
   const to = useAppPath()

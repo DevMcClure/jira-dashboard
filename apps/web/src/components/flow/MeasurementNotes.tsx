@@ -40,6 +40,8 @@ export function MeasurementNotes({ basis }: Props) {
     ["Flow velocity", "Items that first reached Done in the window, counted regardless of size or priority. See “Size of finished items” for the size mix."],
     ["Flow efficiency", "Flow Efficiency = (Active Time ÷ Total Flow Time) × 100, over items finished in the window. Time in Done between a finish and a reopen counts as waiting."],
     ["Flow distribution", distributionText(cfg)],
+    ["In vs out", "Defects and debt items created, and first moved to Done, in each week; open = created and not in Done at the week's end."],
+    ["Waiting now", `Items in a waiting status (${states("waiting")}) now, timed from their last status change.`],
     ["Flow predictability", "Actual ÷ planned business value of committed PI objectives; uncommitted objectives add to actual only."],
     [
       "Statuses",

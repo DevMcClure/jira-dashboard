@@ -4,7 +4,7 @@
  * `working-time.ts`. See docs/plan-frontend.md → "Flow metrics research" and
  * docs/decisions/0007, 0014–0017.
  */
-import { eachDayOfInterval, eachWeekOfInterval, endOfDay, startOfDay, startOfWeek } from "date-fns"
+import { eachDayOfInterval, eachWeekOfInterval, endOfDay, endOfWeek, startOfDay, startOfWeek } from "date-fns"
 import { compareStatus } from "./constants"
 import { DEFAULT_FLOW_CONFIG, FLOW_TYPES, flowStateOf, flowTypeOf, isFlowItem, type FlowConfig, type FlowState, type FlowType } from "./flowConfig"
 import { piPredictability, statusAt } from "./metrics"
@@ -476,4 +476,70 @@ export function sampleQuality(n: number): SampleQuality {
   if (n < 10) return { level: "low", note: `Only ${n} finished item${n === 1 ? "" : "s"}: percentiles are rough.` }
   if (n < 20) return { level: "p95", note: `Under 20 finished items: treat the 95th percentile with caution.` }
   return { level: "ok", note: null }
+}
+
+// ---------------------------------------------------------------------------
+// Work mix and wait states (docs/decisions/0047)
+// ---------------------------------------------------------------------------
+
+export type InOutWeek = { week: Date; created: number; finished: number; open: number }
+
+/**
+ * Arrivals against departures for one flow type (Defect, Debt, …): items
+ * created and first finished each week in the range, and how many were open
+ * (created, not done) at each week's end. Created outpacing finished week after
+ * week shows as a rising open count.
+ */
+export function flowInOut(items: Issue[], type: FlowType, range: DateRange, opts: FlowOptions) {
+  const cfg = opts.cfg ?? DEFAULT_FLOW_CONFIG
+  const own = items.filter((i) => flowTypeOf(i, cfg) === type)
+  const clip = (t: Date) => (t < opts.now ? t : opts.now)
+  const openAt = (t: Date) =>
+    own.filter((i) => {
+      const status = statusAt(i, t)
+      return status !== null && flowStateOf(status, i, cfg) !== "done"
+    }).length
+  const perWeek = weeksOf(range).map((week): InOutWeek => {
+    const inWeek = (d: Date | null) => d !== null && inRange(d, range) && weekOf(d).getTime() === week.getTime()
+    return {
+      week,
+      created: own.filter((i) => inWeek(i.created)).length,
+      finished: own.filter((i) => inWeek(firstDone(i, cfg))).length,
+      open: openAt(clip(endOfWeek(week, { weekStartsOn: 1 }))),
+    }
+  })
+  return {
+    perWeek,
+    created: perWeek.reduce((n, w) => n + w.created, 0),
+    finished: perWeek.reduce((n, w) => n + w.finished, 0),
+    openAtStart: openAt(range.start),
+    openAtEnd: openAt(clip(range.end)),
+  }
+}
+
+export type WaitingItem = { key: string; summary: string; status: string; type: FlowType; since: Date; waitingDays: number }
+export type WaitQueue = { status: string; items: WaitingItem[]; totalDays: number }
+
+/**
+ * The items in a waiting status now, one queue per status in workflow order,
+ * each item with the time it has sat in that status, longest first.
+ */
+export function waitingNow(items: Issue[], opts: FlowOptions): WaitQueue[] {
+  const cfg = opts.cfg ?? DEFAULT_FLOW_CONFIG
+  const queues = new Map<string, WaitingItem[]>()
+  for (const i of items) {
+    if (flowStateOf(i.status, i, cfg) !== "waiting") continue
+    const last = statusChanges(i).at(-1)?.at
+    const since = last && last > i.created ? last : i.created
+    const waitingDays = toDays(elapsedMs(since, opts.now, opts.mode, cfg.workingHours), opts.mode, cfg.workingHours)
+    const item: WaitingItem = { key: i.key, summary: i.summary, status: i.status, type: flowTypeOf(i, cfg), since, waitingDays }
+    queues.set(i.status, [...(queues.get(i.status) ?? []), item])
+  }
+  return [...queues.entries()]
+    .sort(([a], [b]) => compareStatus(a, b))
+    .map(([status, list]) => ({
+      status,
+      items: list.sort((a, b) => b.waitingDays - a.waitingDays),
+      totalDays: list.reduce((n, w) => n + w.waitingDays, 0),
+    }))
 }

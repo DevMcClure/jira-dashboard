@@ -13,6 +13,7 @@ import {
   flowDistribution,
   flowEfficiency,
   flowEnd,
+  flowInOut,
   flowItems,
   flowLoad,
   flowPredictability,
@@ -28,6 +29,7 @@ import {
   sizeMix,
   statusSegments,
   teamFlow,
+  waitingNow,
   weeklyLoad,
 } from "./flow"
 import { flowStateOf, flowTypeOf } from "./flowConfig"
@@ -276,5 +278,43 @@ describe("historyCoverage", () => {
 describe("sampleQuality", () => {
   it("warns below 10 and below 20 items", () => {
     expect([0, 3, 12, 20].map((n) => sampleQuality(n).level)).toEqual(["none", "low", "p95", "ok"])
+  })
+})
+
+describe("flowInOut", () => {
+  it("counts created and first finished per week, and what's open at each week's end", () => {
+    // F-2 (Defect): created and done Thu 15 Oct, reopened and done again Fri 16: one in, one out.
+    const defect = flowInOut(items, "Defect", range, working)
+    expect(defect.perWeek.map((w) => [w.week.toISOString().slice(0, 10), w.created, w.finished, w.open])).toEqual([
+      ["2026-10-12", 1, 1, 0],
+      ["2026-10-19", 0, 0, 0],
+    ])
+    // F-3 (Debt): created Fri 16 Oct, still in review at the weekend, done Mon 19.
+    const debt = flowInOut(items, "Debt", range, working)
+    expect(debt.perWeek.map((w) => [w.created, w.finished, w.open])).toEqual([[1, 0, 1], [0, 1, 0]])
+    expect([debt.created, debt.finished, debt.openAtStart, debt.openAtEnd]).toEqual([1, 1, 0, 0])
+  })
+
+  it("counts open items at the range's start and end", () => {
+    // F-1 (Feature) is open on 13 Oct; F-4 (Feature) and F-6 (Risk) are open now.
+    const r = { start: d("2026-10-13T12:00:00Z"), end: now }
+    const feature = flowInOut(items, "Feature", r, working)
+    expect([feature.openAtStart, feature.openAtEnd]).toEqual([1, 1])
+    expect(flowInOut(items, "Risk", r, working).openAtEnd).toBe(1)
+  })
+})
+
+describe("waitingNow", () => {
+  it("groups waiting items by status, timed from when they entered it", () => {
+    // F-4 entered In Review Wed 21 Oct 13:00Z: Wed 13–17 4 h + Thu 08–16 8 h = 12 h; calendar 27 h.
+    const q = waitingNow(items, working)
+    expect(q.map((w) => [w.status, w.items.map((i) => [i.key, i.type, round(i.waitingDays)]), round(w.totalDays)])).toEqual([
+      ["In Review", [["F-4", "Feature", round(12 * H)]], round(12 * H)],
+    ])
+    expect(round(waitingNow(items, calendar)[0].items[0].waitingDays)).toBe(round(27 / 24))
+  })
+
+  it("is empty when nothing waits", () => {
+    expect(waitingNow(items.filter((i) => i.key !== "F-4"), working)).toEqual([])
   })
 })

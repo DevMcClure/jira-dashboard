@@ -6,6 +6,8 @@
  * in the app should need to change.
  */
 import { categoryForStatus, compareStatus, statusColorVar } from "./constants"
+import { objectivesFromIssues } from "./derive-objectives"
+import { derivePis } from "./derive-pis"
 import { exportSchema, type RawExport, type RawIssue, type RawObjective } from "./schema"
 import {
   isTrawlerLog,
@@ -104,7 +106,7 @@ function buildDataset(data: RawExport): JiraDataset {
 
   const transitions = buildTransitions(issues)
   const meta = toMeta(data, issues, teams, sprints)
-  const programIncrements = toProgramIncrements(data, sprints, teams, meta.generatedAt)
+  const programIncrements = toProgramIncrements(data, sprints, teams, issues, meta.generatedAt)
   const objectives = programIncrements.flatMap((p) => p.objectives)
 
   synthesiseMissingPeople(people, teams, issues, objectives)
@@ -245,29 +247,35 @@ function toMeta(data: RawExport, issues: Issue[], teams: Team[], sprints: Sprint
 }
 
 /**
- * PIs sorted by start. Sprints without a known `piId` are assigned (mutated) to
- * the PI whose dates contain their start; a PI without a state gets one from
- * its dates vs `now`.
+ * PIs sorted by start. Without a `programIncrements` list they're derived from
+ * sprint names and epic labels (decision 0048). Sprints without a known `piId`
+ * are assigned (mutated) to the PI whose dates contain their start; a PI
+ * without a state gets one from its dates vs `now`.
  */
-function toProgramIncrements(data: RawExport, sprints: Sprint[], teams: Team[], now: Date): ProgramIncrement[] {
+function toProgramIncrements(data: RawExport, sprints: Sprint[], teams: Team[], issues: Issue[], now: Date): ProgramIncrement[] {
   const teamIds = new Set(teams.map((t) => t.id))
-  const pis = (data.programIncrements ?? [])
-    .map(
-      (p): ProgramIncrement => {
-        const startDate = new Date(p.startDate)
-        const endDate = new Date(p.endDate)
-        return {
-          id: p.id,
-          name: p.name,
-          startDate,
-          endDate,
-          state: p.state ?? (now < startDate ? "future" : now > endDate ? "closed" : "active"),
-          objectives: (p.objectives ?? []).map((o, i) => toObjective(o, i, p.id, teamIds)),
-          sprintIds: [],
-        }
-      },
-    )
-    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+  const stateOf = (start: Date, end: Date) => (now < start ? "future" : now > end ? "closed" : "active")
+  let pis: ProgramIncrement[]
+  if (data.programIncrements?.length) {
+    pis = data.programIncrements.map((p): ProgramIncrement => {
+      const startDate = new Date(p.startDate)
+      const endDate = new Date(p.endDate)
+      return {
+        id: p.id,
+        name: p.name,
+        startDate,
+        endDate,
+        state: p.state ?? stateOf(startDate, endDate),
+        objectives: (p.objectives ?? []).map((o, i) => toObjective(o, i, p.id, teamIds)),
+        sprintIds: [],
+      }
+    })
+  } else {
+    const derived = derivePis(sprints, issues)
+    for (const s of sprints) s.piId ??= derived.piOfSprint.get(s.id) ?? null
+    pis = derived.pis.map((p) => ({ ...p, state: stateOf(p.startDate, p.endDate), objectives: [], sprintIds: [] }))
+  }
+  pis.sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
 
   const byId = new Map(pis.map((p) => [p.id, p]))
   for (const s of sprints) {
@@ -278,6 +286,11 @@ function toProgramIncrements(data: RawExport, sprints: Sprint[], teams: Team[], 
     }
     if (s.piId) byId.get(s.piId)!.sprintIds.push(s.id)
   }
+
+  // PIs without listed objectives take them from Objective issues (decision 0049).
+  const related = new Map(data.issues.map((i) => [i.key, i.relatedKeys ?? []]))
+  const fromIssues = objectivesFromIssues(issues, related, pis, sprints, teamIds)
+  for (const p of pis) if (!p.objectives.length) p.objectives = fromIssues.filter((o) => o.piId === p.id)
   return pis
 }
 

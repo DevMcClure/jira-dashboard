@@ -49,8 +49,8 @@ export default function ObjectivesPage() {
         <PageHeader title="Objectives" description="PI objectives and their progress, rolled up from epics and tickets." />
         <EmptyState className="h-40 px-6">
           {pi
-            ? `${pi.name} has no objectives in this export. Add an objectives list to the PI to track them here.`
-            : "This export has no program increments, so there are no PI objectives to show."}
+            ? `${pi.name} has no objectives. An Objective issue shows here once its epics (linked by Epic Link or “relates to”) are in this PI.`
+            : "No PI found, so there are no objectives to show. PIs come from sprint names like “Platform 2026 PI 5 - Iteration 2”."}
         </EmptyState>
       </>
     )

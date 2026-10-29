@@ -46,6 +46,8 @@ export const issueSchema = z.looseObject({
   labels: z.array(z.string()).nullable().optional(),
   epicKey: optionalString,
   parentKey: optionalString,
+  /** Keys this issue "relates to" (Jira issue links); links Objectives to their epics (decision 0049). */
+  relatedKeys: z.array(z.string()).nullable().optional(),
   created: isoDate,
   updated: optionalIsoDate,
   resolved: optionalIsoDate,

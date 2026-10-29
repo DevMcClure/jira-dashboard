@@ -3,20 +3,27 @@ import { StatusBadge } from "@/components/common/StatusBadge"
 import { Progress } from "@/components/ui/progress"
 import { useAppPath } from "@/hooks/useAppPath"
 import { useData } from "@/hooks/useData"
-import { epicProgress, objectiveIssues } from "@jira-dashboard/core/metrics"
-import type { Issue, Objective, ProgramIncrement } from "@jira-dashboard/core/types"
+import { epicProgress } from "@jira-dashboard/core/metrics"
+import type { Issue } from "@jira-dashboard/core/types"
 
-type Props = { objective: Objective; pi: ProgramIncrement; issues: Issue[] }
+type Props = {
+  epicKeys: string[]
+  /** Tickets linked to the objective directly, not through an epic. */
+  issueKeys?: string[]
+  /** The objective's tickets for the current filters. */
+  tickets: Issue[]
+  /** Shown under an epic with no tickets. */
+  emptyText?: string
+}
 
 /** An objective's linked epics with their progress and tickets, plus any directly linked tickets. */
-export function ObjectiveEpics({ objective, pi, issues }: Props) {
+export function ObjectiveEpics({ epicKeys, issueKeys = [], tickets, emptyText = "No tickets for the current filters." }: Props) {
   const { dataset } = useData()
   const to = useAppPath()
-  const tickets = objectiveIssues(objective, pi, issues)
   const progress = new Map(epicProgress(tickets).map((e) => [e.epicKey, e]))
-  const direct = new Set(objective.issueKeys)
+  const direct = new Set(issueKeys)
   const groups = [
-    ...objective.epicKeys.map((key) => ({
+    ...epicKeys.map((key) => ({
       key,
       title: dataset.byKey.get(key)?.summary ?? key,
       tickets: tickets.filter((t) => t.epicKey === key && !direct.has(t.key)),
@@ -44,7 +51,7 @@ export function ObjectiveEpics({ objective, pi, issues }: Props) {
             )}
           </div>
           {g.tickets.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No tickets in this PI for the current filters.</p>
+            <p className="text-xs text-muted-foreground">{emptyText}</p>
           ) : (
             <ul className="divide-y rounded-lg border">
               {g.tickets.map((t) => (

@@ -4,6 +4,7 @@ import { HEALTH_LEVELS } from "@/components/health/health-levels"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { objectiveIssues } from "@jira-dashboard/core/metrics"
 import type { Issue, ProgramIncrement } from "@jira-dashboard/core/types"
 import { ObjectiveEpics } from "./ObjectiveEpics"
 import type { ObjectiveRowData } from "./objective-row-data"
@@ -68,7 +69,12 @@ export function ObjectiveRow({ row, pi, issues, onOpenBurnup }: Props) {
           </Button>
         </div>
         <CollapsibleContent className="border-t bg-muted/20 px-6 py-4">
-          <ObjectiveEpics objective={o} pi={pi} issues={issues} />
+          <ObjectiveEpics
+            epicKeys={o.epicKeys}
+            issueKeys={o.issueKeys}
+            tickets={objectiveIssues(o, pi, issues)}
+            emptyText="No tickets in this PI for the current filters."
+          />
         </CollapsibleContent>
       </li>
     </Collapsible>

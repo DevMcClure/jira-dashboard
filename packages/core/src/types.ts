@@ -135,6 +135,8 @@ export type JiraDataset = {
   piById: Map<string, ProgramIncrement>
   /** Every PI's objectives by id. */
   objectiveById: Map<string, Objective>
+  /** Every Jira issue of type "Objective" → its linked epics' keys, in a PI or not (decision 0050). */
+  objectiveEpics: Map<string, string[]>
   /** Flattened status changes across all issues, sorted by time. */
   transitions: Transition[]
   /** Every status seen in the data, in workflow order (known first, then unknown A–Z). */

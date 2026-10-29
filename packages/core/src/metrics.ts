@@ -370,6 +370,18 @@ export function objectiveProgress(objective: Objective, pi: ProgramIncrement, is
   return { pctDone: Math.round(pct), ...rest }
 }
 
+/** The tickets (not epics) under these epics, in any sprint: an Objective issue's work (decision 0050). */
+export function epicTickets(epicKeys: string[], issues: Issue[]): Issue[] {
+  const epics = new Set(epicKeys)
+  return issues.filter((i) => i.type !== "Epic" && i.epicKey !== null && epics.has(i.epicKey))
+}
+
+/** Done vs total of these epics' tickets, by points (or ticket count when nothing is estimated). Rounded %. */
+export function epicsProgress(epicKeys: string[], issues: Issue[]): ObjectiveProgress {
+  const { pct, ...rest } = progressOf(epicTickets(epicKeys, issues))
+  return { pctDone: Math.round(pct), ...rest }
+}
+
 /** Progress vs % of the PI gone, with the sprint thresholds; "no_data" when no tickets are linked. */
 export function objectiveHealth(objective: Objective, pi: ProgramIncrement, issues: Issue[], now: Date) {
   const scoped = objectiveIssues(objective, pi, issues)

@@ -54,7 +54,8 @@ export default function PiPage() {
       <>
         <PageHeader title="PI" description="Progress across a whole program increment." />
         <EmptyState className="h-40">
-          This export has no program increments. Add a programIncrements list to see PI progress.
+          No PI found. PIs come from sprint names like “Platform 2026 PI 5 - Iteration 2”, or a programIncrements list in the
+          export.
         </EmptyState>
       </>
     )
